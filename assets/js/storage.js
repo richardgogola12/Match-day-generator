@@ -457,6 +457,7 @@
             req.onerror = () => resolve(out);
         }));
     };
+    store.clearPhotos = async function () { for (const p of await store.listPhotos()) await store.removePhoto(p.key); };
     /** Zmenší fotku (max. 1200 px, JPEG), aby úložisko prehliadača nezaplnili veľké súbory z mobilu */
     store.shrinkImage = function (file, max) {
         max = max || 1200;

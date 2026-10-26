@@ -180,7 +180,7 @@
 		<li><strong>Posledný zápas</strong> – tlačidlá <strong>Výsledok</strong>, <strong>Strelci</strong> a <strong>Zápis</strong>.</li>
 		<li>V zozname má každý zápas jedno hlavné tlačidlo (<em>Match day</em> pri nadchádzajúcom, <em>Výsledok</em> pri odohratom) a tlačidlo <i class="bi bi-three-dots"></i> s ostatnými obrázkami (Zostava, Strelci, Súhrn) a zápisom o stretnutí.</li>
 		<li><strong>Filter</strong> <em>Všetky / Nadchádzajúce / Odohraté</em> skryje zápasy, ktoré práve nepotrebujete. Víťaz je zvýraznený zelenou.</li>
-		<li><strong>Tabuľka a hráči</strong> otvorí prehľad družstva (viď <a href="#druzstvo">Prehľad družstva</a>), <strong>Súpiska</strong> vytvorí obrázok so všetkými hráčmi.</li>
+		<li><strong>Družstvo</strong> otvorí prehľad družstva (viď <a href="#druzstvo">Prehľad družstva</a>), <strong>Súpiska</strong> vytvorí obrázok so všetkými hráčmi.</li>
 		<li>Kliknutím na <strong>výsledok</strong> otvoríte celý zápis o stretnutí.</li>
 	</ul>
 </section>
@@ -296,12 +296,18 @@
 <!-- ================================================================== -->
 <section id="druzstvo">
 	<h2><i class="bi bi-bar-chart-line"></i>Prehľad družstva</h2>
-	<p>Na stránke klubu kliknite v hlavičke družstva na <strong>Tabuľka a hráči</strong>. Stránka má štyri karty:</p>
+	<p>Na stránke klubu kliknite v hlavičke družstva na <strong>Družstvo</strong> (alebo kdekoľvek na názov tímu). Stránka má tieto karty – pri každej je tlačidlo na obrázok:</p>
 	<?= guide_shot('20-druzstvo.webp', 'Prehľad družstva', 'Karta Prehľad: miesto v tabuľke, body, bilancia, skóre, forma a rebríčky hráčov.') ?>
 	<dl class="guide-dl">
 		<dt><i class="bi bi-speedometer2"></i>Prehľad</dt>
 		<dd>Miesto v tabuľke, body, výhry/remízy/prehry, skóre, zápasy bez inkasovaného gólu, priemerná návštevnosť, forma (posledných 5 zápasov), bilancia doma a vonku, najvyššia výhra a rebríčky – strelci, najviac odohraných minút a žlté karty.</dd>
-		<dt><i class="bi bi-people"></i>Hráči</dt>
+		<dt><i class="bi bi-trophy"></i>Výsledky</dt>
+		<dd>Všetky odohraté zápasy družstva v sezóne (aj pohárové), farebne výhra / remíza / prehra. Pri zápase je tlačidlo <em>Výsledok</em> a v ponuke <i class="bi bi-three-dots"></i> Strelci, Súhrn, Zostava, Vzájomné zápasy, Forma a detail zápasu.</dd>
+		<dt><i class="bi bi-calendar-event"></i>Program</dt>
+		<dd>Nadchádzajúce zápasy s tlačidlom <em>Match day</em> a ostatnými obrázkami v ponuke; hore obrázok programu kola.</dd>
+		<dt><i class="bi bi-people"></i>Súpiska</dt>
+		<dd>Brankári a hráči s číslami dresov, počtom zápasov, gólmi a minútami; kliknutím otvoríte profil hráča. Obrázok <em>Súpiska</em>.</dd>
+		<dt><i class="bi bi-bar-chart-line"></i>Štatistiky hráčov</dt>
 		<dd>Tabuľka všetkých hráčov: odohrané zápasy (Z), zápasy v základe (Š), minúty, góly, góly z penalty, žlté a červené karty. Kliknutím na hlavičku stĺpca zoradíte, kliknutím na meno otvoríte <a href="#profil">profil hráča</a>.</dd>
 		<dt><i class="bi bi-list-ol"></i>Tabuľka</dt>
 		<dd>Poradie súťaže s formou všetkých tímov; vaše družstvo je zvýraznené.</dd>
@@ -623,6 +629,7 @@
 		<div class="col-md-6"><div class="guide-card h-100"><i class="bi bi-laptop"></i><div><strong>Vo vašom prehliadači</strong><br><span>Šablóny, pozadia, vlastné písma, ručné úpravy zostáv a súpisiek, fotky hráčov, posledné hľadania, téma a náhodné anonymné ID prehliadača. Nikam sa neposielajú.</span></div></div></div>
 		<div class="col-md-6"><div class="guide-card h-100"><i class="bi bi-hdd-network"></i><div><strong>Na serveri</strong><br><span>Uložené obrázky (PNG) s údajmi o zápase a záznam v logu: čo a kedy sa vytvorilo, rodina prehliadača a systému (napr. Chrome / Android) a anonymné ID.</span></div></div></div>
 	</div>
+	<p class="mt-3">Všetko, čo je uložené v prehliadači, vymažete odkazom <strong>Obnoviť nastavenia</strong> v pätičke stránky. Vyberiete, čo sa má zmazať (šablóny a pozadia, fotky hráčov, predvoľby, offline cache, prípadne aj ID galérie) a aplikácia sa vráti do pôvodného stavu. Predtým si môžete stiahnuť zálohu.</p>
 	<p class="mt-3 mb-0">Aplikácia <strong>neukladá IP adresy</strong>, presnú verziu prehliadača, model zariadenia, jazyk, polohu ani odkiaľ ste prišli. Nepoužíva reklamné ani analytické cookies. Galéria každého prehliadača je oddelená – iní používatelia vaše obrázky v galérii nevidia (vidia ich iba ak im pošlete odkaz).</p>
 </section>
 

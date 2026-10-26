@@ -98,4 +98,37 @@
 
     /* Tooltipy */
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => new bootstrap.Tooltip(el));
+
+    /* ------------------------------------------------------------------ */
+    /* Obnovenie nastavení prehliadača (pätička)                           */
+    /* ------------------------------------------------------------------ */
+    $('#resetGo').on('click', async function () {
+        const parts = new Set($('#resetParts input:checked').map((_, el) => el.value).get());
+        if (!parts.size) { MD.toast('Vyberte, čo chcete vymazať.', 'info'); return; }
+        $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Mažem…');
+        const ls = (() => { try { return window.localStorage; } catch (e) { return null; } })();
+        const keys = [];
+        try { for (let i = 0; ls && i < ls.length; i++) keys.push(ls.key(i)); } catch (e) { /* nič */ }
+        const drop = (test) => keys.filter((k) => k && k.startsWith('matchday.') && test(k)).forEach((k) => { try { ls.removeItem(k); } catch (e) { /* nič */ } });
+        if (parts.has('templates')) drop((k) => k.startsWith('matchday.templates') || k.startsWith('matchday.bg.') || k.startsWith('matchday.fonts'));
+        if (parts.has('photos')) drop((k) => k.startsWith('matchday.players'));
+        if (parts.has('prefs')) drop((k) => k.startsWith('matchday.prefs'));
+        if (parts.has('client')) drop((k) => k === 'matchday.clientId');
+        try { Object.keys(sessionStorage).filter((k) => k.startsWith('matchday.')).forEach((k) => sessionStorage.removeItem(k)); } catch (e) { /* nič */ }
+        // IndexedDB: pozadia, písma a fotky – celú databázu iba ak sa maže všetko z nej
+        if (parts.has('templates') && parts.has('photos') && window.indexedDB) {
+            await new Promise((res) => { const r = indexedDB.deleteDatabase('matchday'); r.onsuccess = r.onerror = r.onblocked = () => res(); });
+        } else {
+            try {
+                if (parts.has('templates') && MD.store && MD.store.resetAll) await MD.store.resetAll();
+                if (parts.has('templates') && MD.store && MD.store.listFonts) for (const f of await MD.store.listFonts()) await MD.store.removeFont(f.name).catch(() => null);
+                if (parts.has('photos') && MD.store && MD.store.clearPhotos) await MD.store.clearPhotos();
+            } catch (e) { /* nič */ }
+        }
+        if (parts.has('cache') && window.caches) {
+            try { for (const k of await caches.keys()) if (k.startsWith('md-')) await caches.delete(k); } catch (e) { /* nič */ }
+        }
+        MD.toast('Nastavenia boli obnovené');
+        setTimeout(() => location.reload(), 600);
+    });
 })(jQuery);

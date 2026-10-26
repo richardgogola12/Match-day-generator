@@ -977,3 +977,39 @@ a.sb-team:hover span { text-decoration: underline; }
 .mini-matches .sc { min-width: 3.4rem; text-align: center; font-weight: 800; padding: .2rem .5rem; border-radius: .5rem; background: var(--md-pitch); color: #fff; }
 @media (max-width: 575.98px) { .mini-matches a { grid-template-columns: 1fr auto 1fr; font-size: .88rem; padding: .7rem .9rem; } .mini-matches .when { grid-column: 1 / -1; text-align: center; } }
 .spot-score:hover{color:#fff;filter:brightness(1.3)} a.spot-score{color:#fff}
+
+/* =====================================================================
+ * Prehľad družstva: výsledky / program, súpiska
+ * ===================================================================== */
+.nav-pills.team-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+.nav-pills.team-tabs::-webkit-scrollbar { display: none; }
+.nav-pills.team-tabs .nav-link { white-space: nowrap; border-radius: 999px; }
+.tm-list { list-style: none; margin: 0; padding: 0; }
+.tm-row { display: grid; grid-template-columns: 8.5rem 1fr auto 1fr auto; gap: .75rem; align-items: center; padding: .7rem 1.25rem; border-top: 1px solid var(--md-border); }
+.tm-row:first-child { border-top: 0; }
+.tm-row:hover { background: var(--md-surface-2); }
+.tm-row a { color: inherit; text-decoration: none; }
+.tm-row .when { font-size: .82rem; color: var(--md-muted); display: flex; flex-direction: column; min-width: 0; }
+.tm-row .when small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tm-row .h, .tm-row .a { display: flex; align-items: center; gap: .5rem; min-width: 0; font-weight: 500; }
+.tm-row .h { justify-content: flex-end; text-align: right; }
+.tm-row .h span, .tm-row .a span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tm-row .own { font-weight: 700; }
+.tm-row img { width: 26px; height: 26px; object-fit: contain; flex: 0 0 26px; }
+.tm-row .sc { min-width: 3.6rem; text-align: center; font-weight: 800; padding: .25rem .5rem; border-radius: .5rem; background: var(--md-pitch); color: #fff !important; }
+.tm-row .sc.res-V { background: #22a06b; } .tm-row .sc.res-R { background: #d4900f; } .tm-row .sc.res-P { background: #d93a3a; }
+.tm-row .sc.upcoming { background: var(--md-surface-2); color: var(--bs-body-color) !important; font-weight: 600; border: 1px solid var(--md-border); }
+.tm-row .acts { display: flex; gap: .35rem; justify-content: flex-end; }
+@media (max-width: 767.98px) {
+    .tm-row { grid-template-columns: 1fr auto 1fr; padding: .8rem .9rem; font-size: .9rem; }
+    .tm-row .when { grid-column: 1 / -1; flex-direction: row; gap: .4rem; justify-content: center; }
+    .tm-row .acts { grid-column: 1 / -1; justify-content: center; }
+}
+.squad-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: .6rem; }
+.squad-card { display: flex; align-items: center; gap: .75rem; padding: .6rem .75rem; border: 1px solid var(--md-border); border-radius: .9rem; background: var(--md-surface-2); color: inherit; text-decoration: none; }
+.squad-card:hover { border-color: rgba(var(--md-accent-rgb), .5); color: inherit; transform: translateY(-1px); }
+.sq-nr { flex: 0 0 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font-family: "Biome", "Inter", sans-serif; font-size: 1.35rem; color: #fff;
+    background: linear-gradient(145deg, var(--bs-primary), #8d0f1a); }
+.sq-txt { display: flex; flex-direction: column; min-width: 0; }
+.sq-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sq-meta { font-size: .78rem; color: var(--md-muted); }

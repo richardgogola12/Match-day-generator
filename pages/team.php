@@ -25,7 +25,23 @@ $roundSel = isset($_GET['kolo']) ? (int)$_GET['kolo'] : null;
 $curIdx = $C['nextRound'] ?? ($C['lastRound'] ?? 0);
 if ($roundSel !== null) foreach ($rounds as $i => $r) if ($r['no'] === $roundSel) $curIdx = $i;
 $tab = $_GET['tab'] ?? 'prehlad';
-if (!in_array($tab, ['prehlad', 'hraci', 'tabulka', 'kola'], true)) $tab = 'prehlad';
+if (!in_array($tab, ['prehlad', 'vysledky', 'program', 'tabulka', 'supiska', 'hraci', 'kola'], true)) $tab = 'prehlad';
+
+// všetky zápasy družstva (aj pohár a prípravné) – výsledky a program
+$ownList = sn_fetch_cached(sprintf(API_MATCHES, rawurlencode($teamId)), 900);
+$results = []; $fixtures = [];
+foreach ((array)($ownList['matches'] ?? []) as $m) {
+    if (($m['matchState'] ?? '') === 'NEZUCASTNENE_JEDNO_DRUZSTVO') continue;
+    $b = sn_match_brief($m);
+    if ($b['played']) { $b['result'] = sn_brief_result($b, $team['id'] ?: $teamId); $results[] = $b; }
+    elseif (strtotime($b['date']) > time() - 3 * 3600) $fixtures[] = $b;
+}
+usort($results, fn($a, $b) => strcmp($b['date'], $a['date']));
+usort($fixtures, fn($a, $b) => strcmp($a['date'], $b['date']));
+// súpiska: všetci hráči zo zápisov (brankári zvlášť)
+$roster = array_values(array_filter($players, fn($p) => $p['apps'] > 0 || ($p['listed'] ?? 0) > 0));
+$gks = array_values(array_filter($roster, fn($p) => $p['gk']));
+$field = array_values(array_filter($roster, fn($p) => !$p['gk']));
 
 $hasMin = !empty($T['hasMinutes']);
 $leaders = [
@@ -63,7 +79,7 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 	<div class="card-app mb-4">
 		<div class="card-body py-3 d-flex flex-wrap gap-2 align-items-center justify-content-between">
 			<ul class="nav nav-pills team-tabs" role="tablist">
-				<?php foreach (['prehlad' => ['bi-speedometer2', 'Prehľad'], 'hraci' => ['bi-people', 'Hráči'], 'tabulka' => ['bi-list-ol', 'Tabuľka'], 'kola' => ['bi-calendar-week', 'Kolá']] as $k => [$ic, $lab]): ?>
+				<?php foreach (['prehlad' => ['bi-speedometer2', 'Prehľad'], 'vysledky' => ['bi-trophy', 'Výsledky'], 'program' => ['bi-calendar-event', 'Program'], 'tabulka' => ['bi-list-ol', 'Tabuľka'], 'supiska' => ['bi-people', 'Súpiska'], 'hraci' => ['bi-bar-chart-line', 'Štatistiky hráčov'], 'kola' => ['bi-calendar-week', 'Kolá']] as $k => [$ic, $lab]): ?>
 					<li class="nav-item" role="presentation"><button class="nav-link<?= $tab === $k ? ' active' : '' ?>" data-bs-toggle="pill" data-bs-target="#t-<?= $k ?>" data-tab="<?= $k ?>" type="button" role="tab"><i class="bi <?= $ic ?> me-1"></i><?= $lab ?></button></li>
 				<?php endforeach; ?>
 			</ul>
@@ -131,9 +147,92 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 			<p class="small text-muted-2 mt-3 mb-0"><i class="bi bi-info-circle me-1"></i><?= !empty($T['officialStats']) ? 'Minúty, zápasy a štarty sú oficiálne štatistiky Sportnetu; ostatné údaje zo zápisov o stretnutí' : 'Štatistiky sú spočítané zo zápisov o stretnutí na Sportnete' ?> (<?= (int)($T['matchesUsed'] ?? 0) ?> z <?= (int)($T['played'] ?? 0) ?> odohratých zápasov).</p>
 		</div>
 
-		<!-- HRÁČI -->
+
+		<?php
+		/** Riadok zápasu v Výsledkoch / Programe */
+		$matchRow = function ($m) use ($team, $teamId, $season) {
+			[$dT, $tT] = format_match_date($m['date']);
+			$p = md_match_params($m, $team['id'] ?: $teamId);
+			$side = $m['away']['id'] === ($team['id'] ?: $teamId) ? 'away' : 'home';
+			ob_start(); ?>
+			<li class="tm-row">
+				<a class="when" href="<?= plain(md_match_url($m['id'], $team['id'])) ?>"><?= plain($dT) ?><small><?= plain($tT) ?> · <?= plain($m['round'] ? (preg_match('/kolo/i', $m['round']) ? $m['round'] : $m['round'] . '. kolo') : $m['competition']) ?></small></a>
+				<a class="h<?= $side === 'home' ? ' own' : '' ?>" href="<?= plain(md_team_url($m['home']['id'], $season)) ?>"><span><?= plain($m['home']['name']) ?></span><?php if ($m['home']['logo']): ?><img src="<?= plain($m['home']['logo']) ?>" alt="" loading="lazy"><?php endif; ?></a>
+				<a class="sc<?= $m['played'] ? ' res-' . plain($m['result'] ?? '') : ' upcoming' ?>" href="<?= plain(md_match_url($m['id'], $team['id'])) ?>" title="Detail zápasu"><?= $m['played'] ? (int)$m['home']['score'] . ':' . (int)$m['away']['score'] : plain($tT ?: '–') ?></a>
+				<a class="a<?= $side === 'away' ? ' own' : '' ?>" href="<?= plain(md_team_url($m['away']['id'], $season)) ?>"><?php if ($m['away']['logo']): ?><img src="<?= plain($m['away']['logo']) ?>" alt="" loading="lazy"><?php endif; ?><span><?= plain($m['away']['name']) ?></span></a>
+				<span class="acts">
+					<a class="btn btn-sm btn-outline-primary rounded-pill" href="<?= plain(md_gen_link($m['played'] ? 'result' : 'matchday', $p)) ?>"><i class="bi bi-image me-1"></i><?= $m['played'] ? 'Výsledok' : 'Match day' ?></a>
+					<span class="dropdown">
+						<button class="btn btn-sm btn-outline-secondary btn-more rounded-pill" type="button" data-bs-toggle="dropdown" aria-label="Ďalšie obrázky"><i class="bi bi-three-dots"></i></button>
+						<ul class="dropdown-menu dropdown-menu-end app-dropdown">
+							<li><a class="dropdown-item" href="<?= plain(md_match_url($m['id'], $team['id'])) ?>"><i class="bi bi-info-circle"></i>Detail zápasu</a></li><li><hr class="dropdown-divider"></li>
+							<?php if ($m['played']): ?>
+								<li><a class="dropdown-item" href="<?= plain(md_gen_link('goals', $p)) ?>"><i class="bi bi-list-ol"></i>Strelci</a></li>
+								<li><a class="dropdown-item" href="<?= plain(md_gen_link('report', $p)) ?>"><i class="bi bi-file-text"></i>Súhrn zápasu</a></li>
+							<?php else: ?>
+								<li><a class="dropdown-item" href="<?= plain(md_gen_link('matchday', $p)) ?>"><i class="bi bi-calendar-event"></i>Match day</a></li>
+							<?php endif; ?>
+							<li><a class="dropdown-item" href="<?= plain(md_gen_link('lineup', $p + ['side' => $side])) ?>"><i class="bi bi-person-lines-fill"></i>Zostava</a></li>
+							<li><a class="dropdown-item" href="<?= plain(md_gen_link('h2h', $p)) ?>"><i class="bi bi-bar-chart-steps"></i>Vzájomné zápasy</a></li>
+							<li><a class="dropdown-item" href="<?= plain(md_gen_link('form', $p + ['side' => $side])) ?>"><i class="bi bi-graph-up-arrow"></i>Forma</a></li>
+						</ul>
+					</span>
+				</span>
+			</li>
+			<?php return ob_get_clean();
+		};
+		?>
+
+		<!-- VÝSLEDKY -->
+		<div class="tab-pane fade<?= $tab === 'vysledky' ? ' show active' : '' ?>" id="t-vysledky" role="tabpanel">
+			<div class="card-app overflow-hidden">
+				<div class="card-header sec-head"><h2 class="team-title mb-0">Výsledky <span class="fw-normal text-muted-2 small">· <?= count($results) ?> zápasov</span></h2>
+					<?php if ($results): $lr = $results[0]; ?><a class="btn btn-sm btn-outline-primary rounded-pill" href="<?= plain(md_gen_link('round', $tp + ['roundNo' => $rounds[$C['lastRound'] ?? 0]['no'] ?? ''])) ?>"><i class="bi bi-image me-1"></i>Výsledky kola</a><?php endif; ?></div>
+				<?php if (!$results): ?><div class="empty-state"><i class="bi bi-trophy"></i>Zatiaľ žiadne odohraté zápasy.</div><?php else: ?>
+				<ul class="tm-list"><?php foreach ($results as $m) echo $matchRow($m); ?></ul>
+				<?php endif; ?>
+			</div>
+		</div>
+
+		<!-- PROGRAM -->
+		<div class="tab-pane fade<?= $tab === 'program' ? ' show active' : '' ?>" id="t-program" role="tabpanel">
+			<div class="card-app overflow-hidden">
+				<div class="card-header sec-head"><h2 class="team-title mb-0">Program <span class="fw-normal text-muted-2 small">· <?= count($fixtures) ?> zápasov</span></h2>
+					<?php if ($fixtures): ?><a class="btn btn-sm btn-outline-primary rounded-pill" href="<?= plain(md_gen_link('round', $tp + ['roundNo' => $rounds[$C['nextRound'] ?? 0]['no'] ?? ''])) ?>"><i class="bi bi-image me-1"></i>Program kola</a><?php endif; ?></div>
+				<?php if (!$fixtures): ?><div class="empty-state"><i class="bi bi-calendar-x"></i>Žiadne nadchádzajúce zápasy.</div><?php else: ?>
+				<ul class="tm-list"><?php foreach ($fixtures as $m) echo $matchRow($m); ?></ul>
+				<?php endif; ?>
+			</div>
+		</div>
+
+		<!-- SÚPISKA -->
+		<div class="tab-pane fade<?= $tab === 'supiska' ? ' show active' : '' ?>" id="t-supiska" role="tabpanel">
+			<div class="card-app">
+				<div class="card-header sec-head"><h2 class="team-title mb-0">Súpiska <span class="fw-normal text-muted-2 small">· <?= count($roster) ?> hráčov</span></h2>
+					<a class="btn btn-sm btn-outline-primary rounded-pill" href="<?= plain(md_gen_link('squad', $tp)) ?>"><i class="bi bi-image me-1"></i>Obrázok Súpiska</a></div>
+				<div class="card-body">
+					<?php if (!$roster): ?><div class="empty-state"><i class="bi bi-people"></i>V zápisoch o stretnutí sa zatiaľ nenašli žiadni hráči.</div><?php endif; ?>
+					<?php foreach ([['Brankári', $gks], ['Hráči', $field]] as [$lab, $list]): if (!$list) continue; ?>
+						<h3 class="h6 section-title text-uppercase text-muted-2 mb-3 mt-2"><?= $lab ?></h3>
+						<div class="squad-grid mb-3">
+							<?php foreach ($list as $p): ?>
+								<a class="squad-card" href="<?= plain(md_player_url($p['id'], $teamId, $season, $cat, $p['key'])) ?>">
+									<span class="sq-nr"><?= plain($p['nr'] ?: '–') ?></span>
+									<span class="sq-txt"><span class="sq-name"><?= plain($p['name']) ?><?= $p['captain'] ? ' <span class="badge text-bg-warning">C</span>' : '' ?></span>
+									<span class="sq-meta"><?= (int)$p['apps'] ?> z · <?= (int)$p['goals'] ?> g<?= $p['minutes'] !== null ? ' · ' . (int)$p['minutes'] . "'" : '' ?></span></span>
+								</a>
+							<?php endforeach; ?>
+						</div>
+					<?php endforeach; ?>
+					<?php if (!empty($T['coach'])): ?><div class="small"><span class="text-muted-2">Tréner:</span> <strong><?= plain($T['coach']) ?></strong></div><?php endif; ?>
+				</div>
+			</div>
+		</div>
+
+		<!-- ŠTATISTIKY HRÁČOV -->
 		<div class="tab-pane fade<?= $tab === 'hraci' ? ' show active' : '' ?>" id="t-hraci" role="tabpanel">
 			<div class="card-app overflow-hidden">
+				<div class="card-header sec-head"><h2 class="team-title mb-0">Štatistiky hráčov</h2><a class="btn btn-sm btn-outline-primary rounded-pill" href="<?= plain(md_gen_link('stats', $tp)) ?>"><i class="bi bi-image me-1"></i>Obrázok Štatistiky</a></div>
 				<?php if (!$players): ?>
 					<div class="empty-state"><i class="bi bi-people"></i>V zápisoch o stretnutí sa zatiaľ nenašli žiadni hráči.</div>
 				<?php else: ?>
@@ -165,6 +264,7 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 		<!-- TABUĽKA -->
 		<div class="tab-pane fade<?= $tab === 'tabulka' ? ' show active' : '' ?>" id="t-tabulka" role="tabpanel">
 			<div class="card-app overflow-hidden">
+				<div class="card-header sec-head"><h2 class="team-title mb-0">Tabuľka<?= $compName ? ' <span class="fw-normal text-muted-2 small">· ' . plain($compName) . '</span>' : '' ?></h2><a class="btn btn-sm btn-outline-primary rounded-pill" href="<?= plain(md_gen_link('table', $tp)) ?>"><i class="bi bi-image me-1"></i>Obrázok Tabuľka</a></div>
 				<?php if (empty($C['table'])): ?>
 					<div class="empty-state"><i class="bi bi-list-ol"></i>Tabuľku sa nepodarilo zostaviť.</div>
 				<?php else: ?>

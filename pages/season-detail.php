@@ -157,7 +157,7 @@
 				</div>
 				<?php if ($matches): ?>
 				<div class="d-flex flex-wrap gap-2">
-					<a class="btn btn-sm btn-primary rounded-pill px-3" href="<?= plain($teamLink) ?>"><i class="bi bi-bar-chart-line me-1"></i>Tabuľka a hráči</a>
+					<a class="btn btn-sm btn-primary rounded-pill px-3" href="<?= plain($teamLink) ?>"><i class="bi bi-people me-1"></i>Družstvo</a>
 					<a class="btn btn-sm btn-outline-primary rounded-pill px-3" href="<?= plain($squadLink) ?>" title="Obrázok so súpiskou družstva"><i class="bi bi-people me-1"></i>Súpiska</a>
 				</div>
 				<?php endif; ?>
