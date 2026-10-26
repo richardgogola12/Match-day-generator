@@ -80,6 +80,8 @@
         ['{day}', 'deň'], ['{month}', 'mesiac (Okt)'], ['{monthLong}', 'mesiac (Október)'], ['{year}', 'rok'],
         ['{weekday}', 'deň v týždni'], ['{date}', '25.10.2026'], ['{time}', 'čas'],
         ['{competition}', 'súťaž'], ['{round}', 'kolo'], ['{roundLabel}', '„10. Kolo“'],
+        ['{team}', 'družstvo (zostava, súpiska)'], ['{opponent}', 'súper (zostava)'], ['{category}', 'kategória (Muži A)'],
+        ['{season}', 'sezóna'], ['{coach}', 'tréner'], ['{players}', 'počet hráčov'],
     ];
 
     /* ------------------------------------------------------------------ */
@@ -184,6 +186,9 @@
             score1: data.score1 ?? '', score2: data.score2 ?? '',
             score: (data.score1 ?? '') + ':' + (data.score2 ?? ''),
             competition: data.competition || '', round, roundLabel,
+            team: data.team || '', opponent: data.opponent || '', category: data.category || '',
+            season: data.season || '', coach: data.coach || '',
+            players: String(((data.players || {}).squad || []).length || ((data.players || {}).start || []).length || ''),
         }, dateParts(data.startDate));
     };
 
@@ -364,6 +369,86 @@
         return { x: left, y: top, w, h: Math.min(bottom, el.maxY || bottom) - top, maxY: el.maxY, scale: layout.size / el.size };
     }
 
+    /* ------------------------------------------------------------------ */
+    /* Zoznam hráčov (zostava / náhradníci / súpiska) – v stĺpcoch          */
+    /* ------------------------------------------------------------------ */
+    function playerLine(el, p) {
+        const name = (p.name || '') + (p.captain && el.capMark ? el.capMark : '') + (p.gk && el.gkMark ? el.gkMark : '');
+        const map = { nr: p.nr ?? '', name, apps: p.apps ?? '', goals: p.goals ?? '', starts: p.starts ?? '' };
+        let full = String(el.format || '{nr}  {name}').replace(/\{(nr|name|apps|goals|starts)\}/g, (m, k) => map[k]);
+        full = full.replace(/^\s+/, '');
+        // číslo zvlášť (iná farba) – iba ak formát začína {nr}
+        let num = '';
+        if (el.numColor && /^\{nr\}/.test(el.format || '') && map.nr !== '') {
+            num = String(map.nr);
+            full = full.slice(num.length);
+        }
+        if (el.uppercase) { full = full.toLocaleUpperCase('sk'); }
+        return { num, rest: full };
+    }
+
+    function layoutPlayers(ctx, el, list, scale) {
+        const size = Math.max(6, Math.round(el.size * scale));
+        applyTextStyle(ctx, el, size);
+        const cols = Math.max(1, Math.round(el.columns || 1));
+        const rows = Math.max(1, Math.ceil(list.length / cols));
+        const gap = (el.gap || size * 1.5) * scale;
+        const colW = el.maxWidth || 260;
+        const colGap = el.colGap || 0;
+        const { asc, desc } = metrics(ctx, size);
+        const items = list.map((p, i) => {
+            const c = Math.floor(i / rows), r = i % rows;
+            return { p, x: el.x + c * (colW + colGap), y: el.y + r * gap };
+        });
+        const bottom = list.length ? el.y + (Math.min(rows, list.length) - 1) * gap + desc : el.y;
+        return { size, items, bottom, asc, colW, cols: Math.min(cols, Math.max(1, Math.ceil(list.length / rows))) };
+    }
+
+    function fitText(ctx, txt, maxW) {
+        if (!maxW || ctx.measureText(txt).width <= maxW) return txt;
+        let t = txt;
+        while (t.length > 1 && ctx.measureText(t + '…').width > maxW) t = t.slice(0, -1);
+        return t.trimEnd() + '…';
+    }
+
+    function drawPlayers(ctx, el, data, opts) {
+        const all = (data.players || {})[el.source] || [];
+        const list = all.filter((p) => p && p.hidden !== true);
+        let layout = layoutPlayers(ctx, el, list, 1);
+        if (el.autoFit && el.maxY) {
+            const min = el.minScale || 0.5;
+            for (let s = 0.95; layout.bottom > el.maxY && s >= min - 1e-6; s -= 0.05) layout = layoutPlayers(ctx, el, list, s);
+        }
+        const size = layout.size;
+        applyTextStyle(ctx, el, size);
+        ctx.textAlign = 'left';
+        const colW = layout.colW;
+        withEffects(ctx, el, size, () => {
+            if (!list.length && el.emptyText) {
+                ctx.fillStyle = el.color || '#fff';
+                drawLines(ctx, el, [el.emptyText], el.x, el.y, 0, size);
+                return;
+            }
+            layout.items.forEach(({ p, x, y }) => {
+                if (el.maxY && y > el.maxY) return;
+                const { num, rest } = playerLine(el, p);
+                let cx = x;
+                if (num) {
+                    ctx.fillStyle = el.numColor;
+                    drawLines(ctx, el, [num], cx, y, 0, size);
+                    cx += ctx.measureText(num).width;
+                }
+                ctx.fillStyle = el.color || '#fff';
+                drawLines(ctx, el, [fitText(ctx, rest, colW - (cx - x))], cx, y, 0, size);
+            });
+        });
+        const cols = Math.max(1, Math.round(el.columns || 1));
+        const w = cols * colW + (cols - 1) * (el.colGap || 0);
+        const top = el.y - layout.asc;
+        const bottom = Math.max(layout.bottom, opts.editor ? top + size * 3 : top);
+        return { x: el.x, y: top, w, h: Math.min(bottom, el.maxY || bottom) - top, maxY: el.maxY, scale: size / el.size };
+    }
+
     function drawBackground(ctx, tpl, img) {
         const W = tpl.width, H = tpl.height;
         if (img) {
@@ -407,6 +492,7 @@
                 else if (el.type === 'logo') boxes[el.id] = drawLogo(ctx, el, assets, opts);
                 else if (el.type === 'goals') boxes[el.id] = drawGoals(ctx, el, data || {}, opts);
                 else if (el.type === 'shape') boxes[el.id] = drawShape(ctx, el);
+                else if (el.type === 'players') boxes[el.id] = drawPlayers(ctx, el, data || {}, opts);
             } catch (e) { console.error('Chyba pri kreslení prvku', el, e); }
             ctx.restore();
         });
@@ -437,7 +523,20 @@
                 { minute: '76', name: 'Lukáš Baláž', side: 'home' },
                 { minute: '89', name: 'Marek Molnár', side: 'away' },
             ],
+            team: 'FK Slovan Horná Ves', opponent: 'TJ Družstevník Veľké Ludince', category: 'Muži A', season: '2026/2027', coach: 'Jozef Hrubý',
         },
         logos: { home: sampleLogo('H', '#e63946', '#8d0f1a'), away: sampleLogo('L', '#1d7bf2', '#0b3a8a') },
+    };
+
+    const SAMPLE_NAMES = ['Martin Kováč', 'Ján Novák', 'Peter Horváth', 'Tomáš Szabó', 'Lukáš Baláž', 'Marek Molnár', 'Dávid Lacko', 'Róbert Takáč',
+        'Samuel Hudec', 'Adam Krajčovič', 'Filip Urban', 'Michal Bartoš', 'Patrik Gašpar', 'Jakub Mráz', 'Richard Kollár', 'Matej Šimko',
+        'Erik Vrábel', 'Oliver Kučera', 'Daniel Polák', 'Andrej Bednár', 'Šimon Král', 'Viktor Hronec', 'Matúš Pavlík', 'Roman Čierny',
+        'Juraj Kubica', 'Igor Masár', 'Denis Ondruš', 'Sebastián Janík', 'Kristián Mikuš', 'Boris Šťastný', 'Pavol Zelený', 'Rastislav Uhrín'];
+    /** Ukážkoví hráči pre editor: n hráčov súpisky, 11 + 7 v zostave */
+    MD.samplePlayers = function (n) {
+        const nr = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 14, 3, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33];
+        const mk = (i) => ({ nr: String(nr[i % nr.length]), name: SAMPLE_NAMES[i % SAMPLE_NAMES.length], gk: i === 0 || i === 12, captain: i === 6, apps: 12 - (i % 7), goals: i > 4 && i < 10 ? 9 - i : 0 });
+        const squad = Array.from({ length: n || 24 }, (_, i) => mk(i)).sort((a, b) => a.nr - b.nr);
+        return { start: Array.from({ length: 11 }, (_, i) => mk(i)), subs: Array.from({ length: 7 }, (_, i) => mk(i + 11)), squad };
     };
 })(window);

@@ -2,10 +2,11 @@
 
 PHP + Bootstrap 5 aplikácia na generovanie zápasových grafík pre futbalové kluby (dáta zo Sportnet / Futbalnet SFZ).
 
-Tri typy obrázkov: **Match day** (pozvánka), **Výsledok** a **Strelci**.
+Päť typov obrázkov: **Match day** (pozvánka), **Zostava**, **Výsledok**, **Strelci** a **Súpiska** družstva.
 
 ## Funkcie
 - Vyhľadanie klubu a zápasov sezóny, filter nadchádzajúce / odohraté
+- Zostava na zápas (základ, náhradníci, tréner) zo zápisu o stretnutí a súpiska družstva za sezónu zo zápisov odohratých zápasov; hráčov možno ručne upraviť (uloží sa v prehliadači)
 - Generovanie obrázka priamo v prehliadači (HTML canvas) – stiahnutie PNG, kopírovanie, zdieľanie
 - **Drag & drop editor šablón** – pozície prvkov, písmo, farby, obrys, tieň, vlastné texty a podklady
 - Nastavenie zoznamu strelcov (osadenie, rozostupy, šírka stĺpca, automatické zmenšenie)
@@ -30,7 +31,7 @@ Tri typy obrázkov: **Match day** (pozvánka), **Výsledok** a **Strelci**.
 |---|---|
 | `index.php`, `config.php` | vstupný bod a konfigurácia (routy, cesty, API) |
 | `pages/` | stránky (`index`, `season-detail`, `generator`, `settings`, `gallery` …) |
-| `pages/api/` | JSON / obrázkové API: logá, góly, uloženie obrázka, galéria |
+| `pages/api/` | JSON / obrázkové API: logá, zápis o stretnutí (góly, zostavy), súpiska, uloženie obrázka, galéria |
 | `pages/pwa/` | manifest a service worker |
 | `assets/js/renderer.js` | kreslenie obrázka (spoločné pre editor aj generátor) |
 | `assets/js/editor.js` | drag & drop editor šablón |

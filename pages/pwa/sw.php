@@ -18,6 +18,7 @@ $precache = [
     asset('img/match-day-bg.png'),
     asset('img/match-result-bg.png'),
     asset('img/match-result-goals-bg.png'),
+    asset('img/team-bg.jpg'),
     asset('icons/icon.svg'),
     asset('icons/icon-192.png'),
     url('includes/vendor/bootstrap/bootstrap.min.css'),

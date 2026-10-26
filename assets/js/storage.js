@@ -29,6 +29,10 @@
     ]);
     const competition = () => ({ id: 'competition', type: 'text', label: 'Súťaž | kolo', text: '{competition} | {roundLabel}', x: 60, y: 940, size: 20, align: 'left', maxWidth: 0 });
 
+    // spoločné prvky šablón Zostava a Súpiska (panel pozadia team-bg.jpg: x 116–884, y 96–932)
+    const bigTitle = (text) => ({ id: 'title', type: 'text', label: 'Nadpis', text, x: 500, y: 200, size: 96, align: 'center', color: '#e63946', strokeWidth: 5, strokeColor: '#ffffff', shadow: true, letterSpacing: 3 });
+    const yellow = '#ffd166';
+
     const DEFAULTS = {
         matchday: {
             name: 'Match day',
@@ -41,6 +45,41 @@
                 { id: 'monthYear', type: 'text', label: 'Mesiac a rok', text: '{month} {year}', x: 470, y: 690, size: 67, align: 'left' },
                 { id: 'time', type: 'text', label: 'Čas', text: '{time}', x: 470, y: 770, size: 67, align: 'left' },
                 competition(),
+            ],
+        },
+        lineup: {
+            name: 'Zostava',
+            icon: 'bi-person-lines-fill',
+            width: 1000, height: 1000,
+            defaultBackground: 'img/team-bg.jpg',
+            elements: [
+                { id: 'logoTeam', type: 'logo', label: 'Logo družstva', team: 'team', x: 150, y: 118, size: 100 },
+                { id: 'logoOpp', type: 'logo', label: 'Logo súpera', team: 'opponent', x: 750, y: 118, size: 100 },
+                bigTitle('ZOSTAVA'),
+                { id: 'team', type: 'text', label: 'Názov družstva', text: '{team}', x: 500, y: 250, size: 30, align: 'center', color: yellow, maxWidth: 560 },
+                { id: 'match', type: 'text', label: 'Zápas', text: '{d1name} – {d2name}', x: 500, y: 292, size: 22, align: 'center', maxWidth: 700, opacity: 0.9 },
+                { id: 'when', type: 'text', label: 'Dátum a čas', text: '{weekday} {date} · {time}', x: 500, y: 324, size: 20, align: 'center', opacity: 0.8 },
+                { id: 'startLabel', type: 'text', label: 'Nadpis základu', text: 'ZÁKLADNÁ ZOSTAVA', x: 160, y: 385, size: 22, color: yellow, letterSpacing: 2 },
+                { id: 'start', type: 'players', label: 'Základná zostava', source: 'start', x: 160, y: 432, size: 28, columns: 2, maxWidth: 330, colGap: 20, gap: 46, maxY: 700 },
+                { id: 'subsLabel', type: 'text', label: 'Nadpis náhradníkov', text: 'NÁHRADNÍCI', x: 160, y: 745, size: 22, color: yellow, letterSpacing: 2 },
+                { id: 'subs', type: 'players', label: 'Náhradníci', source: 'subs', x: 160, y: 785, size: 20, columns: 3, maxWidth: 215, colGap: 15, gap: 31, maxY: 870 },
+                { id: 'coach', type: 'text', label: 'Tréner', text: 'Tréner: {coach}', x: 160, y: 908, size: 19, opacity: 0.85 },
+                { id: 'competition', type: 'text', label: 'Súťaž | kolo', text: '{competition} | {roundLabel}', x: 840, y: 908, size: 17, align: 'right', opacity: 0.75 },
+            ],
+        },
+        squad: {
+            name: 'Súpiska',
+            icon: 'bi-people',
+            width: 1000, height: 1000,
+            defaultBackground: 'img/team-bg.jpg',
+            elements: [
+                { id: 'logoTeam', type: 'logo', label: 'Logo vľavo', team: 'team', x: 150, y: 118, size: 100 },
+                { id: 'logoTeam2', type: 'logo', label: 'Logo vpravo', team: 'team', x: 750, y: 118, size: 100 },
+                bigTitle('SÚPISKA'),
+                { id: 'team', type: 'text', label: 'Názov družstva', text: '{team}', x: 500, y: 250, size: 30, align: 'center', color: yellow, maxWidth: 560 },
+                { id: 'season', type: 'text', label: 'Kategória a sezóna', text: '{category}  {season}', x: 500, y: 292, size: 22, align: 'center', opacity: 0.9 },
+                { id: 'squad', type: 'players', label: 'Hráči', source: 'squad', x: 150, y: 360, size: 23, columns: 3, maxWidth: 225, colGap: 12, gap: 36, maxY: 870, minScale: 0.55 },
+                { id: 'coach', type: 'text', label: 'Tréner', text: 'Tréner: {coach}', x: 500, y: 908, size: 21, align: 'center', opacity: 0.9 },
             ],
         },
         result: {
@@ -78,10 +117,11 @@
         logo: { team: 'home', size: 120, shadow: false, opacity: 1 },
         goals: { side: 'home', size: 21, font: 'Biome', color: '#ffffff', align: 'left', maxWidth: 270, gap: 34, lineHeight: 1.2, maxY: 925, autoFit: true, minScale: 0.6, format: "{min}' {name}", ownPrefix: '(vl.) ', uppercase: false, bold: false, shadow: false, strokeWidth: 0, strokeColor: '#000000', opacity: 1, ownColor: '' },
         shape: { w: 300, h: 60, color: '#000000', opacity: 0.5, radius: 12 },
+        players: { source: 'start', size: 26, font: 'Biome', color: '#ffffff', numColor: '#ffd166', align: 'left', letterSpacing: 0, italic: false, columns: 2, maxWidth: 330, colGap: 20, gap: 44, lineHeight: 1.2, maxY: 900, autoFit: true, minScale: 0.6, format: '{nr}  {name}', capMark: ' (C)', gkMark: ' (B)', emptyText: '', uppercase: false, bold: false, shadow: false, strokeWidth: 0, strokeColor: '#000000', opacity: 1 },
     };
     MD.TYPE_DEFAULTS = TYPE_DEFAULTS;
 
-    MD.TEMPLATE_IDS = Object.keys(DEFAULTS);
+    MD.TEMPLATE_IDS = ['matchday', 'lineup', 'result', 'goals', 'squad'];
 
     const clone = (o) => JSON.parse(JSON.stringify(o));
 

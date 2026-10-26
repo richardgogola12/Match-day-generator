@@ -1,54 +1,52 @@
 <?php
 /**
- * Góly zápasu pre generátor v prehliadači.
+ * Údaje zo zápisu o stretnutí pre generátor v prehliadači.
  *
- *   GET api-match?id=<matchID>&home=<team1ID>
+ *   GET api-match?id=<matchID>&home=<team1ID>&away=<team2ID>
  *
- * Vracia: { goals: [ { minute, name, side: "home"|"away", own: bool } ] }
- * Vlastný gól sa pripíše súperovi (rovnako ako pôvodný generate-goals.php).
+ * Vracia:
+ *   goals:   [ { minute, name, side: "home"|"away", own: bool } ]   (vlastný gól sa pripíše súperovi)
+ *   lineups: { home: { start: [ {nr, name, captain, gk} ], subs: [...], coach }, away: {...} }
+ *
+ * Správca: &debug=1 vráti skrátenú surovú štruktúru zápisu (na kontrolu formátu dát Sportnetu).
  */
 $id   = $_GET['id'] ?? '';
-$home = $_GET['home'] ?? '';
+$home = (string)($_GET['home'] ?? '');
+$away = (string)($_GET['away'] ?? '');
 
 if (!preg_match('/^[A-Za-z0-9_\-]{6,64}$/', $id)) {
     json_response(['error' => 'Neplatné ID zápasu'], 400);
 }
 
-try {
-    $data = getJsonFromUrl(sprintf(API_MATCH, rawurlencode($id)));
-} catch (Throwable $e) {
-    json_response(['error' => 'Sportnet API je nedostupné: ' . $e->getMessage()], 502);
+$data = sn_fetch_cached(sprintf(API_MATCH, rawurlencode($id)), 120);
+
+if (!is_array($data) || !empty($data['error'])) {
+    json_response(['error' => 'Sportnet API je nedostupné alebo vrátilo chybu'], 502);
 }
 
-if (!is_array($data)) {
-    json_response(['error' => 'Sportnet API vrátilo neočakávanú odpoveď'], 502);
-}
-if (!empty($data['error'])) {
-    json_response(['error' => 'Sportnet API vrátilo chybu (HTTP ' . ($data['http_code'] ?? '?') . ')'], 502);
-}
-
-$events = $data['protocol']['events'] ?? [];
-if (!is_array($events)) $events = [];
-$goals = [];
-
-foreach ($events as $e) {
-    if (!is_array($e)) continue;
-    if (($e['eventType'] ?? '') !== 'goal') continue;
-
-    $own  = ($e['type'] ?? '') === 'dropped';
-    $isHomeTeam = ($e['team'] ?? '') === $home;
-    $side = $isHomeTeam ? 'home' : 'away';
-    if ($own) $side = $side === 'home' ? 'away' : 'home';
-
-    $goals[] = [
-        'minute' => explode(':', (string)($e['eventTime'] ?? ''))[0],
-        'name'   => is_array($e['player'] ?? null) ? ($e['player']['name'] ?? '') : (string)($e['player'] ?? ''),
-        'side'   => $side,
-        'own'    => $own,
-    ];
+if (!empty($_GET['debug']) && is_admin()) {
+    no_store_headers();
+    $short = function ($v, $depth = 0) use (&$short) {
+        if (!is_array($v)) return is_string($v) ? mb_substr($v, 0, 80, 'UTF-8') : $v;
+        if ($depth > 4) return '…';
+        $out = [];
+        $n = 0;
+        foreach ($v as $k => $x) {
+            if (++$n > (array_is_list($v) ? 2 : 40)) { $out['…'] = count($v) . ' položiek'; break; }
+            $out[$k] = $short($x, $depth + 1);
+        }
+        return $out;
+    };
+    json_response(['keys' => array_keys($data), 'nominations' => $short($data['nominations'] ?? null), 'protocol' => $short($data['protocol'] ?? null), 'parsed' => sportnet_lineups($data, $home, $away)]);
 }
 
-// zoradenie podľa minúty (stabilné)
-usort($goals, fn($a, $b) => (int)$a['minute'] <=> (int)$b['minute']);
+$strip = fn($list) => array_map(fn($p) => ['nr' => $p['nr'], 'name' => $p['name'], 'captain' => $p['captain'], 'gk' => $p['gk']], $list);
+$lineups = sportnet_lineups($data, $home, $away);
+foreach ($lineups as $s => $l) {
+    $lineups[$s] = ['start' => $strip($l['start']), 'subs' => $strip($l['subs']), 'coach' => $l['coach']];
+}
 
-json_response(['goals' => $goals]);
+json_response([
+    'goals'   => array_map(fn($g) => ['minute' => $g['minute'], 'name' => $g['name'], 'side' => $g['side'], 'own' => $g['own']], sportnet_goals($data, $home)),
+    'lineups' => $lineups,
+]);

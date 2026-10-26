@@ -93,6 +93,12 @@
 		}
 		$matches = $data["matches"] ?? [];
 		$played = count(array_filter($matches, fn($m) => ($m['matchState'] ?? '') === 'ODOHRATY'));
+		// klub tohto družstva (tím, ktorý je vo všetkých zápasoch) – pre súpisku a predvolenú zostavu
+		[$ownId, $ownName, $ownLogo] = $matches ? sn_own_team($matches, $team_id) : ['', '', ''];
+		$squadLink = gen_link('squad', [
+			'team' => $team_id, 'd1name' => $ownName ?: $team_name, 'd1url' => $ownLogo, 'category' => $team_name,
+			'season' => $season, 'competitionName' => $matches[0]['competitionPart']['name'] ?? '',
+		]);
 	?>
 		<section class="card-app team-card mb-4" id="team-<?= plain($team_id) ?>">
 			<div class="card-header">
@@ -100,10 +106,15 @@
 					<h2 class="team-title"><?= plain($team_name) ?></h2>
 					<div class="small text-muted-2"><?= plain($season) ?> · <?= count($matches) ?> zápasov · <?= $played ?> odohraných</div>
 				</div>
-				<div class="btn-group filter-pills" role="group" aria-label="Filter zápasov">
-					<button type="button" class="btn btn-outline-secondary active" data-filter="all">Všetky</button>
-					<button type="button" class="btn btn-outline-secondary" data-filter="upcoming">Nadchádzajúce</button>
-					<button type="button" class="btn btn-outline-secondary" data-filter="played">Odohraté</button>
+				<div class="d-flex flex-wrap gap-2 align-items-center">
+					<div class="btn-group filter-pills" role="group" aria-label="Filter zápasov">
+						<button type="button" class="btn btn-outline-secondary active" data-filter="all">Všetky</button>
+						<button type="button" class="btn btn-outline-secondary" data-filter="upcoming">Nadchádzajúce</button>
+						<button type="button" class="btn btn-outline-secondary" data-filter="played">Odohraté</button>
+					</div>
+					<?php if ($matches): ?>
+						<a class="btn btn-sm btn-primary rounded-pill px-3" href="<?= plain($squadLink) ?>" title="Obrázok so súpiskou družstva za sezónu"><i class="bi bi-people me-1"></i>Súpiska</a>
+					<?php endif; ?>
 				</div>
 			</div>
 
@@ -133,14 +144,15 @@
 						'startDate' => $value['startDate'] ?? '',
 						'competitionName' => $value['competitionPart']['name'] ?? '',
 						'round' => $roundName,
+						'matchID' => $value['_id'] ?? '',
+						'team1ID' => $home['_id'] ?? '',
+						'team2ID' => $away['_id'] ?? '',
+						'myTeam' => $ownId,
 					];
 					if ($isPlayed) {
 						$params += [
 							'score1' => $home['score'] ?? '',
 							'score2' => $away['score'] ?? '',
-							'matchID' => $value['_id'] ?? '',
-							'team1ID' => $home['_id'] ?? '',
-							'team2ID' => $away['_id'] ?? '',
 						];
 					}
 				?>
@@ -171,6 +183,9 @@
 					<div class="match-actions">
 						<?php if (!$isBye): ?>
 							<a class="btn btn-outline-primary" href="<?= plain(gen_link('matchday', $params)) ?>"><i class="bi bi-calendar-event me-1"></i>Match day</a>
+							<?php if ($params['matchID'] !== ''): ?>
+								<a class="btn btn-outline-primary" href="<?= plain(gen_link('lineup', $params)) ?>" title="Zostava zo zápisu o stretnutí"><i class="bi bi-person-lines-fill me-1"></i>Zostava</a>
+							<?php endif; ?>
 							<?php if ($isPlayed): ?>
 								<a class="btn btn-outline-primary" href="<?= plain(gen_link('result', $params)) ?>"><i class="bi bi-trophy me-1"></i>Výsledok</a>
 								<a class="btn btn-primary" href="<?= plain(gen_link('goals', $params)) ?>"><i class="bi bi-list-ol me-1"></i>Strelci</a>

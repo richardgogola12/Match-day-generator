@@ -36,7 +36,7 @@ if (!$info || $info['mime'] !== 'image/png' || $info[0] > MAX_IMAGE_SIDE || $inf
 
 // metadáta
 $m = [];
-foreach (['d1name', 'd2name', 'startDate', 'competition', 'round', 'score1', 'score2', 'matchID'] as $k) {
+foreach (['d1name', 'd2name', 'startDate', 'competition', 'round', 'score1', 'score2', 'matchID', 'season', 'category', 'teamID', 'variant'] as $k) {
     $m[$k] = mb_substr(trim((string)($_GET[$k] ?? '')), 0, 200, 'UTF-8');
 }
 
@@ -46,8 +46,19 @@ try {
     $date = new DateTime('now', new DateTimeZone('Europe/Bratislava'));
 }
 
-$key  = $m['matchID'] !== '' ? $m['matchID'] : ($m['d1name'] . '|' . $m['d2name'] . '|' . $m['startDate']);
-$name = $date->format('Y-m-d') . '_' . $type . '_' . slugify($m['d1name'], 30) . '-vs-' . slugify($m['d2name'], 30) . '_' . substr(sha1($type . '|' . $key . '|' . $client), 0, 8);
+if (!in_array($m['variant'], ['', 'home', 'away'], true)) $m['variant'] = '';
+if ($type === 'squad') {
+    // súpiska nie je viazaná na zápas – jeden súbor na družstvo a sezónu
+    // stály názov aj priečinok (podľa začiatku sezóny), aby sa súpiska pri ďalšom uložení prepísala
+    $key  = 'squad|' . ($m['teamID'] ?: $m['d1name']) . '|' . $m['season'];
+    $y = preg_match('/^(\d{4})/', $m['season'], $sy) ? (int)$sy[1] : (int)$date->format('Y');
+    $date = new DateTime($y . '-07-01', new DateTimeZone('Europe/Bratislava'));
+    $name = 'squad_' . slugify($m['d1name'], 30) . '-' . slugify($m['category'] ?: 'druzstvo', 20) . '-' . slugify($m['season'] ?: 'sezona', 12);
+} else {
+    $key  = ($m['matchID'] !== '' ? $m['matchID'] : ($m['d1name'] . '|' . $m['d2name'] . '|' . $m['startDate'])) . ($m['variant'] !== '' ? '|' . $m['variant'] : '');
+    $name = $date->format('Y-m-d') . '_' . $type . '_' . slugify($m['d1name'], 30) . '-vs-' . slugify($m['d2name'], 30);
+}
+$name .= '_' . substr(sha1($type . '|' . $key . '|' . $client), 0, 8);
 $dir  = STORAGE_DIR . $date->format('Y-m') . '/';
 
 if (!ensure_storage_dir($dir)) {

@@ -11,8 +11,9 @@
     const guideV = document.getElementById('guideV');
     const guideH = document.getElementById('guideH');
 
-    const TYPE_ICON = { text: 'bi-fonts', logo: 'bi-shield', goals: 'bi-list-ol', shape: 'bi-square-fill' };
-    const TYPE_NAME = { text: 'Text', logo: 'Logo', goals: 'Strelci', shape: 'Obdĺžnik' };
+    const TYPE_ICON = { text: 'bi-fonts', logo: 'bi-shield', goals: 'bi-list-ol', shape: 'bi-square-fill', players: 'bi-people' };
+    const TYPE_NAME = { text: 'Text', logo: 'Logo', goals: 'Strelci', shape: 'Obdĺžnik', players: 'Hráči' };
+    const LISTS = ['goals', 'players']; // prvky so spodnou hranicou (maxY)
 
     const S = {
         tplId: null,
@@ -22,8 +23,8 @@
         bg: null,
         bgCustom: false,
         bgUrl: null,
-        sampleLogos: { home: null, away: null },
-        lastLogos: { home: null, away: null },
+        sampleLogos: { home: null, away: null, team: null, opponent: null },
+        lastLogos: { home: null, away: null, team: null, opponent: null },
         history: [],
         hIndex: -1,
     };
@@ -44,8 +45,16 @@
     }
 
     function previewData() {
-        if ($('#optData').val() === 'last' && lastMatch) return lastMatch;
-        return Object.assign({}, MD.SAMPLE.data, { goals: sampleGoals(parseInt($('#optGoals').val(), 10)) });
+        const sample = Object.assign({}, MD.SAMPLE.data, {
+            goals: sampleGoals(parseInt($('#optGoals').val(), 10)),
+            players: MD.samplePlayers(parseInt($('#optPlayers').val(), 10) || 24),
+        });
+        if ($('#optData').val() === 'last' && lastMatch) {
+            // posledný zápas bez hráčov (napr. Match day) – hráči z ukážky
+            const hasPlayers = lastMatch.players && ['start', 'subs', 'squad'].some((k) => (lastMatch.players[k] || []).length);
+            return Object.assign({}, lastMatch, hasPlayers ? {} : { players: sample.players });
+        }
+        return sample;
     }
     function previewLogos() {
         return $('#optData').val() === 'last' && lastMatch ? S.lastLogos : S.sampleLogos;
@@ -166,7 +175,7 @@
             node.classList.toggle('selected', el.id === S.selected);
             node.style.zIndex = el.id === S.selected ? 3 : '';
 
-            if (el.type === 'goals' && el.maxY && el.id === S.selected) {
+            if (LISTS.includes(el.type) && el.maxY && el.id === S.selected) {
                 const line = document.createElement('div');
                 line.className = 'maxy-line';
                 line.style.left = pct(b.x, W);
@@ -227,7 +236,7 @@
             guideH.style.display = gh ? 'block' : 'none';
             guideH.style.top = '50%';
             // ak sa posúva zoznam strelcov, posúvaj s ním aj spodnú hranicu
-            if (el.type === 'goals' && el.maxY) el.maxY = Math.round(drag.orig.maxY + (ny - drag.oy));
+            if (LISTS.includes(el.type) && el.maxY) el.maxY = Math.round(drag.orig.maxY + (ny - drag.oy));
             el.x = nx; el.y = ny;
         } else {
             const o = drag.orig;
@@ -239,6 +248,10 @@
                 if (b && o.maxWidth) el.maxWidth = Math.max(20, rnd(o.maxWidth + dx * (el.align === 'center' ? 2 : 1)));
             } else if (el.type === 'goals') {
                 el.maxWidth = Math.max(40, rnd(o.maxWidth + dx * (el.align === 'center' ? 2 : 1)));
+                el.maxY = Math.round(o.maxY + dy);
+            } else if (el.type === 'players') {
+                // šírka stĺpca podľa toho, koľko stĺpcov má zoznam
+                el.maxWidth = Math.max(40, rnd(o.maxWidth + dx / Math.max(1, o.columns || 1)));
                 el.maxY = Math.round(o.maxY + dy);
             }
         }
@@ -271,7 +284,7 @@
             e.preventDefault();
             el.x += moves[e.key][0];
             el.y += moves[e.key][1];
-            if (el.type === 'goals' && el.maxY) el.maxY += moves[e.key][1];
+            if (LISTS.includes(el.type) && el.maxY) el.maxY += moves[e.key][1];
             syncProps();
             changed();
         } else if (e.key === 'Escape') {
@@ -371,7 +384,7 @@
         ],
         logo: [
             { prop: 'label', label: 'Názov prvku', type: 'text', col: 12 },
-            { prop: 'team', label: 'Družstvo', type: 'select', options: () => [['home', 'Domáci'], ['away', 'Hostia']], col: 12 },
+            { prop: 'team', label: 'Družstvo', type: 'select', options: () => [['home', 'Domáci'], ['away', 'Hostia'], ['team', 'Vybrané družstvo (zostava, súpiska)'], ['opponent', 'Súper vybraného družstva']], col: 12 },
             ...position,
             { prop: 'size', label: 'Veľkosť (px)', type: 'number', min: 16, max: 2000, col: 6 },
             { prop: 'shadow', label: 'Tieň', type: 'switch', col: 6 },
@@ -392,6 +405,28 @@
             { prop: 'format', label: 'Formát ({min}, {name})', type: 'text', col: 7 },
             { prop: 'ownPrefix', label: 'Vlastný gól', type: 'text', col: 5 },
             { prop: 'ownColor', label: 'Farba vlastného gólu (prázdne = rovnaká)', type: 'colorOpt', col: 12 },
+            { section: 'Písmo' },
+            ...typo,
+            ...style,
+        ],
+        players: [
+            { prop: 'label', label: 'Názov prvku', type: 'text', col: 12 },
+            { prop: 'source', label: 'Zoznam', type: 'select', options: () => [['start', 'Základná zostava'], ['subs', 'Náhradníci'], ['squad', 'Súpiska družstva']], col: 12 },
+            ...position,
+            { section: 'Stĺpce a riadky' },
+            { prop: 'columns', label: 'Počet stĺpcov', type: 'select', options: () => [[1, '1'], [2, '2'], [3, '3'], [4, '4']], col: 6, number: true },
+            { prop: 'maxWidth', label: 'Šírka stĺpca', type: 'number', min: 40, max: 4000, col: 6 },
+            { prop: 'colGap', label: 'Medzera stĺpcov', type: 'number', min: 0, max: 400, col: 6 },
+            { prop: 'gap', label: 'Rozostup riadkov', type: 'number', min: 0, max: 400, col: 6 },
+            { prop: 'maxY', label: 'Spodná hranica (Y)', type: 'number', min: 0, max: 8000, col: 6 },
+            { prop: 'minScale', label: 'Min. zmenšenie', type: 'select', options: () => [[0.4, '40 %'], [0.5, '50 %'], [0.55, '55 %'], [0.6, '60 %'], [0.7, '70 %'], [0.8, '80 %'], [1, 'nezmenšovať']], col: 6, number: true },
+            { prop: 'autoFit', label: 'Automaticky zmenšiť, keď sa nezmestí', type: 'switch', col: 12 },
+            { section: 'Formát riadku' },
+            { prop: 'format', label: 'Formát ({nr}, {name}, {apps}, {goals})', type: 'text', col: 12 },
+            { prop: 'capMark', label: 'Kapitán', type: 'text', col: 6 },
+            { prop: 'gkMark', label: 'Brankár', type: 'text', col: 6 },
+            { prop: 'numColor', label: 'Farba čísla (prázdne = rovnaká)', type: 'colorOpt', col: 12 },
+            { prop: 'emptyText', label: 'Text, keď hráči chýbajú', type: 'text', col: 12 },
             { section: 'Písmo' },
             ...typo,
             ...style,
@@ -571,6 +606,7 @@
             shape: { x: Math.round(W / 2 - 200), y: Math.round(H / 2 - 40), w: 400, h: 80 },
             logo: { x: Math.round(W / 2 - 60), y: Math.round(H / 2 - 60), team: 'home', size: 120 },
             goals: { x: Math.round(W / 2 - 130), y: Math.round(H / 2), side: 'home', maxY: Math.round(H * 0.9), maxWidth: 260 },
+            players: { x: Math.round(W * 0.16), y: Math.round(H * 0.4), source: S.tplId === 'squad' ? 'squad' : 'start', maxY: Math.round(H * 0.88), columns: 2, maxWidth: Math.round(W * 0.33) },
         }[type];
         const el = Object.assign({}, MD.TYPE_DEFAULTS[type], base, pos);
         if (type === 'shape') S.tpl.elements.unshift(el); // podklad dať pod ostatné
@@ -674,7 +710,7 @@
         $('#fontShowcase .font-item').removeClass('active');
         $(this).addClass('active');
         const el = S.selected && getEl(S.selected);
-        if (el && (el.type === 'text' || el.type === 'goals')) {
+        if (el && (el.type === 'text' || LISTS.includes(el.type))) {
             el.font = this.dataset.font;
             MD.loadFamily(el.font).then(draw);
             renderProps();
@@ -687,7 +723,7 @@
         const font = $('#fontAll').val();
         await MD.loadFamily(font);
         const allTpl = $('#fontAllTemplates').is(':checked');
-        const apply = (tpl) => tpl.elements.forEach((e) => { if (e.type === 'text' || e.type === 'goals') e.font = font; });
+        const apply = (tpl) => tpl.elements.forEach((e) => { if (e.type === 'text' || LISTS.includes(e.type)) e.font = font; });
         apply(S.tpl);
         if (allTpl) {
             const all = MD.store.loadTemplates();
@@ -774,7 +810,7 @@
     $('#btnRedo').on('click', () => restore(S.hIndex + 1));
     $('#optGrid').on('change', function () { stage.classList.toggle('show-grid', this.checked); MD.store.pref('editorGrid', this.checked); });
     $('#optSnap').on('change', function () { fitStage(); MD.store.pref('editorSnap', this.value); });
-    $('#optData, #optGoals').on('change', draw);
+    $('#optData, #optGoals, #optPlayers').on('change', draw);
     $('#btnTestPng').on('click', () => {
         // čistý náhľad bez pomocných rámikov
         const c = document.createElement('canvas');
@@ -818,7 +854,8 @@
         renderProps();
         syncSize();
         fitStage();
-        $('#optGoals').closest('select').prop('hidden', !S.tpl.elements.some((e) => e.type === 'goals'));
+        $('#optGoals').prop('hidden', !S.tpl.elements.some((e) => e.type === 'goals'));
+        $('#optPlayers').prop('hidden', !S.tpl.elements.some((e) => e.type === 'players' && e.source === 'squad'));
         await loadBackground();
         MD.ensureFonts(S.tpl).then(draw);
     }
@@ -844,10 +881,10 @@
         }
 
         const [h, a] = await Promise.all([MD.loadImage(MD.SAMPLE.logos.home), MD.loadImage(MD.SAMPLE.logos.away)]);
-        S.sampleLogos = { home: h, away: a };
+        S.sampleLogos = { home: h, away: a, team: h, opponent: a };
         if (lastMatch) {
-            const [lh, la] = await Promise.all([MD.loadImage(lastMatch.logoHome), MD.loadImage(lastMatch.logoAway)]);
-            S.lastLogos = { home: lh, away: la };
+            const [lh, la, lt, lo] = await Promise.all([MD.loadImage(lastMatch.logoHome), MD.loadImage(lastMatch.logoAway), MD.loadImage(lastMatch.logoTeam), MD.loadImage(lastMatch.logoOpponent)]);
+            S.lastLogos = { home: lh, away: la, team: lt || lh, opponent: lo || la };
         }
 
         await MD.ensureFonts();

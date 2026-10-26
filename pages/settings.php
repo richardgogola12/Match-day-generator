@@ -57,6 +57,11 @@
 							<option value="12">12 gólov</option>
 							<option value="20">20 gólov</option>
 						</select>
+						<select class="form-select form-select-sm w-auto" id="optPlayers" title="Počet hráčov v ukážke súpisky" hidden>
+							<option value="16">16 hráčov</option>
+							<option value="24" selected>24 hráčov</option>
+							<option value="30">30 hráčov</option>
+						</select>
 						<button type="button" class="btn btn-sm btn-outline-secondary" id="btnTestPng" title="Stiahnuť náhľad ako PNG"><i class="bi bi-download"></i></button>
 					</div>
 				</div>
@@ -98,6 +103,7 @@
 									<li><button class="dropdown-item" data-add="shape"><i class="bi bi-square-fill me-2"></i>Obdĺžnik (podklad)</button></li>
 									<li><button class="dropdown-item" data-add="logo"><i class="bi bi-shield me-2"></i>Logo družstva</button></li>
 									<li><button class="dropdown-item" data-add="goals"><i class="bi bi-list-ol me-2"></i>Zoznam strelcov</button></li>
+									<li><button class="dropdown-item" data-add="players"><i class="bi bi-people me-2"></i>Zoznam hráčov</button></li>
 								</ul>
 							</div>
 						</div>

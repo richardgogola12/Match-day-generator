@@ -85,6 +85,7 @@ $routes = array(
     // JSON / obrázkové API pre prehliadač
     "api-logo"                => "api/logo",
     "api-match"               => "api/match",
+    "api-squad"               => "api/squad",
     "api-save"                => "api/save",
     "api-gallery"             => "api/gallery",
 

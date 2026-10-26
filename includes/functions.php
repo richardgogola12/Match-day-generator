@@ -614,7 +614,7 @@ function slugify($text, $max = 40) {
 
 /** Názvy typov obrázkov */
 function image_types() {
-    return ['matchday' => 'Match day', 'result' => 'Výsledok', 'goals' => 'Strelci'];
+    return ['matchday' => 'Match day', 'lineup' => 'Zostava', 'result' => 'Výsledok', 'goals' => 'Strelci', 'squad' => 'Súpiska'];
 }
 
 /**
@@ -857,11 +857,16 @@ function write_generation_log(array $entry) {
     }
 
     $txt  = str_repeat('=', 78) . "\n";
-    $txt .= $now->format('Y-m-d H:i:s') . '  |  ' . $clean($entry['typeName']) . '  |  ' . $clean($entry['d1name'] . ' vs ' . $entry['d2name']) . "\n";
+    $isSquad = ($entry['type'] ?? '') === 'squad';
+    $title = $isSquad ? $entry['d1name'] . (($entry['category'] ?? '') !== '' ? ' – ' . $entry['category'] : '') . (($entry['season'] ?? '') !== '' ? ' (' . $entry['season'] . ')' : '')
+                      : $entry['d1name'] . ' vs ' . $entry['d2name'];
+    $txt .= $now->format('Y-m-d H:i:s') . '  |  ' . $clean($entry['typeName']) . '  |  ' . $clean($title) . "\n";
     $txt .= str_repeat('-', 78) . "\n";
     $txt .= "OBRÁZOK\n";
     $txt .= $line('Typ', $entry['typeName'] . ' (' . $entry['type'] . ')');
-    $txt .= $line('Zápas', $entry['d1name'] . ' vs ' . $entry['d2name'] . (($entry['score1'] ?? '') !== '' ? '  ' . $entry['score1'] . ':' . $entry['score2'] : ''));
+    if ($isSquad) $txt .= $line('Družstvo', $title);
+    else $txt .= $line('Zápas', $entry['d1name'] . ' vs ' . $entry['d2name'] . (($entry['score1'] ?? '') !== '' ? '  ' . $entry['score1'] . ':' . $entry['score2'] : ''));
+    $txt .= $line('Zostava tímu', ($entry['type'] ?? '') === 'lineup' ? ($entry['variant'] === 'away' ? $entry['d2name'] : $entry['d1name']) : '');
     $txt .= $line('Dátum zápasu', $startDate);
     $txt .= $line('Súťaž / kolo', trim(($entry['competition'] ?? '') . ' / ' . ($entry['round'] ?? ''), ' /'));
     $txt .= $line('ID zápasu', $entry['matchID'] ?? '');
@@ -898,7 +903,7 @@ function scrub_legacy_logs($force = false) {
     if (!$force && is_file($marker)) return 0;
     if (!is_dir(LOG_DIR) || !is_writable(LOG_DIR)) return 0;
 
-    $keep = ['Typ', 'Zápas', 'Dátum zápasu', 'Súťaž / kolo', 'ID zápasu', 'Súbor', 'Akcia', 'Anonymné ID'];
+    $keep = ['Typ', 'Zápas', 'Družstvo', 'Zostava tímu', 'Dátum zápasu', 'Súťaž / kolo', 'ID zápasu', 'Súbor', 'Akcia', 'Anonymné ID'];
     $fmt = fn($label, $value) => '  ' . $label . ':' . str_repeat(' ', max(1, 23 - mb_strlen($label, 'UTF-8'))) . $value;
     $changed = 0;
 
@@ -936,4 +941,343 @@ function scrub_legacy_logs($force = false) {
     }
     @file_put_contents($marker, date('c') . "\n");
     return $changed;
+}
+
+
+// =================================================================================
+// Sportnet – zostavy zápasu a súpiska družstva
+//
+// Formát dát Sportnetu nie je verejne zdokumentovaný, preto parser skúša viac
+// možných názvov polí (napr. additionalData.nr / nr / number). Ak sa formát zmení,
+// stačí upraviť zoznamy ciest nižšie. Správca vidí surovú štruktúru cez
+// api-match?id=…&debug=1.
+// =================================================================================
+
+/** Hodnota z vnoreného poľa podľa prvej existujúcej cesty ("a.b.c") */
+function sn_val($arr, array $paths, $default = null) {
+    foreach ($paths as $path) {
+        $v = $arr;
+        foreach (explode('.', $path) as $k) {
+            if (!is_array($v) || !array_key_exists($k, $v)) { $v = null; break; }
+            $v = $v[$k];
+        }
+        if ($v !== null && $v !== '' && $v !== []) return $v;
+    }
+    return $default;
+}
+
+/** Meno osoby z rôznych tvarov objektu */
+function sn_person_name($p) {
+    if (is_string($p)) return trim($p);
+    if (!is_array($p)) return '';
+    $name = sn_val($p, ['sportnetUser.name', 'name', 'displayName', 'athlete.name', 'athlete.sportnetUser.name', 'user.name', 'person.name', 'player.name']);
+    if (is_string($name) && trim($name) !== '') return trim(preg_replace('/\s+/u', ' ', $name));
+    $first = sn_val($p, ['sportnetUser.givenname', 'givenname', 'firstName', 'firstname', 'name.first']);
+    $last  = sn_val($p, ['sportnetUser.familyname', 'familyname', 'surname', 'lastName', 'lastname', 'name.last']);
+    return trim(($first ?: '') . ' ' . ($last ?: ''));
+}
+
+/** ID osoby (na spájanie hráča naprieč zápasmi a s gólmi) */
+function sn_person_id($p) {
+    if (!is_array($p)) return '';
+    return (string)sn_val($p, ['sportnetUser._id', 'sportnetId', 'athlete.sportnetUser._id', 'athlete._id', '_id', 'id', 'user._id'], '');
+}
+
+/** Normalizovaný kľúč mena (bez diakritiky a veľkosti písmen) */
+function sn_name_key($name) {
+    return slugify($name, 80);
+}
+
+/** Pravdivostná hodnota z rôznych zápisov (true, 1, "true", "ano") */
+function sn_bool($v) {
+    if (is_bool($v)) return $v;
+    if (is_numeric($v)) return (int)$v === 1;
+    return in_array(mb_strtolower(trim((string)$v), 'UTF-8'), ['true', 'yes', 'ano', 'áno', 'y'], true);
+}
+
+/** Jeden hráč zo zápisu -> {id, nr, name, sub, captain, gk} */
+function sn_player($p) {
+    $name = sn_person_name($p);
+    if ($name === '') return null;
+    $nr = sn_val($p, ['additionalData.nr', 'nr', 'number', 'dressNumber', 'shirtNumber', 'jerseyNumber', 'additionalData.number', 'additionalData.dressNumber']);
+    $pos = (string)sn_val($p, ['additionalData.position', 'position', 'role', 'additionalData.role'], '');
+    return [
+        'id'      => sn_person_id($p),
+        'nr'      => is_scalar($nr) ? trim((string)$nr) : '',
+        'name'    => $name,
+        'sub'     => sn_bool(sn_val($p, ['additionalData.substitute', 'substitute', 'isSubstitute', 'additionalData.isSubstitute'], false)),
+        'captain' => sn_bool(sn_val($p, ['additionalData.captain', 'captain', 'isCaptain', 'additionalData.isCaptain'], false)),
+        'gk'      => sn_bool(sn_val($p, ['additionalData.goalkeeper', 'goalkeeper', 'isGoalkeeper', 'additionalData.isGoalkeeper'], false))
+                     || (bool)preg_match('/brank|goal|^gk$/iu', $pos),
+    ];
+}
+
+/** Tréner z "crew" nominácie (objekt alebo zoznam) */
+function sn_coach($crew) {
+    if (!is_array($crew) || !$crew) return '';
+    $isCoach = fn($s) => (bool)preg_match('/coach|tr[eé]ner|manager|head/iu', (string)$s);
+    // objekt { coach: {...}, assistant: {...} }
+    foreach ($crew as $k => $v) {
+        if (is_string($k) && $isCoach($k) && !preg_match('/assist|asist/i', $k)) {
+            $n = sn_person_name(is_array($v) && isset($v[0]) ? $v[0] : $v);
+            if ($n !== '') return $n;
+        }
+    }
+    // zoznam [{ position: "trener", sportnetUser: {...} }]
+    foreach ($crew as $v) {
+        if (!is_array($v)) continue;
+        $pos = (string)sn_val($v, ['position', 'role', 'type', 'additionalData.position'], '');
+        if ($isCoach($pos) && !preg_match('/assist|asist/iu', $pos)) {
+            $n = sn_person_name($v);
+            if ($n !== '') return $n;
+        }
+    }
+    return '';
+}
+
+/**
+ * Zostavy oboch tímov zo zápasu.
+ * @return array ['home' => ['start'=>[], 'subs'=>[], 'coach'=>''], 'away' => …]
+ */
+function sportnet_lineups(array $match, $homeId = '', $awayId = '') {
+    $out = ['home' => ['start' => [], 'subs' => [], 'coach' => ''], 'away' => ['start' => [], 'subs' => [], 'coach' => '']];
+    $homeId = $homeId ?: (string)sn_val($match, ['homeTeam._id', 'teams.0._id'], '');
+    $awayId = $awayId ?: (string)sn_val($match, ['awayTeam._id', 'teams.1._id'], '');
+
+    $noms = sn_val($match, ['nominations', 'nomination', 'lineups', 'protocol.nominations'], []);
+    if (!is_array($noms)) return $out;
+    $list = [];
+    foreach ($noms as $key => $n) {
+        if (!is_array($n)) continue;
+        $tid = (string)sn_val($n, ['teamId', 'team._id', 'team.id', 'team'], is_string($key) ? $key : '');
+        $list[] = [$tid, $n];
+    }
+    foreach ($list as $i => [$tid, $n]) {
+        if ($tid !== '' && $tid === $homeId) $side = 'home';
+        elseif ($tid !== '' && $tid === $awayId) $side = 'away';
+        elseif (count($list) === 2) $side = $i === 0 ? 'home' : 'away'; // záložné poradie
+        else continue;
+
+        $players = sn_val($n, ['athletes', 'players', 'squad.athletes', 'nominations'], []);
+        foreach (is_array($players) ? $players : [] as $p) {
+            $pl = sn_player($p);
+            if (!$pl) continue;
+            $out[$side][$pl['sub'] ? 'subs' : 'start'][] = $pl;
+        }
+        $out[$side]['coach'] = sn_coach(sn_val($n, ['crew', 'staff', 'officials'], []));
+    }
+    // brankár v základe ako prvý (ak zápis nemá poradie)
+    foreach (['home', 'away'] as $s) {
+        usort($out[$s]['start'], fn($a, $b) => (int)$b['gk'] <=> (int)$a['gk']);
+    }
+    return $out;
+}
+
+/** Góly zo zápasu: [{minute, name, id, side, own}] */
+function sportnet_goals(array $match, $homeId) {
+    $goals = [];
+    foreach ((array)sn_val($match, ['protocol.events'], []) as $e) {
+        if (!is_array($e) || ($e['eventType'] ?? '') !== 'goal') continue;
+        $own  = ($e['type'] ?? '') === 'dropped';
+        $side = ($e['team'] ?? '') === $homeId ? 'home' : 'away';
+        if ($own) $side = $side === 'home' ? 'away' : 'home';
+        $player = $e['player'] ?? null;
+        $goals[] = [
+            'minute' => explode(':', (string)($e['eventTime'] ?? ''))[0],
+            'name'   => sn_person_name($player),
+            'id'     => sn_person_id(is_array($player) ? $player : []),
+            'team'   => (string)($e['team'] ?? ''),
+            'side'   => $side,
+            'own'    => $own,
+        ];
+    }
+    usort($goals, fn($a, $b) => (int)$a['minute'] <=> (int)$b['minute']);
+    return $goals;
+}
+
+/** Priečinok dočasnej cache odpovedí Sportnetu */
+function sn_cache_file($key) {
+    $dir = sys_get_temp_dir() . '/match-day-cache';
+    if (!is_dir($dir)) @mkdir($dir, 0775, true);
+    return $dir . '/' . sha1($key) . '.json';
+}
+
+/** JSON z URL s cache na disku (ttl v sekundách); pri chybe vráti starú cache, ak existuje */
+function sn_fetch_cached($url, $ttl) {
+    $f = sn_cache_file($url);
+    if (is_file($f) && filemtime($f) > time() - $ttl) {
+        $d = json_decode((string)file_get_contents($f), true);
+        if (is_array($d)) return $d;
+    }
+    try {
+        $d = getJsonFromUrl($url);
+    } catch (Throwable $e) {
+        $d = null;
+    }
+    if (is_array($d) && empty($d['error'])) {
+        @file_put_contents($f, json_encode($d, JSON_UNESCAPED_UNICODE), LOCK_EX);
+        return $d;
+    }
+    if (is_file($f)) {
+        $old = json_decode((string)file_get_contents($f), true);
+        if (is_array($old)) return $old;
+    }
+    return is_array($d) ? $d : ['error' => true];
+}
+
+/** Viac JSON adries naraz (paralelne, s cache); vracia pole v rovnakom poradí */
+function sn_fetch_many(array $urls, $ttl, $parallel = 6) {
+    $out = [];
+    $todo = [];
+    foreach ($urls as $i => $url) {
+        $f = sn_cache_file($url);
+        if (is_file($f) && filemtime($f) > time() - $ttl && is_array($d = json_decode((string)file_get_contents($f), true))) $out[$i] = $d;
+        else $todo[$i] = $url;
+    }
+    foreach (array_chunk($todo, $parallel, true) as $chunk) {
+        $mh = curl_multi_init();
+        $handles = [];
+        foreach ($chunk as $i => $url) {
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true, CURLOPT_TIMEOUT => 20,
+                CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36',
+                CURLOPT_HTTPHEADER => ['Accept: application/json'],
+                CURLOPT_SSL_VERIFYPEER => false, CURLOPT_SSL_VERIFYHOST => false,
+            ]);
+            curl_multi_add_handle($mh, $ch);
+            $handles[$i] = $ch;
+        }
+        do {
+            $st = curl_multi_exec($mh, $running);
+            if ($running) curl_multi_select($mh, 1.0);
+        } while ($running && $st === CURLM_OK);
+        foreach ($handles as $i => $ch) {
+            $body = curl_multi_getcontent($ch);
+            $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_multi_remove_handle($mh, $ch);
+            $d = $code === 200 ? json_decode((string)$body, true) : null;
+            $f = sn_cache_file($chunk[$i]);
+            if (is_array($d)) {
+                @file_put_contents($f, json_encode($d, JSON_UNESCAPED_UNICODE), LOCK_EX);
+                $out[$i] = $d;
+            } elseif (is_file($f)) {
+                $out[$i] = json_decode((string)file_get_contents($f), true) ?: null;
+            } else {
+                $out[$i] = null;
+            }
+        }
+        curl_multi_close($mh);
+    }
+    ksort($out);
+    return $out;
+}
+
+/**
+ * ID "nášho" družstva v zozname zápasov – tím, ktorý sa vyskytuje v najviac zápasoch
+ * (zoznam sa načítava podľa ID družstva, takže je v každom zápase).
+ * @return array [id, name, logoUrl]
+ */
+function sn_own_team(array $matches, $preferId = '') {
+    $count = [];
+    $info = [];
+    foreach ($matches as $m) {
+        foreach (['homeTeam', 'awayTeam'] as $s) {
+            $id = (string)($m[$s]['_id'] ?? '');
+            if ($id === '') continue;
+            $count[$id] = ($count[$id] ?? 0) + 1;
+            if (empty($info[$id]['logo']) || empty($info[$id]['name'])) {
+                $info[$id] = ['name' => $m[$s]['name'] ?? ($info[$id]['name'] ?? ''), 'logo' => $m[$s]['logoUrl'] ?? ($info[$id]['logo'] ?? '')];
+            }
+        }
+    }
+    if ($preferId !== '' && isset($count[$preferId])) $id = $preferId;
+    else { arsort($count); $id = (string)array_key_first($count); }
+    return [$id, $info[$id]['name'] ?? '', $info[$id]['logo'] ?? ''];
+}
+
+/**
+ * Súpiska družstva za sezónu – hráči zo zápisov všetkých odohratých zápasov
+ * (číslo, meno, počet zápasov, v základe, góly, brankár, kapitán) a posledný tréner.
+ */
+function sportnet_squad($teamId) {
+    $cacheF = sn_cache_file('squad|' . $teamId);
+    if (is_file($cacheF) && filemtime($cacheF) > time() - 3600 && is_array($c = json_decode((string)file_get_contents($cacheF), true))) return $c;
+
+    $list = sn_fetch_cached(sprintf(API_MATCHES, rawurlencode($teamId)), 1800);
+    if (!empty($list['error'])) return ['error' => 'Zápasy družstva sa nepodarilo načítať zo Sportnetu.'];
+    $matches = $list['matches'] ?? [];
+    [$ownId, $ownName] = sn_own_team($matches, $teamId);
+
+    $done = array_values(array_filter($matches, function ($m) {
+        $state = $m['matchState'] ?? '';
+        if ($state === 'ODOHRATY') return true;
+        // aj zápasy s inými stavmi, ktoré už prebehli (kontumácia a pod.), okrem voľna
+        return $state !== 'NEZUCASTNENE_JEDNO_DRUZSTVO' && !empty($m['startDate']) && strtotime($m['startDate']) < time() - 3 * 3600;
+    }));
+    usort($done, fn($a, $b) => strcmp($a['startDate'] ?? '', $b['startDate'] ?? ''));
+
+    $ids = array_values(array_filter(array_map(fn($m) => (string)($m['_id'] ?? ''), $done)));
+    $details = sn_fetch_many(array_map(fn($id) => sprintf(API_MATCH, rawurlencode($id)), $ids), 12 * 3600);
+
+    $players = [];
+    $coach = '';
+    $used = 0;
+    foreach ($done as $i => $m) {
+        $d = $details[$i] ?? null;
+        if (!is_array($d) || !empty($d['error'])) continue;
+        $homeId = (string)($m['homeTeam']['_id'] ?? '');
+        $awayId = (string)($m['awayTeam']['_id'] ?? '');
+        $side = $homeId === $ownId ? 'home' : ($awayId === $ownId ? 'away' : null);
+        if (!$side) continue;
+        $lu = sportnet_lineups($d, $homeId, $awayId)[$side];
+        if (!$lu['start'] && !$lu['subs']) continue;
+        $used++;
+        if ($lu['coach'] !== '') $coach = $lu['coach'];
+
+        $seen = [];
+        foreach (array_merge($lu['start'], $lu['subs']) as $p) {
+            $k = $p['id'] !== '' ? 'id:' . $p['id'] : 'n:' . sn_name_key($p['name']);
+            // rovnaký hráč pod ID aj menom – zjednotiť podľa mena
+            foreach ($players as $pk => $pp) {
+                if ($pk !== $k && sn_name_key($pp['name']) === sn_name_key($p['name'])) { $k = $pk; break; }
+            }
+            if (isset($seen[$k])) continue;
+            $seen[$k] = true;
+            $cur = $players[$k] ?? ['id' => $p['id'], 'nr' => '', 'name' => $p['name'], 'apps' => 0, 'starts' => 0, 'goals' => 0, 'gk' => false, 'captain' => 0, 'nrs' => []];
+            $cur['apps']++;
+            if (!$p['sub']) $cur['starts']++;
+            if ($p['gk']) $cur['gk'] = true;
+            if ($p['captain']) $cur['captain']++;
+            if ($p['nr'] !== '') { $cur['nr'] = $p['nr']; $cur['nrs'][$p['nr']] = ($cur['nrs'][$p['nr']] ?? 0) + 1; }
+            $cur['name'] = $p['name'];
+            $players[$k] = $cur;
+        }
+        foreach (sportnet_goals($d, $homeId) as $g) {
+            if ($g['own'] || $g['team'] !== $ownId) continue;
+            foreach ($players as $pk => $pp) {
+                if (($g['id'] !== '' && $g['id'] === $pp['id']) || sn_name_key($g['name']) === sn_name_key($pp['name'])) { $players[$pk]['goals']++; break; }
+            }
+        }
+    }
+
+    // kapitán = hráč, ktorý bol kapitánom najčastejšie
+    $capKey = null;
+    foreach ($players as $k => $p) if ($p['captain'] > 0 && ($capKey === null || $p['captain'] > $players[$capKey]['captain'])) $capKey = $k;
+
+    $out = [];
+    foreach ($players as $k => $p) {
+        // najčastejšie číslo dresu (posledné, ak je ich viac rovnako často)
+        if ($p['nrs']) { arsort($p['nrs']); $p['nr'] = (string)array_key_first($p['nrs']); }
+        $out[] = ['nr' => $p['nr'], 'name' => $p['name'], 'apps' => $p['apps'], 'starts' => $p['starts'], 'goals' => $p['goals'], 'gk' => $p['gk'], 'captain' => $k === $capKey];
+    }
+    usort($out, function ($a, $b) {
+        $na = $a['nr'] === '' ? 999 : (int)$a['nr'];
+        $nb = $b['nr'] === '' ? 999 : (int)$b['nr'];
+        return $na <=> $nb ?: strcmp(sn_name_key($a['name']), sn_name_key($b['name']));
+    });
+
+    $res = ['players' => $out, 'coach' => $coach, 'team' => $ownName, 'teamId' => $ownId, 'matches' => $used, 'played' => count($done)];
+    @file_put_contents($cacheF, json_encode($res, JSON_UNESCAPED_UNICODE), LOCK_EX);
+    return $res;
 }
