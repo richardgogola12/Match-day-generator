@@ -54,7 +54,7 @@ add_layout("header", array("title" => "Správca | Match Day", "noindex" => true)
 	<div class="container-xxl">
 		<span class="hero-eyebrow mb-3"><i class="bi bi-shield-lock"></i> <?= $isAdmin ? 'Prihlásený správca' : 'Iba pre správcu' ?></span>
 		<h1 class="mb-2">Správa <span class="accent">aplikácie</span></h1>
-		<p class="lead mb-0"><?= $isAdmin ? 'Galéria všetkých prehliadačov a log generovania.' : 'Prihláste sa heslom z config.local.php.' ?></p>
+		<p class="lead mb-0"><?= $isAdmin ? 'Galéria všetkých prehliadačov a log generovania.' : 'Prihláste sa heslom správcu.' ?></p>
 	</div>
 </section>
 
@@ -103,6 +103,10 @@ add_layout("header", array("title" => "Správca | Match Day", "noindex" => true)
 		</script>
 
 	<?php else: ?>
+		<?php if (GALLERY_ADMIN_KEY === 'asd123'): ?>
+			<div class="alert alert-warning d-flex gap-2 align-items-start"><i class="bi bi-exclamation-triangle-fill"></i>
+				<div>Používate predvolené heslo <code>asd123</code>. Na verejnom serveri ho zmeňte v súbore <code>config.local.php</code> (<code>define('GALLERY_ADMIN_KEY', 'nové-heslo');</code>).</div></div>
+		<?php endif; ?>
 		<div class="row g-3 mb-4">
 			<div class="col-6 col-lg-3"><div class="stat-tile"><div class="stat-num"><?= $stats['images'] ?></div><div class="stat-label">obrázkov na serveri</div></div></div>
 			<div class="col-6 col-lg-3"><div class="stat-tile"><div class="stat-num"><?= human_bytes($stats['bytes']) ?></div><div class="stat-label">obsadené miesto</div></div></div>

@@ -1,6 +1,6 @@
 <?php
 	add_layout("header", array(
-		"title"      => "Nastavenie šablón | Match Day",
+		"title"      => "Šablóny | Match Day",
 		"body_class" => "page-settings",
 		"scripts"    => ["js/renderer.js", "js/editor.js"],
 	));

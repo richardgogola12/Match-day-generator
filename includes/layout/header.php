@@ -70,6 +70,15 @@
 			<span class="brand-text">Match<span>Day</span></span>
 		</a>
 
+		<?php if ($active !== ''): // na úvodnej stránke je veľké hľadanie priamo na stránke ?>
+		<form class="gsearch gsearch-nav" role="search" autocomplete="off">
+			<i class="bi bi-search gsearch-icon" aria-hidden="true"></i>
+			<input type="search" class="form-control gsearch-input" placeholder="Hľadať klub, družstvo, hráča…" aria-label="Hľadať klub, družstvo alebo hráča" aria-expanded="false" aria-controls="gsMenuNav" data-gsearch data-gsearch-main>
+			<kbd class="gsearch-kbd" aria-hidden="true">/</kbd>
+			<div class="gsearch-menu" id="gsMenuNav" role="listbox" hidden></div>
+		</form>
+		<?php endif; ?>
+
 		<div class="d-flex align-items-center gap-2 order-md-last">
 			<button class="btn btn-primary btn-sm rounded-pill px-3 install-btn" type="button" id="installBtn" hidden title="Nainštalovať aplikáciu do zariadenia">
 				<i class="bi bi-download me-1"></i><span class="d-none d-sm-inline">Nainštalovať</span><span class="d-sm-none">Inštalovať</span>
@@ -87,7 +96,7 @@
 			<ul class="navbar-nav ms-auto me-md-3 gap-md-1">
 				<li class="nav-item">
 					<a class="nav-link<?= $nav(['', 'match-day-season-detail', 'generator', 'druzstvo', 'hrac', 'zapas']) ?>" href="<?= url("/") ?>">
-						<i class="bi bi-search"></i><span>Zápasy</span>
+						<i class="bi bi-house"></i><span>Zápasy</span>
 					</a>
 				</li>
 				<li class="nav-item">
@@ -97,7 +106,7 @@
 				</li>
 				<li class="nav-item">
 					<a class="nav-link<?= $nav('nastavenia') ?>" href="<?= url("nastavenia") ?>">
-						<i class="bi bi-sliders"></i><span>Nastavenie šablón</span>
+						<i class="bi bi-sliders"></i><span>Šablóny</span>
 					</a>
 				</li>
 				<li class="nav-item">

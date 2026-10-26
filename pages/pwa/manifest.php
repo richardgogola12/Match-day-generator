@@ -26,7 +26,7 @@ echo json_encode([
     'shortcuts' => [
         ['name' => 'Hľadať zápasy', 'url' => BASE_PATH . '/', 'icons' => [['src' => asset('icons/icon-192.png'), 'sizes' => '192x192']]],
         ['name' => 'Galéria', 'url' => BASE_PATH . '/galeria', 'icons' => [['src' => asset('icons/icon-192.png'), 'sizes' => '192x192']]],
-        ['name' => 'Nastavenie šablón', 'url' => BASE_PATH . '/nastavenia', 'icons' => [['src' => asset('icons/icon-192.png'), 'sizes' => '192x192']]],
+        ['name' => 'Šablóny', 'url' => BASE_PATH . '/nastavenia', 'icons' => [['src' => asset('icons/icon-192.png'), 'sizes' => '192x192']]],
         ['name' => 'Návod', 'url' => BASE_PATH . '/navod', 'icons' => [['src' => asset('icons/icon-192.png'), 'sizes' => '192x192']]],
     ],
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);

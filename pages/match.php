@@ -10,6 +10,9 @@ $err = !is_array($data) || !empty($data['error']);
 $events = $err ? [] : sportnet_events($data, $b['home']['id']);
 $lineups = $err ? null : sportnet_lineups($data, $b['home']['id'], $b['away']['id']);
 $rep = $err ? [] : sportnet_report($data);
+$len = $err ? 90 : sn_match_length($data);
+$mins = [];
+if ($lineups) foreach (['home', 'away'] as $s) $mins[$s] = sn_match_minutes($lineups[$s], $events, $b[$s]['id'], $len);
 [$dT, $tT] = format_match_date($b['date']);
 $params = $_GET;
 $myTeam = (string)($_GET['myTeam'] ?? '');
@@ -50,7 +53,7 @@ add_layout("header", array("title" => $b['home']['name'] . ' – ' . $b['away'][
 	<?php endif; ?>
 
 	<div class="card-app mb-4"><div class="card-body py-3 d-flex flex-wrap gap-2">
-		<span class="small fw-semibold text-muted-2 align-self-center me-1">Obrázky:</span>
+		<span class="small fw-semibold text-muted-2 align-self-center me-1">Vytvoriť obrázok:</span>
 		<a class="btn btn-sm btn-outline-primary" href="<?= plain(md_gen_link('matchday', $params)) ?>"><i class="bi bi-calendar-event me-1"></i>Match day</a>
 		<a class="btn btn-sm btn-outline-primary" href="<?= plain(md_gen_link('lineup', $params)) ?>"><i class="bi bi-person-lines-fill me-1"></i>Zostava</a>
 		<?php if ($b['played']): ?>

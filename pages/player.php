@@ -20,6 +20,8 @@ $q = fn(array $extra = []) => http_build_query(['team' => $teamId, 's' => $seaso
 $tp = md_team_params($teamId, $team, $cat, $season, $T['competition'] ?? '');
 $pp = $P ? $tp + ['player' => $P['key']] : $tp;
 
+$career = $P ? sportnet_player_career($P['id']) : null;
+
 // jubileá – najbližší okrúhly počet zápasov / gólov
 $mil = fn($n, $steps) => array_values(array_filter($steps, fn($s) => $s >= $n))[0] ?? null;
 
@@ -58,9 +60,8 @@ add_layout("header", array("title" => ($P['name'] ?? 'Hráč') . " – profil | 
 		<div class="col-lg-8">
 			<div class="row g-3 mb-4">
 				<?php
-				$tiles = [[$P['apps'], 'zápasov v zápise'], [$P['goals'], 'gólov'], [$P['penalties'], 'z penalty'], [$P['yellow'], 'žltých kariet'], [$P['red'], 'červených kariet']];
-				// základ iba ak to zápisy rozlišujú
-				$tiles[] = $P['startsKnown'] > 0 ? [$P['starts'] . ' / ' . $P['startsKnown'], 'v základe (zo zápisov s vyznačeným základom)'] : [$P['apps'] ? round($P['goals'] / $P['apps'], 2) : 0, 'gólov na zápas'];
+				$tiles = [[$P['apps'], 'odohraných zápasov'], [$P['starts'], 'v základnej zostave'], [$P['minutes'] !== null ? number_format($P['minutes'], 0, ',', ' ') : '–', 'odohraných minút'],
+				          [$P['goals'], 'gólov' . ($P['penalties'] ? ' (' . $P['penalties'] . ' z PK)' : '')], [$P['yellow'], 'žltých kariet'], [$P['red'], 'červených kariet']];
 				foreach ($tiles as [$n, $l]): ?>
 					<div class="col-6 col-md-4"><div class="stat-tile"><div class="stat-num"><?= plain($n) ?></div><div class="stat-label"><?= plain($l) ?></div></div></div>
 				<?php endforeach; ?>
@@ -73,7 +74,7 @@ add_layout("header", array("title" => ($P['name'] ?? 'Hráč') . " – profil | 
 				<?php else: ?>
 				<div class="table-responsive">
 					<table class="table align-middle mb-0 data-table">
-						<thead><tr><th>Dátum</th><th>Súper</th><th class="text-center">Výsledok</th><th>V zápise</th><th class="text-end">G</th><th class="text-end">Karty</th></tr></thead>
+						<thead><tr><th>Dátum</th><th>Súper</th><th class="text-center">Výsledok</th><th>Nastúpil</th><th class="text-end">Min</th><th class="text-end">G</th><th class="text-end">Karty</th></tr></thead>
 						<tbody>
 						<?php foreach (array_reverse($P['matches']) as $m): [$dT] = format_match_date($m['date']);
 							$rc = ['W' => 'success', 'D' => 'secondary', 'L' => 'danger'][$m['result']] ?? 'light'; ?>
@@ -81,7 +82,14 @@ add_layout("header", array("title" => ($P['name'] ?? 'Hráč') . " – profil | 
 								<td class="text-nowrap small"><?= plain($dT) ?><div class="text-muted-2"><?= plain($m['round']) ?></div></td>
 								<td><span class="text-muted-2 small"><?= $m['home'] ? 'doma' : 'vonku' ?></span> <span class="fw-semibold"><?= plain($m['opponent']) ?></span></td>
 								<td class="text-center"><?php if ($m['score'] !== ''): ?><span class="badge text-bg-<?= $rc ?>"><?= plain($m['score']) ?></span><?php endif; ?></td>
-								<td class="small"><?= ['start' => 'základ', 'sub' => 'náhradník', 'listed' => '<span class="text-muted-2">áno</span>'][$m['role']] ?? '' ?></td>
+								<td class="small"><?php
+									$role = $m['role'] ?? 'listed';
+									if ($role === 'start') echo 'základ' . (($m['out'] ?? null) !== null ? ' <span class="text-muted-2">→ ' . (int)$m['out'] . "'</span>" : '');
+									elseif ($role === 'sub') echo 'striedal <span class="text-muted-2">' . (int)$m['in'] . "'</span>";
+									elseif ($role === 'bench') echo '<span class="text-muted-2">lavička</span>';
+									else echo '<span class="text-muted-2">v zápise</span>';
+								?></td>
+								<td class="text-end small"><?= isset($m['min']) && $m['min'] !== null ? (int)$m['min'] . "'" : '<span class="text-muted-2">–</span>' ?></td>
 								<td class="text-end fw-bold"><?= $m['goals'] ? str_repeat('<i class="bi bi-circle-fill text-primary" style="font-size:.55rem"></i>', min(5, $m['goals'])) . ' ' . (int)$m['goals'] : '' ?></td>
 								<td class="text-end"><?= str_repeat('<span class="card-ic yellow"></span>', (int)$m['yellow']) . str_repeat('<span class="card-ic red"></span>', (int)$m['red']) ?></td>
 							</tr>

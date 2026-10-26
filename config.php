@@ -45,7 +45,8 @@ define('MAX_IMAGE_SIDE', 4000);                             // max. šírka / v�
 // Galéria zobrazuje iba obrázky vytvorené v danom prehliadači; na serveri sa ukladajú všetky.
 // Heslo správcu: po prihlásení na adrese /spravca uvidíte obrázky zo všetkých prehliadačov a log.
 // Heslo sa zadáva iba do formulára (nikdy nie do adresy), preto sa nedostane do logov servera.
-defined('GALLERY_ADMIN_KEY') || define('GALLERY_ADMIN_KEY', '');   // nastavte v config.local.php
+// Predvolené heslo je asd123 – na verejnom serveri ho zmeňte v config.local.php.
+defined('GALLERY_ADMIN_KEY') || define('GALLERY_ADMIN_KEY', 'asd123');
 
 // ---------------------------------------------------------------------------------
 // LOG GENEROVANIA (storage/logs/generovanie-RRRR-MM.txt, z webu nedostupné)
@@ -63,6 +64,13 @@ define('API_SEASONS', 'https://sutaze.api.sportnet.online/api/v2/public/futbalsf
 define('API_TEAMS', 'https://sutaze.sportnet.online/api/v2/public/%s.futbalnet.sk/teams?limit=100&offset=0&seasonName=%s');
 define('API_MATCHES', 'https://sutaze.api.sportnet.online/api/v2/futbalnet/matches?teamId=%s&sorter=dateFromAsc&offset=0&limit=100');
 define('API_MATCH', 'https://sutaze.sportnet.online/api/v2/matches/%s?noCache=0');
+// Sportnet Sútaže API v2 (dokumentácia: https://sutaze.api.sportnet.online/api/v2/docs/)
+define('API_BASE', 'https://sutaze.sportnet.online/api/v2');
+define('API_CLUB_TEAMS', API_BASE . '/public/%s/teams?limit=100&offset=0&seasonName=%s');       // družstvá klubu (aj issf_club_…)
+define('API_PART_TABLE', API_BASE . '/public/competitions/%s/parts/%s/results');                // oficiálna tabuľka časti súťaže
+define('API_COMP_PLAYERS', API_BASE . '/public/competitions/%s/players?%s');                    // štatistiky hráčov (minúty, štarty, striedania)
+define('API_PLAYER_STATS', API_BASE . '/player/%s/statistics');                                 // kariérne štatistiky hráča
+define('API_CLUB_SEARCH', 'https://api.sportnet.online/v1/ppo/futbalsfz.sk/related-ppos?ppoType=club&limit=%d&offset=0&q=%s');
 
 // ---------------------------------------------------------------------------------
 // ROUTES
@@ -92,6 +100,7 @@ $routes = array(
     "api-team"                => "api/team",
     "api-save"                => "api/save",
     "api-gallery"             => "api/gallery",
+    "api-search"              => "api/search",
 
     // pôvodné serverové generátory (GD) – ponechané ako záloha
     "generate-match-result"   => "generate/generate-result",

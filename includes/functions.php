@@ -1087,6 +1087,14 @@ function sportnet_lineups(array $match, $homeId = '', $awayId = '') {
         // Ak v tomto zápise nie je vyznačený nikde a hráčov je viac ako 11, rozdelí sa podľa poradia
         // v zápise (základ býva uvedený prvý) – v generátore sa to zobrazí ako odhad.
         $flagged = (bool)array_filter($all, fn($x) => $x['sub']);
+        // bez príznaku: kto v zápise prišiel striedaním, je náhradník (udalosť "substitution")
+        if (!$flagged && count($all) > 11 && ($rep = sn_replacements($match, $tid))) {
+            foreach ($all as &$pl) if (isset($rep[$pl['id']]) || isset($rep['n:' . sn_name_key($pl['name'])])) $pl['sub'] = true;
+            unset($pl);
+            $flagged = count(array_filter($all, fn($x) => !$x['sub'])) <= 11;
+            if (!$flagged) foreach ($all as &$pl) $pl['sub'] = false;
+            unset($pl);
+        }
         if (!$flagged && count($all) > 11) {
             foreach ($all as $i => $pl) { $pl['sub'] = $i >= 11; $out[$side][$pl['sub'] ? 'subs' : 'start'][] = $pl; }
             $out[$side]['guessed'] = true;
@@ -1099,6 +1107,21 @@ function sportnet_lineups(array $match, $homeId = '', $awayId = '') {
     // brankár v základe ako prvý (ak zápis nemá poradie)
     foreach (['home', 'away'] as $s) {
         usort($out[$s]['start'], fn($a, $b) => (int)$b['gk'] <=> (int)$a['gk']);
+    }
+    return $out;
+}
+
+/** Hráči, ktorí v zápase prišli na ihrisko striedaním (kľúče: ID aj "n:" + kľúč mena) */
+function sn_replacements(array $match, $teamId = '') {
+    $out = [];
+    foreach ((array)sn_val($match, ['protocol.events', 'events'], []) as $e) {
+        if (!is_array($e) || !preg_match('/subst|striedan/i', (string)($e['eventType'] ?? ''))) continue;
+        if ($teamId !== '' && (string)($e['team'] ?? '') !== $teamId) continue;
+        $in = $e['replacement'] ?? $e['playerIn'] ?? null;
+        if (!is_array($in)) continue;
+        $id = sn_person_id($in);
+        if ($id !== '') $out[$id] = true;
+        $out['n:' . sn_name_key(sn_person_name($in))] = true;
     }
     return $out;
 }
@@ -1232,8 +1255,8 @@ function sn_own_team(array $matches, $preferId = '') {
 function sportnet_squad($teamId) {
     $t = sportnet_team($teamId);
     if (!empty($t['error'])) return $t;
-    $players = array_map(fn($p) => ['nr' => $p['nr'], 'name' => $p['name'], 'apps' => $p['apps'], 'starts' => $p['starts'], 'goals' => $p['goals'],
-        'gk' => $p['gk'], 'captain' => $p['captain'], 'key' => $p['key']], array_values(array_filter($t['players'], fn($p) => $p['apps'] > 0)));
+    $players = array_map(fn($p) => ['nr' => $p['nr'], 'name' => $p['name'], 'apps' => $p['apps'], 'starts' => $p['starts'], 'minutes' => $p['minutes'], 'goals' => $p['goals'],
+        'gk' => $p['gk'], 'captain' => $p['captain'], 'key' => $p['key']], array_values(array_filter($t['players'], fn($p) => $p['apps'] > 0 || ($p['listed'] ?? 0) > 0)));
     return ['players' => $players, 'coach' => $t['coach'], 'team' => $t['team']['name'], 'teamId' => $t['team']['id'], 'matches' => $t['matchesUsed'], 'played' => $t['played']];
 }
 

@@ -125,8 +125,8 @@
     function sourcePlayers() {
         if (SQUAD()) {
             const t = teamInfo || {};
-            const list = (t.players || []).filter((p) => p.apps > 0);
-            return { list: list.map((p) => ({ nr: p.nr || '', name: p.name, role: 'show', captain: !!p.captain, gk: !!p.gk, apps: p.apps, goals: p.goals, starts: p.starts })), coach: t.coach || '' };
+            const list = (t.players || []).filter((p) => p.apps > 0 || p.listed > 0);
+            return { list: list.map((p) => ({ nr: p.nr || '', name: p.name, role: 'show', captain: !!p.captain, gk: !!p.gk, apps: p.apps, goals: p.goals, starts: p.starts, minutes: p.minutes })), coach: t.coach || '' };
         }
         const l = ((matchInfo || {}).lineups || {})[side] || {};
         const map = (role) => (p) => ({ nr: p.nr || '', name: p.name, role, captain: !!p.captain, gk: !!p.gk });
@@ -184,7 +184,7 @@
 
         if (type === 'lineup' || SQUAD()) {
             const eff = effectivePlayers();
-            const clean = (p) => ({ nr: p.nr, name: p.name, captain: p.captain, gk: p.gk, apps: p.apps, goals: p.goals, starts: p.starts });
+            const clean = (p) => ({ nr: p.nr, name: p.name, captain: p.captain, gk: p.gk, apps: p.apps, goals: p.goals, starts: p.starts, minutes: p.minutes });
             if (SQUAD()) {
                 data.opponent = '';
                 data.players = { start: [], subs: [], squad: eff.list.filter((p) => p.role !== 'hide' && p.name).map(clean) };
@@ -256,7 +256,7 @@
         }
         // hráči
         if ($('#selPlayer').length) {
-            const list = (teamInfo.players || []).filter((p) => p.apps > 0);
+            const list = (teamInfo.players || []).filter((p) => p.apps > 0 || p.listed > 0);
             if (!playerKey && list.length) playerKey = list[0].key;
             $('#selPlayer').html(list.length ? list.map((p) => '<option value="' + esc(p.key) + '"' + (p.key === playerKey ? ' selected' : '') + '>' + esc((p.nr ? p.nr + ' · ' : '') + p.name) + '</option>').join('') : '<option value="">Žiadni hráči</option>');
             syncPlayerCard();
@@ -301,7 +301,7 @@
         $('#motmBox').prop('hidden', type !== 'motm');
         $('#milestoneBox').prop('hidden', type !== 'milestone');
         if (!P) { $('#playerStats').text(''); return; }
-        $('#playerStats').text(P.apps + ' zápasov · ' + P.goals + ' gólov · ' + P.yellow + ' ŽK / ' + P.red + ' ČK');
+        $('#playerStats').text(P.apps + ' zápasov' + (P.minutes != null ? ' · ' + P.minutes + ' min.' : '') + ' · ' + P.goals + ' gólov · ' + P.yellow + ' ŽK / ' + P.red + ' ČK');
         // zápasy pre "Hráč zápasu"
         const ms = P.matches.filter((m) => m.score !== '').reverse();
         if (!ms.find((m) => m.id === matchRef) && ms[0]) matchRef = ms[0].id;

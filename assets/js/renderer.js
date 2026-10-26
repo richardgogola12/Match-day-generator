@@ -84,7 +84,7 @@
         ['{season}', 'sezóna'], ['{coach}', 'tréner'], ['{players}', 'počet hráčov'],
         ['{halftime}', 'polčas'], ['{spectators}', 'diváci'], ['{referee}', 'rozhodca'], ['{venue}', 'štadión'],
         ['{player}', 'meno hráča'], ['{playerFirst}', 'krstné meno'], ['{playerLast}', 'priezvisko'], ['{playerNr}', 'číslo hráča'],
-        ['{apps}', 'zápasy hráča'], ['{goalsP}', 'góly hráča'], ['{penalties}', 'góly z penalty'],
+        ['{apps}', 'zápasy hráča'], ['{starts}', 'zápasy v základe'], ['{minutes}', 'odohrané minúty'], ['{goalsP}', 'góly hráča'], ['{penalties}', 'góly z penalty'],
         ['{yellow}', 'žlté karty'], ['{red}', 'červené karty'],
         ['{milestone}', 'jubileum (číslo)'], ['{milestoneLabel}', 'jubileum (text)'],
         ['{matchHome}', 'zápas – domáci'], ['{matchAway}', 'zápas – hostia'], ['{matchScore}', 'zápas – skóre'], ['{matchGoals}', 'góly hráča v zápase'],
@@ -211,7 +211,7 @@
         const n = (v) => (v === undefined || v === null ? '' : String(v));
         return {
             player: name, playerFirst: parts.length > 1 ? parts.slice(0, -1).join(' ') : name, playerLast: parts.length > 1 ? parts[parts.length - 1] : '',
-            playerNr: n(p.nr), apps: n(p.apps), goalsP: n(p.goals), penalties: n(p.penalties), yellow: n(p.yellow), red: n(p.red),
+            playerNr: n(p.nr), apps: n(p.apps), starts: n(p.starts), minutes: n(p.minutes), goalsP: n(p.goals), penalties: n(p.penalties), yellow: n(p.yellow), red: n(p.red),
             milestone: n(ms.value), milestoneLabel: n(ms.label),
             matchHome: n(m.home), matchAway: n(m.away), matchScore: n(m.score), matchGoals: n(m.goals),
         };
@@ -422,8 +422,8 @@
     /* ------------------------------------------------------------------ */
     function playerLine(el, p) {
         const name = (p.name || '') + (p.captain && el.capMark ? el.capMark : '') + (p.gk && el.gkMark ? el.gkMark : '');
-        const map = { nr: p.nr ?? '', name, apps: p.apps ?? '', goals: p.goals ?? '', penalties: p.penalties ?? '', yellow: p.yellow ?? '', red: p.red ?? '', pos: p.pos ?? '' };
-        let full = String(el.format || '{nr}  {name}').replace(/\{(nr|name|apps|goals|penalties|yellow|red|pos)\}/g, (m, k) => map[k]);
+        const map = { nr: p.nr ?? '', name, apps: p.apps ?? '', starts: p.starts ?? '', minutes: p.minutes ?? '', goals: p.goals ?? '', penalties: p.penalties ?? '', yellow: p.yellow ?? '', red: p.red ?? '', pos: p.pos ?? '' };
+        let full = String(el.format || '{nr}  {name}').replace(/\{(nr|name|apps|starts|minutes|goals|penalties|yellow|red|pos)\}/g, (m, k) => map[k]);
         full = full.replace(/^\s+/, '');
         // číslo zvlášť (iná farba) – iba ak formát začína {nr}
         let num = '';
@@ -766,7 +766,7 @@
                 { minute: '51', name: 'Ján Novák', side: 'away', kind: 'yellow' },
                 { minute: '78', name: 'Marek Molnár', side: 'away', kind: 'red' },
             ],
-            player: { name: 'Martin Kováč', nr: '7', apps: 13, goals: 9, penalties: 2, yellow: 2, red: 0 },
+            player: { name: 'Martin Kováč', nr: '7', apps: 13, starts: 12, minutes: 1064, goals: 9, penalties: 2, yellow: 2, red: 0 },
             playerMatch: { home: 'FK Slovan Horná Ves', away: 'TJ Družstevník Veľké Ludince', score: '3:2', goals: 2 },
             milestone: { value: 100, label: 'zápas za FK Slovan Horná Ves' },
             afterRound: 'po 12. kole',

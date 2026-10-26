@@ -1,61 +1,76 @@
 <?php
 	// GET vstupy
-	$s    = $_GET['s'] ?? '';    // sezóna "2025/2026"
-	$team = $_GET['team'] ?? ''; // ID klubu
+	$s    = (string)($_GET['s'] ?? '');    // sezóna "2025/2026" (prázdna = aktuálna)
+	$team = (string)($_GET['team'] ?? ''); // ID klubu
+	if (!preg_match('#^\d{4}/\d{4}$#', $s)) $s = md_default_season();
 	$data2 = ['teams' => []];
 	$error = null;
 
-	// získa družstvá klubu
-	if (str_starts_with($team, 'issf_club_')) {
-
-		// POZN.: pôvodná logika – URL klubu je zatiaľ napevno (KFC Komárno)
-		$url = 'https://sportnet.sme.sk/futbalnet/k/kfc-komarno-futbal/';
-		$content = getTeamsContent($url);
-
-		if ($content !== false) {
-			$start = strpos($content, '{\"teams\"');
-			$end = strrpos($content, ']}') + 2;
-			if ($start !== false) {
-				$jsonString = str_replace('\"', '"', substr($content, $start, $end - $start));
-				$dataExternal = json_decode($jsonString, true);
-				if (json_last_error() === JSON_ERROR_NONE) {
-					foreach ($dataExternal["teams"] as $key => $value) {
-						$data2["teams"][$key] = ["_id" => $value["id"], "displayName" => $value["name"]];
-					}
-				} else {
-					$error = 'Chyba pri dekódovaní JSON: ' . json_last_error_msg();
-				}
-			} else {
-				$error = 'Dáta družstiev sa nenašli.';
-			}
-		} else {
-			$error = 'Obsah s družstvami sa nenašiel.';
-		}
-	} else {
-		try {
-			$res = getJsonFromUrl(sprintf(API_TEAMS, rawurlencode($team), rawurlencode($s)));
-			if (!empty($res['teams'])) $data2 = $res;
-			elseif (!empty($res['error'])) $error = 'Sportnet API vrátilo chybu (HTTP ' . ($res['http_code'] ?? '?') . ').';
-		} catch (Exception $e) {
-			$error = $e->getMessage();
-		}
-	}
+	// družstvá klubu (appSpace: "klub.futbalnet.sk" alebo "issf_club_…")
+	if (!preg_match('/^[A-Za-z0-9_\-.]{2,120}$/', $team)) show_404();
+	$appSpace = str_starts_with($team, 'issf_') || str_contains($team, '.') ? $team : $team . '.futbalnet.sk';
+	$res = sn_fetch_cached(sprintf(API_CLUB_TEAMS, rawurlencode($appSpace), rawurlencode($s)), 1800);
+	if (!empty($res['teams'])) $data2 = $res;
+	elseif (!empty($res['error'])) $error = 'Družstvá klubu sa nepodarilo načítať zo Sportnetu. Skúste to o chvíľu.';
 
 	/** Odkaz na generátor */
 	function gen_link($type, $params) {
 		return url('generator') . '?' . http_build_query(['type' => $type] + $params);
 	}
 
-	add_layout("header", array("title" => "Zápasy " . $s . " | Match Day"));
+	// zápasy všetkých družstiev naraz (paralelne)
+	$teams = array_values($data2['teams']);
+	$lists = sn_fetch_many(array_map(fn($t) => sprintf(API_MATCHES, rawurlencode((string)$t['_id'])), $teams), 900);
+	$clubName = (string)($teams[0]['name'] ?? '');
+	$clubLogo = '';
+	foreach ($teams as $i => &$t) {
+		$t['matches'] = (array)($lists[$i]['matches'] ?? []);
+		[$t['ownId'], $t['ownName'], $t['ownLogo']] = $t['matches'] ? sn_own_team($t['matches'], (string)$t['_id']) : ['', '', ''];
+		if (!$clubLogo && $t['ownLogo']) $clubLogo = $t['ownLogo'];
+		if ($clubName === '' && $t['ownName']) $clubName = $t['ownName'];
+	}
+	unset($t);
+	$sel = (string)($_GET['t'] ?? '');
+	if (!array_filter($teams, fn($t) => $t['_id'] === $sel)) {
+		// predvolene družstvo s najbližším zápasom (dospelí majú prednosť)
+		$sel = (string)($teams[0]['_id'] ?? '');
+		foreach ($teams as $t) if ($t['matches'] && preg_match('/dospel|muži|a-tím/iu', $t['displayName'] ?? '')) { $sel = $t['_id']; break; }
+	}
+	$seasonsAll = array_reverse(array_column((array)(sn_fetch_cached(API_SEASONS, 24 * 3600)['seasons'] ?? []), 'name'));
+	$seasonsAll = array_slice($seasonsAll, 0, 6);
+	if ($s !== '' && !in_array($s, $seasonsAll, true)) array_unshift($seasonsAll, $s);
+
+	/** Parametre zápasu pre generátor */
+	$matchParams = function ($m, $ownId) {
+		$p = [
+			'd1name' => $m['homeTeam']['name'] ?? '', 'd2name' => $m['awayTeam']['name'] ?? '',
+			'd1url' => $m['homeTeam']['logoUrl'] ?? '', 'd2url' => $m['awayTeam']['logoUrl'] ?? '',
+			'startDate' => $m['startDate'] ?? '', 'competitionName' => $m['competitionPart']['name'] ?? '',
+			'round' => $m['round']['name'] ?? '', 'matchID' => $m['_id'] ?? '',
+			'team1ID' => $m['homeTeam']['_id'] ?? '', 'team2ID' => $m['awayTeam']['_id'] ?? '', 'myTeam' => $ownId,
+		];
+		if (($m['matchState'] ?? '') === 'ODOHRATY') $p += ['score1' => $m['homeTeam']['score'] ?? '', 'score2' => $m['awayTeam']['score'] ?? ''];
+		return $p;
+	};
+
+	add_layout("header", array("title" => ($clubName ?: 'Zápasy') . ' ' . $s . " | Match Day"));
 ?>
 
 <section class="hero hero-sm">
 	<div class="container-xxl">
-		<a href="<?= url('/') ?>" class="btn btn-sm btn-outline-light rounded-pill mb-3"><i class="bi bi-arrow-left me-1"></i> Nové hľadanie</a>
-		<h1 class="mb-2">Zápasy sezóny</h1>
-		<div class="d-flex flex-wrap gap-2 align-items-center">
-			<span class="hero-eyebrow"><i class="bi bi-calendar3"></i> <?= plain($s) ?></span>
-			<span class="hero-eyebrow"><i class="bi bi-people"></i> <?= count($data2['teams']) ?> družstiev</span>
+		<div class="club-head">
+			<?php if ($clubLogo): ?><img class="club-logo" src="<?= plain($clubLogo) ?>" alt=""><?php else: ?><span class="club-logo empty"><i class="bi bi-shield"></i></span><?php endif; ?>
+			<div class="min-w-0 flex-grow-1">
+				<h1 class="mb-2"><?= plain($clubName ?: 'Zápasy klubu') ?></h1>
+				<form class="d-flex flex-wrap gap-2 align-items-center" method="get" action="<?= url('match-day-season-detail') ?>">
+					<input type="hidden" name="team" value="<?= plain($team) ?>">
+					<label class="visually-hidden" for="seasonSel">Sezóna</label>
+					<select class="form-select form-select-sm season-pill" id="seasonSel" name="s" onchange="this.form.submit()">
+						<?php foreach ($seasonsAll as $sn): ?><option value="<?= plain($sn) ?>" <?= $sn === $s ? 'selected' : '' ?>><?= plain($sn) ?></option><?php endforeach; ?>
+					</select>
+					<span class="hero-eyebrow"><i class="bi bi-people"></i> <?= count($teams) ?> <?= count($teams) === 1 ? 'družstvo' : (count($teams) < 5 ? 'družstvá' : 'družstiev') ?></span>
+				</form>
+			</div>
 		</div>
 	</div>
 </section>
@@ -66,63 +81,97 @@
 		<div class="card-app mb-4"><div class="card-body">
 			<div class="alert alert-danger mb-0"><i class="bi bi-exclamation-octagon me-2"></i><?= plain($error) ?></div>
 		</div></div>
-	<?php elseif (!$data2['teams']): ?>
+	<?php elseif (!$teams): ?>
 		<div class="card-app"><div class="empty-state">
 			<i class="bi bi-inbox"></i>
-			Pre túto sezónu sa nenašli žiadne družstvá.
+			Pre sezónu <?= plain($s) ?> sa nenašli žiadne družstvá. Skúste inú sezónu.
 		</div></div>
 	<?php endif; ?>
 
-	<?php if (count($data2['teams']) > 1): ?>
-		<div class="d-flex flex-wrap gap-2 mb-3">
-			<?php foreach ($data2["teams"] as $value2): ?>
-				<a href="#team-<?= plain($value2['_id']) ?>" class="btn btn-sm rounded-pill btn-light border"><?= plain($value2['displayName']) ?></a>
+	<?php if (count($teams) > 1): ?>
+		<nav class="club-tabs mb-3" aria-label="Družstvá klubu">
+			<?php foreach ($teams as $t): ?>
+				<a href="?<?= plain(http_build_query(['s' => $s, 'team' => $team, 't' => $t['_id']])) ?>" data-team-tab="<?= plain($t['_id']) ?>" class="club-tab<?= $t['_id'] === $sel ? ' active' : '' ?>"<?= $t['_id'] === $sel ? ' aria-current="true"' : '' ?>>
+					<?= plain($t['displayName'] ?? '') ?> <span class="count"><?= count($t['matches']) ?></span>
+				</a>
 			<?php endforeach; ?>
-		</div>
+		</nav>
 	<?php endif; ?>
 
-	<?php foreach ($data2["teams"] as $value2):
-		$team_name = $value2["displayName"];
-		$team_id = $value2["_id"];
-		$season = str_starts_with($team, 'issf_club_') ? $s : ($value2["season"]["name"] ?? $s);
-
-		try {
-			$data = getJsonFromUrl(sprintf(API_MATCHES, rawurlencode($team_id)));
-		} catch (Exception $e) {
-			$data = ['matches' => []];
-		}
-		$matches = $data["matches"] ?? [];
-		$played = count(array_filter($matches, fn($m) => ($m['matchState'] ?? '') === 'ODOHRATY'));
-		// klub tohto družstva (tím, ktorý je vo všetkých zápasoch) – pre súpisku a predvolenú zostavu
-		[$ownId, $ownName, $ownLogo] = $matches ? sn_own_team($matches, $team_id) : ['', '', ''];
-		$squadLink = gen_link('squad', [
-			'team' => $team_id, 'd1name' => $ownName ?: $team_name, 'd1url' => $ownLogo, 'category' => $team_name,
-			'season' => $season, 'competitionName' => $matches[0]['competitionPart']['name'] ?? '',
-		]);
+	<?php foreach ($teams as $tm):
+		$team_name = $tm["displayName"] ?? '';
+		$team_id = (string)$tm["_id"];
+		$season = $tm["season"]["name"] ?? $s;
+		$matches = $tm['matches'];
+		$ownId = $tm['ownId'];
+		$played = array_values(array_filter($matches, fn($m) => ($m['matchState'] ?? '') === 'ODOHRATY'));
+		$upcoming = array_values(array_filter($matches, fn($m) => ($m['matchState'] ?? '') !== 'ODOHRATY' && ($m['matchState'] ?? '') !== 'NEZUCASTNENE_JEDNO_DRUZSTVO' && strtotime($m['startDate'] ?? '') > time() - 3 * 3600));
+		$squadLink = gen_link('squad', ['team' => $team_id, 'd1name' => $tm['ownName'] ?: $team_name, 'd1url' => $tm['ownLogo'], 'category' => $team_name,
+			'season' => $season, 'competitionName' => $matches[0]['competitionPart']['name'] ?? '']);
 		$teamLink = url('druzstvo') . '?' . http_build_query(['team' => $team_id, 's' => $season, 'cat' => $team_name]);
+		$next = $upcoming[0] ?? null;
+		$last = $played ? end($played) : null;
 	?>
+	<div class="team-pane" data-team-pane="<?= plain($team_id) ?>"<?= $team_id === $sel ? '' : ' hidden' ?>>
+
+		<?php if ($next || $last): ?>
+		<div class="row g-3 mb-4">
+			<?php foreach ([['Najbližší zápas', $next, false], ['Posledný zápas', $last, true]] as [$label, $m, $isRes]): if (!$m) continue;
+				$p = $matchParams($m, $ownId);
+				[$dT, $tT] = format_match_date($m['startDate'] ?? ''); ?>
+			<div class="col-md-6">
+				<div class="card-app h-100 spotlight">
+					<div class="card-body">
+						<div class="d-flex justify-content-between align-items-center mb-2">
+							<span class="spot-label"><?= $label ?></span>
+							<span class="small text-muted-2"><?= plain($dT) ?><?= $isRes ? '' : ' · ' . plain($tT) ?></span>
+						</div>
+						<div class="spot-teams">
+							<span class="spot-team"><?php if (!empty($m['homeTeam']['logoUrl'])): ?><img src="<?= plain($m['homeTeam']['logoUrl']) ?>" alt=""><?php endif; ?><span><?= plain($m['homeTeam']['name'] ?? '') ?></span></span>
+							<span class="spot-score"><?= $isRes ? plain(($m['homeTeam']['score'] ?? '') . ':' . ($m['awayTeam']['score'] ?? '')) : 'vs' ?></span>
+							<span class="spot-team away"><?php if (!empty($m['awayTeam']['logoUrl'])): ?><img src="<?= plain($m['awayTeam']['logoUrl']) ?>" alt=""><?php endif; ?><span><?= plain($m['awayTeam']['name'] ?? '') ?></span></span>
+						</div>
+						<div class="d-flex flex-wrap gap-2 mt-3">
+							<?php if ($isRes): ?>
+								<a class="btn btn-primary btn-sm rounded-pill px-3" href="<?= plain(gen_link('result', $p)) ?>"><i class="bi bi-trophy me-1"></i>Výsledok</a>
+								<a class="btn btn-outline-primary btn-sm rounded-pill px-3" href="<?= plain(gen_link('goals', $p)) ?>"><i class="bi bi-list-ol me-1"></i>Strelci</a>
+								<a class="btn btn-outline-secondary btn-sm rounded-pill px-3" href="<?= plain(url('zapas') . '?' . http_build_query($p)) ?>"><i class="bi bi-file-text me-1"></i>Zápis</a>
+							<?php else: ?>
+								<a class="btn btn-primary btn-sm rounded-pill px-3" href="<?= plain(gen_link('matchday', $p)) ?>"><i class="bi bi-calendar-event me-1"></i>Match day</a>
+								<a class="btn btn-outline-primary btn-sm rounded-pill px-3" href="<?= plain(gen_link('lineup', $p)) ?>"><i class="bi bi-person-lines-fill me-1"></i>Zostava</a>
+							<?php endif; ?>
+						</div>
+					</div>
+				</div>
+			</div>
+			<?php endforeach; ?>
+		</div>
+		<?php endif; ?>
+
 		<section class="card-app team-card mb-4" id="team-<?= plain($team_id) ?>">
 			<div class="card-header">
 				<div>
 					<h2 class="team-title"><?= plain($team_name) ?></h2>
-					<div class="small text-muted-2"><?= plain($season) ?> · <?= count($matches) ?> zápasov · <?= $played ?> odohraných</div>
+					<div class="small text-muted-2"><?= plain($matches[0]['competitionPart']['name'] ?? $season) ?> · <?= count($played) ?>/<?= count($matches) ?> odohraných</div>
 				</div>
-				<div class="d-flex flex-wrap gap-2 align-items-center">
-					<div class="btn-group filter-pills" role="group" aria-label="Filter zápasov">
-						<button type="button" class="btn btn-outline-secondary active" data-filter="all">Všetky</button>
-						<button type="button" class="btn btn-outline-secondary" data-filter="upcoming">Nadchádzajúce</button>
-						<button type="button" class="btn btn-outline-secondary" data-filter="played">Odohraté</button>
-					</div>
-					<?php if ($matches): ?>
-						<a class="btn btn-sm btn-outline-primary rounded-pill px-3" href="<?= plain($teamLink) ?>" title="Hráči, tabuľka, kolá a štatistiky družstva"><i class="bi bi-bar-chart-line me-1"></i>Prehľad družstva</a>
-						<a class="btn btn-sm btn-primary rounded-pill px-3" href="<?= plain($squadLink) ?>" title="Obrázok so súpiskou družstva za sezónu"><i class="bi bi-people me-1"></i>Súpiska</a>
-					<?php endif; ?>
+				<?php if ($matches): ?>
+				<div class="d-flex flex-wrap gap-2">
+					<a class="btn btn-sm btn-primary rounded-pill px-3" href="<?= plain($teamLink) ?>"><i class="bi bi-bar-chart-line me-1"></i>Tabuľka a hráči</a>
+					<a class="btn btn-sm btn-outline-primary rounded-pill px-3" href="<?= plain($squadLink) ?>" title="Obrázok so súpiskou družstva"><i class="bi bi-people me-1"></i>Súpiska</a>
 				</div>
+				<?php endif; ?>
 			</div>
 
 			<?php if (!$matches): ?>
 				<div class="empty-state"><i class="bi bi-calendar-x"></i>Žiadne zápasy.</div>
 			<?php else: ?>
+			<div class="list-toolbar">
+				<div class="btn-group filter-pills" role="group" aria-label="Filter zápasov">
+					<button type="button" class="btn btn-outline-secondary active" data-filter="all">Všetky</button>
+					<button type="button" class="btn btn-outline-secondary" data-filter="upcoming">Nadchádzajúce</button>
+					<button type="button" class="btn btn-outline-secondary" data-filter="played">Odohraté</button>
+				</div>
+			</div>
 			<ul class="match-list">
 				<?php foreach ($matches as $value):
 					$home = $value["homeTeam"];
@@ -137,33 +186,14 @@
 					$logo1 = $home['logoUrl'] ?? '';
 					$logo2 = $away['logoUrl'] ?? '';
 					$roundName = $value["round"]["name"] ?? '';
-
-					$params = [
-						'd1name' => $home['name'] ?? '',
-						'd2name' => $away['name'] ?? '',
-						'd1url' => $logo1,
-						'd2url' => $logo2,
-						'startDate' => $value['startDate'] ?? '',
-						'competitionName' => $value['competitionPart']['name'] ?? '',
-						'round' => $roundName,
-						'matchID' => $value['_id'] ?? '',
-						'team1ID' => $home['_id'] ?? '',
-						'team2ID' => $away['_id'] ?? '',
-						'myTeam' => $ownId,
-					];
-					if ($isPlayed) {
-						$params += [
-							'score1' => $home['score'] ?? '',
-							'score2' => $away['score'] ?? '',
-						];
-					}
+					$params = $matchParams($value, $ownId);
+					$zapis = url('zapas') . '?' . http_build_query($params);
 				?>
 				<li class="match" data-state="<?= $isPlayed ? 'played' : 'upcoming' ?>">
 					<div class="match-meta">
 						<span class="round"><?= plain(preg_match('/kolo/i', $roundName) ? $roundName : $roundName . '. kolo') ?></span>
-						<span><i class="bi bi-calendar3 me-1"></i><?= plain($dateTxt) ?> · <?= plain($timeTxt) ?></span>
-						<span class="text-truncate" style="max-width:100%"><?= plain($value["competitionPart"]["name"] ?? '') ?></span>
-						<span class="badge rounded-pill text-bg-<?= $stateColor ?> bg-opacity-75"><?= plain($stateTxt) ?></span>
+						<span><?= plain($dateTxt) ?> · <?= plain($timeTxt) ?></span>
+						<?php if (!$isPlayed): ?><span class="badge rounded-pill text-bg-<?= $stateColor ?> bg-opacity-75"><?= plain($stateTxt) ?></span><?php endif; ?>
 					</div>
 
 					<div class="match-teams">
@@ -172,7 +202,7 @@
 							<?php if ($logo1): ?><img class="team-logo" src="<?= plain($logo1) ?>" alt="" loading="lazy"><?php else: ?><span class="team-logo empty"><i class="bi bi-shield"></i></span><?php endif; ?>
 						</div>
 						<?php if ($isPlayed): ?>
-							<a class="match-score" href="<?= plain(url('zapas') . '?' . http_build_query($params)) ?>" title="Celý zápis o stretnutí"><?= plain($home['score'] ?? '') ?> : <?= plain($away['score'] ?? '') ?></a>
+							<a class="match-score" href="<?= plain($zapis) ?>" title="Zápis o stretnutí"><?= plain($home['score'] ?? '') ?> : <?= plain($away['score'] ?? '') ?></a>
 						<?php else: ?>
 							<div class="match-score upcoming"><?= $isBye ? '–' : plain($timeTxt) ?></div>
 						<?php endif; ?>
@@ -184,17 +214,20 @@
 
 					<div class="match-actions">
 						<?php if (!$isBye): ?>
-							<?php if ($params['matchID'] !== ''): ?>
-								<a class="btn btn-outline-secondary" href="<?= plain(url('zapas') . '?' . http_build_query($params)) ?>" title="Celý zápis o stretnutí"><i class="bi bi-file-text me-1"></i>Zápis</a>
-							<?php endif; ?>
-							<a class="btn btn-outline-primary" href="<?= plain(gen_link('matchday', $params)) ?>"><i class="bi bi-calendar-event me-1"></i>Match day</a>
-							<?php if ($params['matchID'] !== ''): ?>
-								<a class="btn btn-outline-primary" href="<?= plain(gen_link('lineup', $params)) ?>" title="Zostava zo zápisu o stretnutí"><i class="bi bi-person-lines-fill me-1"></i>Zostava</a>
-							<?php endif; ?>
-							<?php if ($isPlayed): ?>
-								<a class="btn btn-outline-primary" href="<?= plain(gen_link('result', $params)) ?>"><i class="bi bi-trophy me-1"></i>Výsledok</a>
-								<a class="btn btn-primary" href="<?= plain(gen_link('goals', $params)) ?>"><i class="bi bi-list-ol me-1"></i>Strelci</a>
-							<?php endif; ?>
+							<a class="btn btn-<?= $isPlayed ? 'outline-primary' : 'primary' ?>" href="<?= plain(gen_link($isPlayed ? 'result' : 'matchday', $params)) ?>"><i class="bi bi-<?= $isPlayed ? 'trophy' : 'calendar-event' ?> me-1"></i><?= $isPlayed ? 'Výsledok' : 'Match day' ?></a>
+							<div class="dropdown">
+								<button class="btn btn-outline-secondary btn-more" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Ďalšie obrázky a zápis" title="Ďalšie"><i class="bi bi-three-dots"></i></button>
+								<ul class="dropdown-menu dropdown-menu-end app-dropdown">
+									<?php if ($params['matchID'] !== ''): ?><li><a class="dropdown-item" href="<?= plain($zapis) ?>"><i class="bi bi-file-text"></i>Zápis o stretnutí</a></li><li><hr class="dropdown-divider"></li><?php endif; ?>
+									<li><a class="dropdown-item" href="<?= plain(gen_link('matchday', $params)) ?>"><i class="bi bi-calendar-event"></i>Match day</a></li>
+									<?php if ($params['matchID'] !== ''): ?><li><a class="dropdown-item" href="<?= plain(gen_link('lineup', $params)) ?>"><i class="bi bi-person-lines-fill"></i>Zostava</a></li><?php endif; ?>
+									<?php if ($isPlayed): ?>
+										<li><a class="dropdown-item" href="<?= plain(gen_link('result', $params)) ?>"><i class="bi bi-trophy"></i>Výsledok</a></li>
+										<li><a class="dropdown-item" href="<?= plain(gen_link('goals', $params)) ?>"><i class="bi bi-list-ol"></i>Strelci</a></li>
+										<li><a class="dropdown-item" href="<?= plain(gen_link('report', $params)) ?>"><i class="bi bi-journal-text"></i>Správa zo zápasu</a></li>
+									<?php endif; ?>
+								</ul>
+							</div>
 						<?php endif; ?>
 					</div>
 				</li>
@@ -203,6 +236,7 @@
 			<div class="empty-state filter-empty" hidden><i class="bi bi-funnel"></i>Žiadne zápasy pre zvolený filter.</div>
 			<?php endif; ?>
 		</section>
+	</div>
 	<?php endforeach; ?>
 </div>
 
@@ -220,6 +254,21 @@ $(function () {
 		});
 		$card.find('.filter-empty').prop('hidden', visible > 0);
 	});
+	// prepínanie družstiev bez načítania stránky
+	$('[data-team-tab]').on('click', function (e) {
+		e.preventDefault();
+		const id = this.dataset.teamTab;
+		$('[data-team-tab]').removeClass('active').removeAttr('aria-current');
+		$(this).addClass('active').attr('aria-current', 'true');
+		$('[data-team-pane]').each(function () { this.hidden = this.dataset.teamPane !== id; });
+		history.replaceState(null, '', this.href);
+	});
+	// zapamätať klub do "Naposledy hľadané"
+	try {
+		const MD = window.MD, list = (MD.store.pref('recent') || []).filter((r) => !(r.teamId === <?= json_encode($team) ?> && r.season === <?= json_encode($s) ?>));
+		<?php if ($teams): ?>list.unshift({ teamId: <?= json_encode($team) ?>, teamName: <?= json_encode($clubName, JSON_UNESCAPED_UNICODE) ?>, season: <?= json_encode($s) ?>, logo: <?= json_encode($clubLogo) ?> });
+		MD.store.pref('recent', list.slice(0, 6));<?php endif; ?>
+	} catch (e) {}
 });
 </script>
 

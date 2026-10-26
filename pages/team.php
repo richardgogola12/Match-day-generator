@@ -26,9 +26,10 @@ if ($roundSel !== null) foreach ($rounds as $i => $r) if ($r['no'] === $roundSel
 $tab = $_GET['tab'] ?? 'prehlad';
 if (!in_array($tab, ['prehlad', 'hraci', 'tabulka', 'kola'], true)) $tab = 'prehlad';
 
+$hasMin = !empty($T['hasMinutes']);
 $leaders = [
 	['goals', 'Strelci', 'bi-bullseye', 'gólov'],
-	['apps', 'Najviac zápasov', 'bi-calendar-check', 'zápasov'],
+	$hasMin ? ['minutes', 'Najviac minút', 'bi-stopwatch', 'min.'] : ['apps', 'Najviac zápasov', 'bi-calendar-check', 'zápasov'],
 	['yellow', 'Žlté karty', 'bi-square-fill text-warning', 'ŽK'],
 ];
 
@@ -98,7 +99,7 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 			</div>
 
 			<div class="row g-4">
-				<div class="col-lg-4">
+				<div class="col-md-6 col-xl-3">
 					<div class="card-app h-100"><div class="card-body">
 						<h2 class="h6 section-title text-uppercase text-muted-2 mb-3">Forma a bilancia</h2>
 						<div class="mb-3"><?= md_form_badges($st['form'] ?? []) ?: '<span class="text-muted-2">–</span>' ?> <span class="small text-muted-2 ms-1">posledných 5 zápasov</span></div>
@@ -107,12 +108,12 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 							<dt>Vonku</dt><dd><?= (int)($st['away']['w'] ?? 0) ?> V · <?= (int)($st['away']['d'] ?? 0) ?> R · <?= (int)($st['away']['l'] ?? 0) ?> P</dd>
 							<dt>Žlté / červené karty</dt><dd><?= (int)($st['yellow'] ?? 0) ?> / <?= (int)($st['red'] ?? 0) ?></dd>
 							<?php if (!empty($st['bigWin'])): ?><dt>Najvyššia výhra</dt><dd><?= plain($st['bigWin']['score']) ?> <span class="fw-normal text-muted-2">– <?= plain($st['bigWin']['opponent']) ?></span></dd><?php endif; ?>
-							<dt>Hráčov v zápisoch</dt><dd><?= count(array_filter($players, fn($p) => $p['apps'] > 0)) ?></dd>
+							<dt>Hráčov nastúpilo</dt><dd><?= count(array_filter($players, fn($p) => $p['apps'] > 0)) ?></dd>
 						</dl>
 					</div></div>
 				</div>
 				<?php foreach ($leaders as [$f, $title, $icon, $unit]): $list = sn_leaders($players, $f, 5); ?>
-					<div class="col-md-6 col-lg-4">
+					<div class="col-md-6 col-xl-3">
 						<div class="card-app h-100"><div class="card-body">
 							<h2 class="h6 section-title text-uppercase text-muted-2 mb-3"><i class="bi <?= $icon ?> me-1"></i><?= $title ?></h2>
 							<?php if (!$list): ?><div class="text-muted-2 small">Zatiaľ žiadne údaje.</div><?php endif; ?>
@@ -125,7 +126,7 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 					</div>
 				<?php endforeach; ?>
 			</div>
-			<p class="small text-muted-2 mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>Štatistiky sú spočítané zo zápisov o stretnutí na Sportnete (<?= (int)($T['matchesUsed'] ?? 0) ?> z <?= (int)($T['played'] ?? 0) ?> odohratých zápasov). Zápas = uvedenie v zápise o stretnutí; Sportnet neeviduje striedania ani odohraté minúty.</p>
+			<p class="small text-muted-2 mt-3 mb-0"><i class="bi bi-info-circle me-1"></i><?= !empty($T['officialStats']) ? 'Minúty, zápasy a štarty sú oficiálne štatistiky Sportnetu; ostatné údaje zo zápisov o stretnutí' : 'Štatistiky sú spočítané zo zápisov o stretnutí na Sportnete' ?> (<?= (int)($T['matchesUsed'] ?? 0) ?> z <?= (int)($T['played'] ?? 0) ?> odohratých zápasov).</p>
 		</div>
 
 		<!-- HRÁČI -->
@@ -138,7 +139,7 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 					<table class="table table-hover align-middle mb-0 data-table sortable">
 						<thead><tr>
 							<th data-sort="num">#</th><th data-sort="text">Hráč</th>
-							<th data-sort="num" class="text-end" title="Zápasy v zápise o stretnutí">Z</th><th data-sort="num" class="text-end" title="Góly">G</th><th data-sort="num" class="text-end" title="Góly z pokutového kopu">PK</th><th data-sort="num" class="text-end" title="Žlté karty">ŽK</th><th data-sort="num" class="text-end" title="Červené karty">ČK</th><th></th>
+							<th data-sort="num" class="text-end" title="Odohrané zápasy">Z</th><th data-sort="num" class="text-end" title="V základnej zostave">Š</th><?php if ($hasMin): ?><th data-sort="num" class="text-end" title="Odohrané minúty">Min</th><?php endif; ?><th data-sort="num" class="text-end" title="Góly">G</th><th data-sort="num" class="text-end" title="Góly z pokutového kopu">PK</th><th data-sort="num" class="text-end" title="Žlté karty">ŽK</th><th data-sort="num" class="text-end" title="Červené karty">ČK</th><th></th>
 						</tr></thead>
 						<tbody>
 							<?php foreach ($players as $p): $pl = url('hrac') . '?' . $q(['p' => $p['key']]); ?>
@@ -146,10 +147,10 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 									<td class="fw-bold text-primary" data-v="<?= $p['nr'] === '' ? 999 : (int)$p['nr'] ?>"><?= plain($p['nr'] ?: '–') ?></td>
 									<td data-v="<?= plain($p['key']) ?>"><a class="fw-semibold text-reset text-decoration-none" href="<?= plain($pl) ?>"><?= plain($p['name']) ?></a>
 										<?= $p['captain'] ? '<span class="badge text-bg-warning ms-1">C</span>' : '' ?><?= $p['gk'] ? '<span class="badge text-bg-secondary ms-1">B</span>' : '' ?></td>
-									<?php foreach (['apps', 'goals', 'penalties', 'yellow', 'red'] as $f): ?>
+									<?php foreach (array_merge(['apps', 'starts'], $hasMin ? ['minutes'] : [], ['goals', 'penalties', 'yellow', 'red']) as $f): ?>
 										<td class="text-end" data-v="<?= (int)$p[$f] ?>"><?= (int)$p[$f] ?: '<span class="text-muted-2">0</span>' ?></td>
 									<?php endforeach; ?>
-									<td class="text-end"><a class="btn btn-sm btn-outline-primary" href="<?= plain($pl) ?>">Profil</a></td>
+									<td class="text-end"><a class="btn btn-sm btn-outline-primary rounded-pill" href="<?= plain($pl) ?>">Profil</a></td>
 								</tr>
 							<?php endforeach; ?>
 						</tbody>
@@ -185,7 +186,8 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 				<?php endif; ?>
 			</div>
 			<?php if (!empty($C['official'])): ?>
-				<p class="small text-muted-2 mt-3 mb-0"><i class="bi bi-patch-check me-1"></i>Oficiálna tabuľka zo Sportnetu (vrátane kontumácií a odpočtov bodov). Forma je vypočítaná z výsledkov.</p>
+				<p class="small text-muted-2 mt-3 mb-0"><i class="bi bi-patch-check me-1"></i>Oficiálna tabuľka zo Sportnetu (vrátane kontumácií a odpočtov bodov).</p>
+					<?php foreach ($C['table'] as $r) if (!empty($r['note'])): ?><p class="small text-muted-2 mb-0"><i class="bi bi-exclamation-circle me-1"></i><?= plain($r['name']) ?>: <?= plain($r['note']) ?></p><?php endif; ?>
 			<?php else: ?>
 				<p class="small text-muted-2 mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>Sportnet k tejto súťaži neposlal oficiálnu tabuľku, preto je vypočítaná z výsledkov zápasov (výhra 3 body, remíza 1 bod). Kontumácie a odpočty bodov rozhodnuté mimo ihriska sa v nej nemusia prejaviť.</p>
 			<?php endif; ?>
@@ -232,6 +234,9 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 
 <script>
 $(function () {
+	// družstvo a hráči do globálneho hľadania (iba v tomto prehliadači)
+	window.MD.rememberTeam && window.MD.rememberTeam(<?= json_encode(['teamId' => $teamId, 'season' => $season, 'cat' => $cat, 'club' => $team['name'], 'logo' => $team['logo'],
+		'players' => array_map(fn($p) => ['key' => $p['key'], 'name' => $p['name'], 'nr' => $p['nr']], $players)], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>);
 	// karta v adrese (návrat späť ostane na rovnakej karte)
 	$('[data-tab]').on('shown.bs.tab', function () {
 		const u = new URL(location.href); u.searchParams.set('tab', this.dataset.tab); history.replaceState(null, '', u);

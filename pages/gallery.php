@@ -82,7 +82,7 @@
 			Na serveri zatiaľ nie sú uložené žiadne obrázky.
 		<?php else: ?>
 			V tomto prehliadači ste zatiaľ nevygenerovali žiadny obrázok.
-			<div class="small mt-1">Ak ste ich tvorili v inom prehliadači, preneste si nastavenia cez <a href="<?= url('nastavenia') ?>">Nastavenie šablón → Záloha</a>.</div>
+			<div class="small mt-1">Ak ste ich tvorili v inom prehliadači, preneste si nastavenia cez <a href="<?= url('nastavenia') ?>">Šablóny → Záloha</a>.</div>
 		<?php endif; ?>
 		<div class="mt-3"><a href="<?= url('/') ?>" class="btn btn-primary"><i class="bi bi-search me-1"></i> Nájsť zápas</a></div>
 	</div></div>

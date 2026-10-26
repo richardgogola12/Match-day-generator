@@ -141,25 +141,23 @@
 <section id="rychly">
 	<h2><i class="bi bi-lightning-charge"></i>Rýchly štart</h2>
 	<ol class="guide-steps">
-		<li><strong>Zápasy</strong> – vyberte sezónu a začnite písať názov svojho klubu.</li>
-		<li>Kliknite na <strong>Zobraziť zápasy</strong>.</li>
-		<li>Pri zápase kliknite na <strong>Match day</strong>, <strong>Zostava</strong>, <strong>Výsledok</strong> alebo <strong>Strelci</strong> – alebo v hlavičke družstva na <strong>Súpiska</strong>.</li>
+		<li>Do <strong>hľadania</strong> (na úvodnej stránke alebo hore v menu) napíšte názov svojho klubu a kliknite naň.</li>
+		<li>Navrchu stránky klubu je <strong>najbližší</strong> a <strong>posledný zápas</strong> – kliknite na <strong>Match day</strong>, <strong>Zostava</strong>, <strong>Výsledok</strong> alebo <strong>Strelci</strong>.</li>
 		<li>Kliknite na <strong>Stiahnuť PNG</strong> – hotovo, obrázok môžete zverejniť.</li>
 	</ol>
-	<p class="mb-0">Ak chcete zmeniť vzhľad (pozadie, rozmiestnenie, písmo), otvorte <a href="<?= url('nastavenia') ?>">Nastavenie šablón</a>. Stačí to urobiť raz – všetky ďalšie obrázky sa vytvoria podľa vašej šablóny.</p>
+	<p class="mb-0">Ak chcete zmeniť vzhľad (pozadie, rozmiestnenie, písmo), otvorte <a href="<?= url('nastavenia') ?>">Šablóny</a>. Stačí to urobiť raz – všetky ďalšie obrázky sa vytvoria podľa vašej šablóny.</p>
 </section>
 
 <!-- ================================================================== -->
 <section id="vyhladanie">
 	<h2><i class="bi bi-search"></i>1. Vyhľadanie klubu</h2>
-	<p>Na úvodnej stránke (v menu <strong>Zápasy</strong>) nájdete formulár <em>Vyhľadať zápasy</em>.</p>
+	<p>Na úvodnej stránke je veľké pole na hľadanie. Na ostatných stránkach je rovnaké <strong>hľadanie hore v menu</strong> – kedykoľvek ho otvoríte klávesou <kbd>/</kbd> alebo <kbd>Ctrl</kbd> + <kbd>K</kbd>.</p>
 	<ol class="guide-steps">
-		<li>V poli <strong>Sezóna</strong> je predvolene vybraná najnovšia sezóna. Ak potrebujete staršiu, vyberte ju zo zoznamu.</li>
-		<li>Do poľa <strong>Klub / družstvo</strong> napíšte <strong>aspoň 3 znaky</strong> názvu klubu (napr. „<em>lúka</em>“). Zobrazí sa zoznam nájdených klubov – kliknite na ten správny.</li>
-		<li>Kliknite na <strong>Zobraziť zápasy</strong>.</li>
+		<li>Napíšte <strong>aspoň 2 znaky</strong> názvu klubu alebo obce (napr. „<em>lúka</em>“). Zobrazia sa nájdené kluby zo Sportnetu.</li>
+		<li>Kliknite na klub (alebo ho vyberte šípkami a potvrďte klávesou <kbd>Enter</kbd>). Otvorí sa stránka klubu s aktuálnou sezónou; inú sezónu vyberiete pod hľadaním alebo priamo na stránke klubu.</li>
 	</ol>
-	<?= guide_shot('01-vyhladanie.webp', 'Vyhľadanie klubu na úvodnej stránke', 'Po napísaní troch znakov sa zobrazí zoznam klubov zo Sportnetu.') ?>
-	<p>Kluby, ktoré ste už hľadali, sa zobrazia v časti <strong>Naposledy hľadané</strong> pod formulárom. Kliknutím na ne sa k zápasom dostanete jedným ťuknutím. Krížikom položku odstránite, tlačidlom <em>Vymazať</em> vymažete celý zoznam.</p>
+	<?= guide_shot('01-vyhladanie.webp', 'Vyhľadanie klubu na úvodnej stránke', 'Po napísaní dvoch znakov sa zobrazia kluby zo Sportnetu.') ?>
+	<p>Hľadanie nájde aj <strong>hráčov a družstvá</strong>, ktoré ste si už prezreli (napr. „<em>kováč</em>“ otvorí profil hráča), a stránky aplikácie (<em>galéria, šablóny, návod</em>). Kluby, ktoré ste otvorili, sú na úvodnej stránke v časti <strong>Vaše kluby</strong> a v hľadaní sa ukážu hneď po kliknutí do poľa. Krížikom klub zo zoznamu odstránite.</p>
 	<div class="guide-tip">
 		<i class="bi bi-lightbulb-fill"></i>
 		<div>Hľadajte podľa výrazného slova z názvu klubu (obec, mesto). Diakritiku písať nemusíte, ale s ňou býva výsledok presnejší.</div>
@@ -169,19 +167,16 @@
 <!-- ================================================================== -->
 <section id="zapasy">
 	<h2><i class="bi bi-list-ul"></i>2. Zoznam zápasov</h2>
-	<p>Stránka <strong>Zápasy sezóny</strong> zobrazí všetky družstvá klubu v danej sezóne (muži, dorast, žiaci…). Ak ich je viac, hore sú tlačidlá, ktorými rýchlo skočíte na konkrétne družstvo.</p>
-	<?= guide_shot('02-zapasy.webp', 'Zoznam zápasov družstva', 'Každý zápas má kolo, dátum, súťaž, stav a tlačidlá na vytvorenie obrázkov.') ?>
+	<p>Stránka klubu má hore logo, názov a <strong>výber sezóny</strong>. Pod ňou sú <strong>záložky družstiev</strong> (muži, dorast, žiaci…) s počtom zápasov – kliknutím prepnete družstvo.</p>
+	<?= guide_shot('02-zapasy.webp', 'Stránka klubu so zápasmi družstva', 'Navrchu najbližší a posledný zápas, pod nimi všetky zápasy družstva.') ?>
 	<ul class="guide-list">
-		<li><strong>Filter</strong> <em>Všetky / Nadchádzajúce / Odohraté</em> v hlavičke družstva skryje zápasy, ktoré práve nepotrebujete.</li>
-		<li>Pri <strong>nadchádzajúcom</strong> zápase je dostupné iba tlačidlo <strong>Match day</strong> (pozvánka).</li>
-		<li>Pri každom zápase je tlačidlo <strong>Zostava</strong> – obrázok so zostavou zo zápisu o stretnutí.</li>
-		<li>Pri <strong>odohratom</strong> zápase sú navyše tlačidlá <strong>Výsledok</strong> a <strong>Strelci</strong>. Víťaz je zvýraznený tučným písmom.</li>
-		<li>Tlačidlo <strong>Súpiska</strong> v hlavičke družstva vytvorí obrázok so všetkými hráčmi družstva za sezónu.</li>
-		<li>Tlačidlo <strong>Prehľad družstva</strong> otvorí štatistiky, hráčov, tabuľku a kolá (viď <a href="#druzstvo">Prehľad družstva</a>).</li>
-		<li>Kliknutím na <strong>výsledok</strong> alebo na tlačidlo <strong>Zápis</strong> otvoríte celý zápis o stretnutí.</li>
-		<li>Zápas so stavom <em>Voľno</em> (družstvo nehrá) nemá žiadne tlačidlá.</li>
+		<li><strong>Najbližší zápas</strong> – tlačidlá <strong>Match day</strong> (pozvánka) a <strong>Zostava</strong>.</li>
+		<li><strong>Posledný zápas</strong> – tlačidlá <strong>Výsledok</strong>, <strong>Strelci</strong> a <strong>Zápis</strong>.</li>
+		<li>V zozname má každý zápas jedno hlavné tlačidlo (<em>Match day</em> pri nadchádzajúcom, <em>Výsledok</em> pri odohratom) a tlačidlo <i class="bi bi-three-dots"></i> s ostatnými obrázkami (Zostava, Strelci, Súhrn) a zápisom o stretnutí.</li>
+		<li><strong>Filter</strong> <em>Všetky / Nadchádzajúce / Odohraté</em> skryje zápasy, ktoré práve nepotrebujete. Víťaz je zvýraznený zelenou.</li>
+		<li><strong>Tabuľka a hráči</strong> otvorí prehľad družstva (viď <a href="#druzstvo">Prehľad družstva</a>), <strong>Súpiska</strong> vytvorí obrázok so všetkými hráčmi.</li>
+		<li>Kliknutím na <strong>výsledok</strong> otvoríte celý zápis o stretnutí.</li>
 	</ul>
-	<p class="mb-0">Tlačidlom <strong>Nové hľadanie</strong> v hornej časti sa vrátite na výber klubu.</p>
 </section>
 
 <!-- ================================================================== -->
@@ -241,15 +236,15 @@
 	<p>Obrázok <strong>Súpiska</strong> zobrazí všetkých hráčov družstva v sezóne zoradených podľa čísla dresu, spolu s trénerom. Nie je viazaný na konkrétny zápas.</p>
 	<?= guide_shot('17-supiska.webp', 'Generátor s obrázkom súpisky', 'Súpiska družstva v troch stĺpcoch; pri veľkom počte hráčov sa písmo automaticky zmenší.') ?>
 	<ol class="guide-steps">
-		<li>Na stránke so zápasmi kliknite v hlavičke družstva (napr. <em>Muži A</em>) na <strong>Súpiska</strong>.</li>
+		<li>Na stránke klubu kliknite v hlavičke družstva (napr. <em>Muži A</em>) na <strong>Súpiska</strong>.</li>
 		<li>Aplikácia prejde zápisy všetkých odohratých zápasov družstva a zostaví z nich súpisku. Prvé načítanie môže trvať niekoľko sekúnd.</li>
 		<li>V karte <strong>Súpiska</strong> vidíte počet hráčov, z koľkých zápasov sa súpiska zostavila a trénera.</li>
 	</ol>
 	<ul class="guide-list">
 		<li>Číslo dresu je to, s ktorým hráč nastupoval najčastejšie. Kapitán je hráč, ktorý bol kapitánom najčastejšie.</li>
 		<li>Na začiatku sezóny (pred prvým zápasom) Sportnet ešte nemá zápisy – súpisku vtedy vytvoríte ručne.</li>
-		<li>Hráči, ktorí za družstvo ešte nenastúpili, v súpiske nebudú – doplňte ich ručne. Hráčov, ktorí odišli, skryjete voľbou <em>Nezobraziť</em>.</li>
-		<li>V editore môžete do riadku pridať aj štatistiky: <code>{apps}</code> (počet zápasov) a <code>{goals}</code> (góly), napr. <code>{nr}  {name} – {goals} g.</code></li>
+		<li>Hráči, ktorí ešte neboli v žiadnom zápise, v súpiske nebudú – doplňte ich ručne. Hráčov, ktorí odišli, skryjete voľbou <em>Nezobraziť</em>.</li>
+		<li>V editore môžete do riadku pridať aj štatistiky: <code>{apps}</code> (počet zápasov), <code>{minutes}</code> (minúty) a <code>{goals}</code> (góly), napr. <code>{nr}  {name} – {goals} g.</code></li>
 	</ul>
 </section>
 
@@ -276,12 +271,12 @@
 <!-- ================================================================== -->
 <section id="zapis">
 	<h2><i class="bi bi-file-text"></i>Zápis o stretnutí</h2>
-	<p>Pri odohratom zápase kliknite v zozname zápasov na <strong>výsledok</strong> alebo na tlačidlo <strong>Zápis</strong>. Otvorí sa stránka so všetkým, čo Sportnet o zápase eviduje.</p>
+	<p>Pri odohratom zápase kliknite na <strong>výsledok</strong> alebo v ponuke <i class="bi bi-three-dots"></i> na <strong>Zápis o stretnutí</strong>. Otvorí sa stránka so všetkým, čo Sportnet o zápase eviduje.</p>
 	<?= guide_shot('19-zapis.webp', 'Stránka Zápis o stretnutí', 'Výsledok s polčasom, priebeh zápasu (góly, karty, striedania), rozhodcovia, diváci a zostavy oboch tímov.') ?>
 	<ul class="guide-list">
-		<li><strong>Priebeh zápasu</strong> – góly <i class="bi bi-circle-fill ev-goal"></i> a žlté a červené karty s minútami; domáci vľavo, hostia vpravo. Pri góle je označený aj vlastný gól a pokutový kop. Striedania Sportnet zväčša neeviduje – zobrazia sa, iba ak sú v zápise.</li>
+		<li><strong>Priebeh zápasu</strong> – góly <i class="bi bi-circle-fill ev-goal"></i>, žlté a červené karty a striedania <i class="bi bi-arrow-left-right"></i> s minútami; domáci vľavo, hostia vpravo. Pri góle je označený aj vlastný gól a pokutový kop.</li>
 		<li><strong>Informácie</strong> – štadión, počet divákov, polčasový výsledok, rozhodcovia a delegát, počet kariet.</li>
-		<li><strong>Zostavy</strong> oboch tímov s číslami, kapitánom, brankárom a trénerom.</li>
+		<li><strong>Zostavy</strong> oboch tímov s číslami, kapitánom, brankárom a trénerom. Pri hráčovi je minúta, kedy prišiel <span class="text-success">↑</span> alebo odišiel <span class="text-danger">↓</span>; nevyužití náhradníci sú bledší.</li>
 		<li>Tlačidlá hore vytvoria obrázky k zápasu – vrátane obrázka <strong>Súhrn zápasu</strong> (skóre, polčas, góly, karty, rozhodca a diváci).</li>
 	</ul>
 </section>
@@ -289,13 +284,13 @@
 <!-- ================================================================== -->
 <section id="druzstvo">
 	<h2><i class="bi bi-bar-chart-line"></i>Prehľad družstva</h2>
-	<p>V zozname zápasov kliknite v hlavičke družstva na <strong>Prehľad družstva</strong>. Stránka má štyri karty:</p>
+	<p>Na stránke klubu kliknite v hlavičke družstva na <strong>Tabuľka a hráči</strong>. Stránka má štyri karty:</p>
 	<?= guide_shot('20-druzstvo.webp', 'Prehľad družstva', 'Karta Prehľad: miesto v tabuľke, body, bilancia, skóre, forma a rebríčky hráčov.') ?>
 	<dl class="guide-dl">
 		<dt><i class="bi bi-speedometer2"></i>Prehľad</dt>
-		<dd>Miesto v tabuľke, body, výhry/remízy/prehry, skóre, zápasy bez inkasovaného gólu, priemerná návštevnosť, forma (posledných 5 zápasov), bilancia doma a vonku, najvyššia výhra a rebríčky – strelci, najviac zápasov a žlté karty.</dd>
+		<dd>Miesto v tabuľke, body, výhry/remízy/prehry, skóre, zápasy bez inkasovaného gólu, priemerná návštevnosť, forma (posledných 5 zápasov), bilancia doma a vonku, najvyššia výhra a rebríčky – strelci, najviac odohraných minút a žlté karty.</dd>
 		<dt><i class="bi bi-people"></i>Hráči</dt>
-		<dd>Tabuľka všetkých hráčov: zápasy (uvedenie v zápise), góly, góly z penalty, žlté a červené karty. Kliknutím na hlavičku stĺpca zoradíte, kliknutím na meno otvoríte <a href="#profil">profil hráča</a>.</dd>
+		<dd>Tabuľka všetkých hráčov: odohrané zápasy (Z), zápasy v základe (Š), minúty, góly, góly z penalty, žlté a červené karty. Kliknutím na hlavičku stĺpca zoradíte, kliknutím na meno otvoríte <a href="#profil">profil hráča</a>.</dd>
 		<dt><i class="bi bi-list-ol"></i>Tabuľka</dt>
 		<dd>Poradie súťaže s formou všetkých tímov; vaše družstvo je zvýraznené.</dd>
 		<dt><i class="bi bi-calendar-week"></i>Kolá</dt>
@@ -304,7 +299,7 @@
 	<?= guide_shot('21-druzstvo-hraci.webp', 'Karta Hráči v prehľade družstva', 'Karta Hráči – štatistiky všetkých hráčov, dajú sa zoradiť podľa ľubovoľného stĺpca.') ?>
 	<div class="guide-note">
 		<i class="bi bi-info-circle-fill"></i>
-		<div>Štatistiky sa počítajú zo zápisov o stretnutí. <strong>Zápas</strong> znamená, že hráč bol uvedený v zápise – Sportnet neeviduje striedania, preto <strong>odohraté minúty neexistujú</strong> a nedá sa zistiť, kto reálne nastúpil. <strong>Tabuľka</strong> je oficiálna zo Sportnetu (vrátane kontumácií a odpočtov bodov); ak ju Sportnet k súťaži nemá, vypočíta sa z výsledkov a stránka to oznámi. Prvé načítanie môže trvať niekoľko sekúnd, potom sa údaje hodinu uchovávajú.</div>
+		<div><strong>Minúty, zápasy a štarty</strong> sú oficiálne štatistiky Sportnetu (rovnaké ako na futbalnet.sk) – nevyužitý náhradník sa do zápasov nezapočíta. Góly a karty sa berú zo zápisov o stretnutí. <strong>Tabuľka</strong> je oficiálna tabuľka súťaže zo Sportnetu vrátane kontumácií a odpočtov bodov (dôvod odpočtu sa zobrazí pod tabuľkou); ak ju Sportnet nemá, vypočíta sa z výsledkov a stránka to oznámi. Prvé načítanie môže trvať niekoľko sekúnd, potom sa údaje hodinu uchovávajú.</div>
 	</div>
 </section>
 
@@ -326,8 +321,9 @@
 	<p>Profil otvoríte kliknutím na meno hráča v prehľade družstva (karta Hráči alebo rebríčky).</p>
 	<?= guide_shot('23-profil.webp', 'Profil hráča', 'Profil: číslo, kapitán/brankár, štatistiky sezóny, všetky jeho zápasy a nahratie fotky.') ?>
 	<ul class="guide-list">
-		<li><strong>Štatistiky sezóny</strong> – zápasy v zápise, góly, góly z penalty, žlté a červené karty; ak zápisy rozlišujú základ, aj koľkokrát bol v základe.</li>
-		<li><strong>Zápasy v sezóne</strong> – súper, výsledok (farebne výhra / remíza / prehra), góly a karty v každom zápase.</li>
+		<li><strong>Štatistiky sezóny</strong> – odohrané zápasy, zápasy v základe, minúty, góly (aj z penalty), žlté a červené karty.</li>
+		<li><strong>Zápasy v sezóne</strong> – súper, výsledok (farebne výhra / remíza / prehra), či hral v základe alebo striedal (s minútou), odohrané minúty, góly a karty.</li>
+		<li><strong>Kariéra</strong> – súčet za všetky súťaže a sezóny zo Sportnetu (zápasy, minúty, góly, karty) a tlačidlo na jubileum podľa počtu zápasov v kariére.</li>
 		<li><strong>Fotka</strong> – ak Sportnet fotku hráča pošle, zobrazí sa automaticky; vlastná nahratá fotka má vždy prednosť.</li>
 		<li><strong>Fotka hráča</strong> – pretiahnite obrázok do rámčeka alebo naň kliknite. Fotka sa zmenší a uloží <strong>iba v tomto prehliadači</strong>; prenesiete ju zálohou nastavení. Najlepšie vyzerá PNG s priehľadným pozadím (napr. vyrezaný hráč v drese).</li>
 		<li><strong>Obrázky hráča</strong> – tlačidlá Profil hráča, Hráč zápasu a Jubileum.</li>
@@ -423,7 +419,7 @@
 	<ul class="guide-list">
 		<li><strong>Zoznam</strong> – <em>Základná zostava</em>, <em>Náhradníci</em> alebo <em>Súpiska družstva</em>.</li>
 		<li><strong>Počet stĺpcov</strong>, <strong>Šírka stĺpca</strong>, <strong>Medzera stĺpcov</strong> a <strong>Rozostup riadkov</strong>. Hráči sa plnia po stĺpcoch zhora nadol. Príliš dlhé meno sa skráti „…“.</li>
-		<li><strong>Formát</strong> riadku, predvolene <code>{nr}  {name}</code>. K dispozícii sú aj <code>{apps}</code> (zápasy), <code>{starts}</code> (v základe) a <code>{goals}</code> (góly) – zmysel majú pri súpiske.</li>
+		<li><strong>Formát</strong> riadku, predvolene <code>{nr}  {name}</code>. K dispozícii sú aj <code>{apps}</code> (zápasy), <code>{starts}</code> (v základe), <code>{minutes}</code> (minúty) a <code>{goals}</code> (góly) – zmysel majú pri súpiske.</li>
 		<li><strong>Kapitán</strong> a <strong>Brankár</strong> – text za menom (predvolene „ (C)“ a „ (B)“). Prázdne pole značku vypne.</li>
 		<li><strong>Farba čísla</strong> – číslo dresu inou farbou (krížikom vypnete).</li>
 		<li><strong>Spodná hranica</strong> a <strong>Automaticky zmenšiť</strong> – rovnako ako pri strelcoch.</li>
@@ -471,7 +467,8 @@
 				<tr><td><code>{referee}</code> / <code>{venue}</code></td><td>rozhodca / štadión</td><td>Ivan Kráľ</td></tr>
 				<tr><td><code>{player}</code></td><td>meno hráča (tiež <code>{playerFirst}</code>, <code>{playerLast}</code>)</td><td>Martin Kováč</td></tr>
 				<tr><td><code>{playerNr}</code></td><td>číslo hráča</td><td>7</td></tr>
-				<tr><td><code>{apps}</code></td><td>zápasy hráča (v zápise)</td><td>13</td></tr>
+				<tr><td><code>{apps}</code></td><td>odohrané zápasy hráča</td><td>13</td></tr>
+				<tr><td><code>{starts}</code> / <code>{minutes}</code></td><td>zápasy v základe / odohrané minúty</td><td>12 / 1064</td></tr>
 				<tr><td><code>{goalsP}</code> / <code>{penalties}</code></td><td>góly hráča / z penalty</td><td>3 / 1</td></tr>
 				<tr><td><code>{yellow}</code> / <code>{red}</code></td><td>žlté / červené karty</td><td>2 / 0</td></tr>
 				<tr><td><code>{milestone}</code> / <code>{milestoneLabel}</code></td><td>jubileum</td><td>100 / zápas za FK…</td></tr>
@@ -522,7 +519,7 @@
 	<ol class="guide-steps">
 		<li>V pôvodnom prehliadači kliknite na <strong>Exportovať všetky nastavenia</strong>. Stiahne sa súbor <code>.json</code>.</li>
 		<li>Súbor preneste do druhého zariadenia (e-mail, USB, cloud…).</li>
-		<li>V druhom prehliadači otvorte Nastavenie šablón → Záloha → <strong>Importovať zo súboru</strong> a vyberte súbor.</li>
+		<li>V druhom prehliadači otvorte Šablóny → Záloha → <strong>Importovať zo súboru</strong> a vyberte súbor.</li>
 	</ol>
 	<p>Súčasťou zálohy je aj anonymné ID prehliadača, takže po importe uvidíte v galérii aj svoje skôr uložené obrázky.</p>
 	<p class="mb-0"><strong>Obnoviť túto šablónu</strong> vráti predvolený vzhľad práve otvorenej šablóny, <strong>Obnoviť všetky šablóny</strong> vráti všetko do pôvodného stavu. Pred obnovením sa aplikácia opýta na potvrdenie.</p>
@@ -623,7 +620,7 @@
 	<p>Správca vidí obrázky zo všetkých prehliadačov a log generovania. Prihlasuje sa na stránke <a href="<?= url('spravca') ?>"><code><?= plain(BASE_PATH) ?>/spravca</code></a> (odkaz <em>Správca</em> je aj v pätičke stránky).</p>
 	<?= guide_shot('14-spravca.webp', 'Prehľad správcu', 'Prehľad správcu: počet obrázkov, obsadené miesto a odkazy na galériu všetkých a log.') ?>
 	<ol class="guide-steps">
-		<li>Na serveri v súbore <code>config.local.php</code> nastavte heslo: <code>define('GALLERY_ADMIN_KEY', 'dlhé-náhodné-heslo');</code></li>
+		<li>Predvolené heslo správcu je <code>asd123</code>. Na verejnom serveri ho zmeňte v súbore <code>config.local.php</code>: <code>define('GALLERY_ADMIN_KEY', 'dlhé-náhodné-heslo');</code> – kým platí predvolené heslo, prehľad správcu na to upozorní.</li>
 		<li>Otvorte <strong>/spravca</strong>, zadajte heslo a kliknite na <strong>Prihlásiť</strong>. V menu pribudne položka <strong>Správca</strong>.</li>
 		<li><strong>Galéria všetkých</strong> zobrazí obrázky zo všetkých prehliadačov vrátane tých, ktoré si používatelia skryli. Ikonou <i class="bi bi-trash"></i> obrázok <strong>natrvalo zmažete</strong> zo servera.</li>
 		<li><strong>Log generovania</strong> zobrazí po mesiacoch, kedy a aký obrázok vznikol. Dá sa prehľadávať a stiahnuť ako TXT.</li>
@@ -639,7 +636,7 @@
 	<ul class="guide-list mb-0">
 		<li>PHP 8.1 alebo novšie s rozšíreniami <code>gd</code>, <code>curl</code>, <code>mbstring</code>; Apache s <code>mod_rewrite</code>.</li>
 		<li>Ak aplikácia nebeží v priečinku <code>/match-day</code>, upravte <code>BASE_PATH</code> v <code>config.php</code>.</li>
-		<li>Skopírujte <code>config.local.example.php</code> ako <code>config.local.php</code> a vyplňte heslo správcu.</li>
+		<li>Skopírujte <code>config.local.example.php</code> ako <code>config.local.php</code> a zmeňte predvolené heslo správcu (<code>asd123</code>).</li>
 		<li>Priečinky <code>storage/generated</code> a <code>storage/logs</code> musia byť zapisovateľné pre PHP.</li>
 		<li>Staršie logy s IP adresami a údajmi o zariadeniach sa po aktualizácii automaticky vyčistia.</li>
 	</ul>
@@ -653,14 +650,14 @@
 		$faq = [
 			['Tabuľka sa líši od oficiálnej', 'Aplikácia používa oficiálnu tabuľku zo Sportnetu. Iba ak ju Sportnet k súťaži nemá, vypočíta tabuľku z výsledkov – vtedy to pod tabuľkou uvidíte a kontumácie či odpočty bodov v nej nemusia byť.'],
 			['Zostava nerozlišuje základ a náhradníkov', 'V zápisoch o stretnutí je náhradník vyznačený len zriedka. Ak chýba, aplikácia dá do základu prvých 11 hráčov zo zápisu a upozorní na to. Skontrolujte a upravte to tlačidlom Upraviť hráčov.'],
-			['Štatistiky hráča nesedia', 'Štatistiky sa skladajú zo zápisov o stretnutí. Ak klub nezadal zostavu alebo udalosti (góly, karty), v štatistike chýbajú. Odohraté minúty Sportnet neeviduje. Ak hráč hrá aj za iné družstvo klubu, štatistiky sú iba za toto družstvo.'],
-			['Fotka hráča sa nezobrazuje na inom zariadení', 'Fotky sa ukladajú iba v prehliadači, v ktorom ste ich nahrali. Preneste ich zálohou: Nastavenie šablón → Záloha → Exportovať a v druhom prehliadači Importovať.'],
+			['Štatistiky hráča nesedia', 'Minúty, zápasy a štarty sú oficiálne čísla Sportnetu; góly a karty sa skladajú zo zápisov o stretnutí – ak klub nezadal udalosti, v štatistike chýbajú. Ak hráč hrá aj za iné družstvo klubu, štatistiky sú iba za toto družstvo (súčet za celú kariéru je v profile hráča).'],
+			['Fotka hráča sa nezobrazuje na inom zariadení', 'Fotky sa ukladajú iba v prehliadači, v ktorom ste ich nahrali. Preneste ich zálohou: Šablóny → Záloha → Exportovať a v druhom prehliadači Importovať.'],
 			['Zostava alebo súpiska je prázdna či neúplná', 'Zostava sa berie zo zápisu o stretnutí – ak ho klub ešte nevyplnil, je prázdna. Súpiska sa skladá zo zápisov odohratých zápasov, preto v nej chýbajú hráči, ktorí ešte nenastúpili. V oboch prípadoch hráčov doplníte cez Upraviť hráčov. Tlačidlom so šípkou načítate údaje zo Sportnetu znova.'],
 			['Nenačítajú sa sezóny alebo kluby', 'Údaje prichádzajú zo Sportnet API. Ak je dočasne nedostupné, zobrazí sa upozornenie. Obnovte stránku o chvíľu. Klub vyhľadáte až po napísaní aspoň 3 znakov.'],
 			['Na obrázku chýbajú strelci', 'Zápis o stretnutí ešte nemusí byť uzavretý alebo v ňom nie sú zadaní strelci. Skúste to neskôr. Skontrolujte tiež, že šablóna Strelci obsahuje dva prvky „Zoznam strelcov“ (domáci a hostia).'],
 			['Logo tímu sa nezobrazuje', 'Klub nemá na Sportnete nahraté logo, alebo sa ho nepodarilo stiahnuť. V editore skontrolujte, či prvok loga nie je skrytý (ikona oka).'],
 			['Písmo vyzerá inak, ako som nastavil', 'Písma z Google Fonts potrebujú internet. Ak sa nenačítajú do 4 sekúnd, použije sa náhradné písmo. Vygenerujte obrázok znova. Vlastné písmo musí byť nahraté v tom istom prehliadači.'],
-			['Na inom počítači nevidím svoje šablóny ani galériu', 'Nastavenia sú uložené iba v prehliadači. Preneste ich cez Nastavenie šablón → Záloha (export a import). Po importe sa zobrazí aj vaša galéria.'],
+			['Na inom počítači nevidím svoje šablóny ani galériu', 'Nastavenia sú uložené iba v prehliadači. Preneste ich cez Šablóny → Záloha (export a import). Po importe sa zobrazí aj vaša galéria.'],
 			['Vymazal som údaje prehliadača a všetko zmizlo', 'Vymazaním údajov stránky sa vymažú aj šablóny. Obnovte ich zo zálohy (.json). Obrázky na serveri zostali – správca ich vidí v galérii všetkých.'],
 			['Kopírovanie obrázka nefunguje', 'Niektoré prehliadače (najmä Firefox a staršie Safari) kopírovanie obrázkov nepodporujú. Použite Stiahnuť PNG alebo Zdieľať.'],
 			['Uloženie na server zlyhá', 'Skontrolujte pripojenie. Na serveri musí byť priečinok storage/generated zapisovateľný a nastavenie post_max_size aspoň 16 MB.'],

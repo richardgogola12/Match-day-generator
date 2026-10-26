@@ -39,6 +39,7 @@
 
 <script src="<?= url("includes/vendor/bootstrap/bootstrap.bundle.min.js") ?>"></script>
 <script src="<?= asset("js/app.js") ?>"></script>
+<script src="<?= asset("js/search.js") ?>"></script>
 <?php foreach ($GLOBALS['page_scripts'] ?? [] as $s): ?>
 <script src="<?= asset($s) ?>"></script>
 <?php endforeach; ?>

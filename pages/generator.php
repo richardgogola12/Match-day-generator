@@ -107,7 +107,6 @@
 						<div class="d-flex flex-wrap gap-2 mt-2" id="srvActions" hidden>
 							<a class="btn btn-sm btn-outline-secondary" id="srvOpen" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right me-1"></i>Otvoriť</a>
 							<button type="button" class="btn btn-sm btn-outline-secondary" id="srvCopy"><i class="bi bi-link-45deg me-1"></i>Kopírovať odkaz</button>
-							<a class="btn btn-sm btn-outline-secondary" href="<?= url('galeria') ?>"><i class="bi bi-images me-1"></i>Galéria</a>
 						</div>
 						<div class="d-flex align-items-center justify-content-between gap-2 mt-3 pt-3 border-top">
 							<div class="form-check form-switch mb-0">
