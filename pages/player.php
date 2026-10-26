@@ -31,7 +31,7 @@ add_layout("header", array("title" => ($P['name'] ?? 'Hráč') . " – profil | 
 		<a href="<?= plain(url('druzstvo') . '?' . $q(['tab' => 'hraci'])) ?>" class="btn btn-sm btn-outline-light rounded-pill mb-3"><i class="bi bi-arrow-left me-1"></i> Hráči družstva</a>
 		<?php if ($P): ?>
 		<div class="player-hero">
-			<div class="player-photo" id="photoBox" data-key="<?= plain('photo:' . $team['id'] . ':' . $P['key']) ?>">
+			<div class="player-photo" id="photoBox" data-key="<?= plain('photo:' . $team['id'] . ':' . $P['key']) ?>" data-remote="<?= plain($P['photo'] ? url('api-logo') . '?raw=1&url=' . rawurlencode($P['photo']) : '') ?>">
 				<span class="player-nr"><?= plain($P['nr'] ?: '?') ?></span>
 				<img id="photoImg" alt="" hidden>
 			</div>
@@ -58,9 +58,9 @@ add_layout("header", array("title" => ($P['name'] ?? 'Hráč') . " – profil | 
 		<div class="col-lg-8">
 			<div class="row g-3 mb-4">
 				<?php
-				$tiles = [[$P['apps'], 'zápasov'], [$P['starts'], 'v základe'], [$P['minutes'], 'minút (odhad)'], [$P['goals'], 'gólov']];
-				$tiles[] = $P['gk'] ? [$P['cleanSheets'], 'čistých kont'] : [$P['penalties'], 'z penalty'];
-				$tiles[] = [$P['yellow'] . ' / ' . $P['red'], 'žlté / červené'];
+				$tiles = [[$P['apps'], 'zápasov v zápise'], [$P['goals'], 'gólov'], [$P['penalties'], 'z penalty'], [$P['yellow'], 'žltých kariet'], [$P['red'], 'červených kariet']];
+				// základ iba ak to zápisy rozlišujú
+				$tiles[] = $P['startsKnown'] > 0 ? [$P['starts'] . ' / ' . $P['startsKnown'], 'v základe (zo zápisov s vyznačeným základom)'] : [$P['apps'] ? round($P['goals'] / $P['apps'], 2) : 0, 'gólov na zápas'];
 				foreach ($tiles as [$n, $l]): ?>
 					<div class="col-6 col-md-4"><div class="stat-tile"><div class="stat-num"><?= plain($n) ?></div><div class="stat-label"><?= plain($l) ?></div></div></div>
 				<?php endforeach; ?>
@@ -73,7 +73,7 @@ add_layout("header", array("title" => ($P['name'] ?? 'Hráč') . " – profil | 
 				<?php else: ?>
 				<div class="table-responsive">
 					<table class="table align-middle mb-0 data-table">
-						<thead><tr><th>Dátum</th><th>Súper</th><th class="text-center">Výsledok</th><th>Nastúpil</th><th class="text-end">Min.</th><th class="text-end">G</th><th class="text-end">Karty</th></tr></thead>
+						<thead><tr><th>Dátum</th><th>Súper</th><th class="text-center">Výsledok</th><th>V zápise</th><th class="text-end">G</th><th class="text-end">Karty</th></tr></thead>
 						<tbody>
 						<?php foreach (array_reverse($P['matches']) as $m): [$dT] = format_match_date($m['date']);
 							$rc = ['W' => 'success', 'D' => 'secondary', 'L' => 'danger'][$m['result']] ?? 'light'; ?>
@@ -81,8 +81,7 @@ add_layout("header", array("title" => ($P['name'] ?? 'Hráč') . " – profil | 
 								<td class="text-nowrap small"><?= plain($dT) ?><div class="text-muted-2"><?= plain($m['round']) ?></div></td>
 								<td><span class="text-muted-2 small"><?= $m['home'] ? 'doma' : 'vonku' ?></span> <span class="fw-semibold"><?= plain($m['opponent']) ?></span></td>
 								<td class="text-center"><?php if ($m['score'] !== ''): ?><span class="badge text-bg-<?= $rc ?>"><?= plain($m['score']) ?></span><?php endif; ?></td>
-								<td class="small"><?= ['start' => 'v základe', 'sub' => 'striedal', 'bench' => '<span class="text-muted-2">na lavičke</span>'][$m['role']] ?></td>
-								<td class="text-end"><?= (int)$m['minutes'] ?: '–' ?></td>
+								<td class="small"><?= ['start' => 'základ', 'sub' => 'náhradník', 'listed' => '<span class="text-muted-2">áno</span>'][$m['role']] ?? '' ?></td>
 								<td class="text-end fw-bold"><?= $m['goals'] ? str_repeat('<i class="bi bi-circle-fill text-primary" style="font-size:.55rem"></i>', min(5, $m['goals'])) . ' ' . (int)$m['goals'] : '' ?></td>
 								<td class="text-end"><?= str_repeat('<span class="card-ic yellow"></span>', (int)$m['yellow']) . str_repeat('<span class="card-ic red"></span>', (int)$m['red']) ?></td>
 							</tr>
@@ -92,7 +91,7 @@ add_layout("header", array("title" => ($P['name'] ?? 'Hráč') . " – profil | 
 				</div>
 				<?php endif; ?>
 			</div>
-			<p class="small text-muted-2 mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>Údaje sú zo zápisov o stretnutí na Sportnete pre toto družstvo a sezónu. Minúty sú odhad podľa striedaní.</p>
+			<p class="small text-muted-2 mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>Údaje sú zo zápisov o stretnutí na Sportnete pre toto družstvo a sezónu. Sportnet neeviduje striedania ani odohraté minúty – „zápas“ znamená uvedenie v zápise o stretnutí.</p>
 		</div>
 
 		<div class="col-lg-4">
@@ -114,7 +113,7 @@ add_layout("header", array("title" => ($P['name'] ?? 'Hráč') . " – profil | 
 					<a class="btn btn-primary" href="<?= plain(md_gen_link('player', $pp)) ?>"><i class="bi bi-person-vcard me-1"></i>Profil hráča</a>
 					<?php
 					$lastM = null;
-					foreach (array_reverse($P['matches']) as $m) if ($m['role'] !== 'bench' && $m['score'] !== '') { $lastM = $m; break; }
+					foreach (array_reverse($P['matches']) as $m) if ($m['score'] !== '') { $lastM = $m; break; }
 					if ($lastM): ?>
 						<a class="btn btn-outline-primary" href="<?= plain(md_gen_link('motm', $pp + ['matchRef' => $lastM['id']])) ?>"><i class="bi bi-award me-1"></i>Hráč zápasu <span class="small text-muted-2">(<?= plain($lastM['opponent']) ?>)</span></a>
 					<?php endif; ?>

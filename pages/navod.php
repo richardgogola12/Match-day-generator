@@ -228,6 +228,7 @@
 		<li>Skontrolujte hráčov v karte a obrázok stiahnite alebo zdieľajte ako ostatné obrázky.</li>
 	</ol>
 	<ul class="guide-list">
+		<li>Ak zápis nerozlišuje základ a náhradníkov (v zápisoch je to vyznačené len zriedka), do základu sa dajú prvých 11 hráčov zo zápisu a v karte <strong>Zostava</strong> sa zobrazí upozornenie – skontrolujte to cez <a href="#hraci">Upraviť hráčov</a>.</li>
 		<li>Hráči v základe sú v poradí zo zápisu, brankár je prvý. Za menom kapitána je „(C)“, za brankárom „(B)“ – tieto značky zmeníte alebo vypnete v editore šablón.</li>
 		<li>Ak klub ešte zostavu nezadal, aplikácia to oznámi. Zostavu môžete doplniť ručne (viď <a href="#hraci">Úprava hráčov</a>) alebo to skúsiť neskôr tlačidlom <i class="bi bi-arrow-clockwise"></i>.</li>
 		<li>Zostava domácich a hostí sa v galérii ukladá ako dva samostatné obrázky.</li>
@@ -278,7 +279,7 @@
 	<p>Pri odohratom zápase kliknite v zozname zápasov na <strong>výsledok</strong> alebo na tlačidlo <strong>Zápis</strong>. Otvorí sa stránka so všetkým, čo Sportnet o zápase eviduje.</p>
 	<?= guide_shot('19-zapis.webp', 'Stránka Zápis o stretnutí', 'Výsledok s polčasom, priebeh zápasu (góly, karty, striedania), rozhodcovia, diváci a zostavy oboch tímov.') ?>
 	<ul class="guide-list">
-		<li><strong>Priebeh zápasu</strong> – góly <i class="bi bi-circle-fill ev-goal"></i>, žlté a červené karty a striedania s minútami; domáci vľavo, hostia vpravo. Pri góle je označený aj vlastný gól a pokutový kop.</li>
+		<li><strong>Priebeh zápasu</strong> – góly <i class="bi bi-circle-fill ev-goal"></i> a žlté a červené karty s minútami; domáci vľavo, hostia vpravo. Pri góle je označený aj vlastný gól a pokutový kop. Striedania Sportnet zväčša neeviduje – zobrazia sa, iba ak sú v zápise.</li>
 		<li><strong>Informácie</strong> – štadión, počet divákov, polčasový výsledok, rozhodcovia a delegát, počet kariet.</li>
 		<li><strong>Zostavy</strong> oboch tímov s číslami, kapitánom, brankárom a trénerom.</li>
 		<li>Tlačidlá hore vytvoria obrázky k zápasu – vrátane obrázka <strong>Súhrn zápasu</strong> (skóre, polčas, góly, karty, rozhodca a diváci).</li>
@@ -292,9 +293,9 @@
 	<?= guide_shot('20-druzstvo.webp', 'Prehľad družstva', 'Karta Prehľad: miesto v tabuľke, body, bilancia, skóre, forma a rebríčky hráčov.') ?>
 	<dl class="guide-dl">
 		<dt><i class="bi bi-speedometer2"></i>Prehľad</dt>
-		<dd>Miesto v tabuľke, body, výhry/remízy/prehry, skóre, zápasy bez inkasovaného gólu, priemerná návštevnosť, forma (posledných 5 zápasov), bilancia doma a vonku, najvyššia výhra a rebríčky – strelci, najviac zápasov, minút a žltých kariet.</dd>
+		<dd>Miesto v tabuľke, body, výhry/remízy/prehry, skóre, zápasy bez inkasovaného gólu, priemerná návštevnosť, forma (posledných 5 zápasov), bilancia doma a vonku, najvyššia výhra a rebríčky – strelci, najviac zápasov a žlté karty.</dd>
 		<dt><i class="bi bi-people"></i>Hráči</dt>
-		<dd>Tabuľka všetkých hráčov: zápasy, v základe, striedal, minúty, góly, žlté a červené karty. Kliknutím na hlavičku stĺpca zoradíte, kliknutím na meno otvoríte <a href="#profil">profil hráča</a>.</dd>
+		<dd>Tabuľka všetkých hráčov: zápasy (uvedenie v zápise), góly, góly z penalty, žlté a červené karty. Kliknutím na hlavičku stĺpca zoradíte, kliknutím na meno otvoríte <a href="#profil">profil hráča</a>.</dd>
 		<dt><i class="bi bi-list-ol"></i>Tabuľka</dt>
 		<dd>Poradie súťaže s formou všetkých tímov; vaše družstvo je zvýraznené.</dd>
 		<dt><i class="bi bi-calendar-week"></i>Kolá</dt>
@@ -303,7 +304,7 @@
 	<?= guide_shot('21-druzstvo-hraci.webp', 'Karta Hráči v prehľade družstva', 'Karta Hráči – štatistiky všetkých hráčov, dajú sa zoradiť podľa ľubovoľného stĺpca.') ?>
 	<div class="guide-note">
 		<i class="bi bi-info-circle-fill"></i>
-		<div>Štatistiky sa počítajú zo zápisov o stretnutí. <strong>Minúty</strong> sú odhad podľa striedaní (zápas = 90 minút). <strong>Tabuľka</strong> je vypočítaná z výsledkov (výhra 3 body, remíza 1) – kontumácie a odpočty bodov rozhodnuté mimo ihriska sa v nej nemusia prejaviť. Prvé načítanie môže trvať niekoľko sekúnd, potom sa údaje hodinu uchovávajú.</div>
+		<div>Štatistiky sa počítajú zo zápisov o stretnutí. <strong>Zápas</strong> znamená, že hráč bol uvedený v zápise – Sportnet neeviduje striedania, preto <strong>odohraté minúty neexistujú</strong> a nedá sa zistiť, kto reálne nastúpil. <strong>Tabuľka</strong> je oficiálna zo Sportnetu (vrátane kontumácií a odpočtov bodov); ak ju Sportnet k súťaži nemá, vypočíta sa z výsledkov a stránka to oznámi. Prvé načítanie môže trvať niekoľko sekúnd, potom sa údaje hodinu uchovávajú.</div>
 	</div>
 </section>
 
@@ -325,8 +326,9 @@
 	<p>Profil otvoríte kliknutím na meno hráča v prehľade družstva (karta Hráči alebo rebríčky).</p>
 	<?= guide_shot('23-profil.webp', 'Profil hráča', 'Profil: číslo, kapitán/brankár, štatistiky sezóny, všetky jeho zápasy a nahratie fotky.') ?>
 	<ul class="guide-list">
-		<li><strong>Štatistiky sezóny</strong> – zápasy, v základe, minúty, góly (u brankára čisté kontá), žlté a červené karty.</li>
-		<li><strong>Zápasy v sezóne</strong> – súper, výsledok (farebne výhra / remíza / prehra), či nastúpil v základe, striedal alebo bol na lavičke, minúty, góly a karty v každom zápase.</li>
+		<li><strong>Štatistiky sezóny</strong> – zápasy v zápise, góly, góly z penalty, žlté a červené karty; ak zápisy rozlišujú základ, aj koľkokrát bol v základe.</li>
+		<li><strong>Zápasy v sezóne</strong> – súper, výsledok (farebne výhra / remíza / prehra), góly a karty v každom zápase.</li>
+		<li><strong>Fotka</strong> – ak Sportnet fotku hráča pošle, zobrazí sa automaticky; vlastná nahratá fotka má vždy prednosť.</li>
 		<li><strong>Fotka hráča</strong> – pretiahnite obrázok do rámčeka alebo naň kliknite. Fotka sa zmenší a uloží <strong>iba v tomto prehliadači</strong>; prenesiete ju zálohou nastavení. Najlepšie vyzerá PNG s priehľadným pozadím (napr. vyrezaný hráč v drese).</li>
 		<li><strong>Obrázky hráča</strong> – tlačidlá Profil hráča, Hráč zápasu a Jubileum.</li>
 	</ul>
@@ -433,7 +435,7 @@
 		<li><strong>Tabuľka súťaže</strong> – stĺpce, výška riadku, logá, hlavička, zvýraznenie vlastného družstva, pruhovanie.</li>
 		<li><strong>Zápasy kola</strong> – domáci, výsledok alebo čas, hostia; logá, farby výsledku a zvýraznenie vlastného zápasu.</li>
 		<li><strong>Strelci / karty</strong> – prvok strelcov vie zobraziť aj <em>žlté a červené karty</em> (s farebnou kartičkou pred menom).</li>
-		<li><strong>Zoznam hráčov</strong> vie okrem zostavy a súpisky zobraziť aj rebríčky: <em>Najlepší strelci, Najviac zápasov, Najviac minút, Najviac kariet</em>; počet obmedzíte poľom <em>Max. hráčov</em>.</li>
+		<li><strong>Zoznam hráčov</strong> vie okrem zostavy a súpisky zobraziť aj rebríčky: <em>Najlepší strelci, Najviac zápasov, Najviac kariet</em>; počet obmedzíte poľom <em>Max. hráčov</em>.</li>
 	</ul>
 	<p>Logo družstva môže okrem <em>Domáci</em> a <em>Hostia</em> zobraziť aj <em>Vybrané družstvo</em> (tím, ktorého zostavu alebo súpisku tvoríte) a <em>Súpera</em>.</p>
 	<p class="mb-0">Vlastný prvok zmažete klávesom <kbd>Delete</kbd> alebo tlačidlom v paneli. Výber zrušíte klávesom <kbd>Esc</kbd>.</p>
@@ -469,9 +471,9 @@
 				<tr><td><code>{referee}</code> / <code>{venue}</code></td><td>rozhodca / štadión</td><td>Ivan Kráľ</td></tr>
 				<tr><td><code>{player}</code></td><td>meno hráča (tiež <code>{playerFirst}</code>, <code>{playerLast}</code>)</td><td>Martin Kováč</td></tr>
 				<tr><td><code>{playerNr}</code></td><td>číslo hráča</td><td>7</td></tr>
-				<tr><td><code>{apps}</code> / <code>{starts}</code></td><td>zápasy / v základe</td><td>13 / 12</td></tr>
-				<tr><td><code>{goalsP}</code> / <code>{minutes}</code></td><td>góly / minúty hráča</td><td>3 / 1170</td></tr>
-				<tr><td><code>{yellow}</code> / <code>{red}</code> / <code>{cleanSheets}</code></td><td>karty / čisté kontá</td><td>2 / 0 / 5</td></tr>
+				<tr><td><code>{apps}</code></td><td>zápasy hráča (v zápise)</td><td>13</td></tr>
+				<tr><td><code>{goalsP}</code> / <code>{penalties}</code></td><td>góly hráča / z penalty</td><td>3 / 1</td></tr>
+				<tr><td><code>{yellow}</code> / <code>{red}</code></td><td>žlté / červené karty</td><td>2 / 0</td></tr>
 				<tr><td><code>{milestone}</code> / <code>{milestoneLabel}</code></td><td>jubileum</td><td>100 / zápas za FK…</td></tr>
 				<tr><td><code>{matchHome}</code> <code>{matchScore}</code> <code>{matchAway}</code> <code>{matchGoals}</code></td><td>zápas pri obrázku Hráč zápasu</td><td>FK… 3:1 MFK… / 1</td></tr>
 				<tr><td><code>{roundTitle}</code></td><td>PROGRAM KOLA / VÝSLEDKY KOLA</td><td>VÝSLEDKY KOLA</td></tr>
@@ -649,8 +651,9 @@
 	<div class="accordion guide-faq" id="faq">
 		<?php
 		$faq = [
-			['Tabuľka sa líši od oficiálnej', 'Tabuľka sa počíta z výsledkov zápasov. Kontumácie, odpočty bodov alebo vylúčenie družstva rozhodnuté mimo ihriska v nej nemusia byť. Oficiálne poradie je na futbalnet.sk.'],
-			['Štatistiky hráča nesedia', 'Štatistiky sa skladajú zo zápisov o stretnutí. Ak klub nezadal zostavu alebo udalosti (góly, karty, striedania), v štatistike chýbajú. Minúty sú odhad (zápas = 90 minút). Ak hráč hrá aj za iné družstvo klubu, štatistiky sú iba za toto družstvo.'],
+			['Tabuľka sa líši od oficiálnej', 'Aplikácia používa oficiálnu tabuľku zo Sportnetu. Iba ak ju Sportnet k súťaži nemá, vypočíta tabuľku z výsledkov – vtedy to pod tabuľkou uvidíte a kontumácie či odpočty bodov v nej nemusia byť.'],
+			['Zostava nerozlišuje základ a náhradníkov', 'V zápisoch o stretnutí je náhradník vyznačený len zriedka. Ak chýba, aplikácia dá do základu prvých 11 hráčov zo zápisu a upozorní na to. Skontrolujte a upravte to tlačidlom Upraviť hráčov.'],
+			['Štatistiky hráča nesedia', 'Štatistiky sa skladajú zo zápisov o stretnutí. Ak klub nezadal zostavu alebo udalosti (góly, karty), v štatistike chýbajú. Odohraté minúty Sportnet neeviduje. Ak hráč hrá aj za iné družstvo klubu, štatistiky sú iba za toto družstvo.'],
 			['Fotka hráča sa nezobrazuje na inom zariadení', 'Fotky sa ukladajú iba v prehliadači, v ktorom ste ich nahrali. Preneste ich zálohou: Nastavenie šablón → Záloha → Exportovať a v druhom prehliadači Importovať.'],
 			['Zostava alebo súpiska je prázdna či neúplná', 'Zostava sa berie zo zápisu o stretnutí – ak ho klub ešte nevyplnil, je prázdna. Súpiska sa skladá zo zápisov odohratých zápasov, preto v nej chýbajú hráči, ktorí ešte nenastúpili. V oboch prípadoch hráčov doplníte cez Upraviť hráčov. Tlačidlom so šípkou načítate údaje zo Sportnetu znova.'],
 			['Nenačítajú sa sezóny alebo kluby', 'Údaje prichádzajú zo Sportnet API. Ak je dočasne nedostupné, zobrazí sa upozornenie. Obnovte stránku o chvíľu. Klub vyhľadáte až po napísaní aspoň 3 znakov.'],

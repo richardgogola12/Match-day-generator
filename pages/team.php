@@ -29,7 +29,6 @@ if (!in_array($tab, ['prehlad', 'hraci', 'tabulka', 'kola'], true)) $tab = 'preh
 $leaders = [
 	['goals', 'Strelci', 'bi-bullseye', 'gólov'],
 	['apps', 'Najviac zápasov', 'bi-calendar-check', 'zápasov'],
-	['minutes', 'Najviac minút', 'bi-stopwatch', 'min.'],
 	['yellow', 'Žlté karty', 'bi-square-fill text-warning', 'ŽK'],
 ];
 
@@ -126,7 +125,7 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 					</div>
 				<?php endforeach; ?>
 			</div>
-			<p class="small text-muted-2 mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>Štatistiky sú spočítané zo zápisov o stretnutí na Sportnete (<?= (int)($T['matchesUsed'] ?? 0) ?> z <?= (int)($T['played'] ?? 0) ?> odohratých zápasov). Minúty sú odhad podľa striedaní (zápas = 90 min.).</p>
+			<p class="small text-muted-2 mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>Štatistiky sú spočítané zo zápisov o stretnutí na Sportnete (<?= (int)($T['matchesUsed'] ?? 0) ?> z <?= (int)($T['played'] ?? 0) ?> odohratých zápasov). Zápas = uvedenie v zápise o stretnutí; Sportnet neeviduje striedania ani odohraté minúty.</p>
 		</div>
 
 		<!-- HRÁČI -->
@@ -139,8 +138,7 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 					<table class="table table-hover align-middle mb-0 data-table sortable">
 						<thead><tr>
 							<th data-sort="num">#</th><th data-sort="text">Hráč</th>
-							<th data-sort="num" class="text-end" title="Zápasy">Z</th><th data-sort="num" class="text-end" title="V základe">Zákl.</th><th data-sort="num" class="text-end" title="Striedal (prišiel)">Str.</th>
-							<th data-sort="num" class="text-end" title="Minúty (odhad)">Min.</th><th data-sort="num" class="text-end" title="Góly">G</th><th data-sort="num" class="text-end" title="Žlté karty">ŽK</th><th data-sort="num" class="text-end" title="Červené karty">ČK</th><th></th>
+							<th data-sort="num" class="text-end" title="Zápasy v zápise o stretnutí">Z</th><th data-sort="num" class="text-end" title="Góly">G</th><th data-sort="num" class="text-end" title="Góly z pokutového kopu">PK</th><th data-sort="num" class="text-end" title="Žlté karty">ŽK</th><th data-sort="num" class="text-end" title="Červené karty">ČK</th><th></th>
 						</tr></thead>
 						<tbody>
 							<?php foreach ($players as $p): $pl = url('hrac') . '?' . $q(['p' => $p['key']]); ?>
@@ -148,7 +146,7 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 									<td class="fw-bold text-primary" data-v="<?= $p['nr'] === '' ? 999 : (int)$p['nr'] ?>"><?= plain($p['nr'] ?: '–') ?></td>
 									<td data-v="<?= plain($p['key']) ?>"><a class="fw-semibold text-reset text-decoration-none" href="<?= plain($pl) ?>"><?= plain($p['name']) ?></a>
 										<?= $p['captain'] ? '<span class="badge text-bg-warning ms-1">C</span>' : '' ?><?= $p['gk'] ? '<span class="badge text-bg-secondary ms-1">B</span>' : '' ?></td>
-									<?php foreach (['apps', 'starts', 'subIn', 'minutes', 'goals', 'yellow', 'red'] as $f): ?>
+									<?php foreach (['apps', 'goals', 'penalties', 'yellow', 'red'] as $f): ?>
 										<td class="text-end" data-v="<?= (int)$p[$f] ?>"><?= (int)$p[$f] ?: '<span class="text-muted-2">0</span>' ?></td>
 									<?php endforeach; ?>
 									<td class="text-end"><a class="btn btn-sm btn-outline-primary" href="<?= plain($pl) ?>">Profil</a></td>
@@ -186,7 +184,11 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 				</div>
 				<?php endif; ?>
 			</div>
-			<p class="small text-muted-2 mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>Tabuľka je vypočítaná z výsledkov zápasov (výhra 3 body, remíza 1 bod). Kontumácie a odpočty bodov rozhodnuté mimo ihriska sa v nej nemusia prejaviť – oficiálnu tabuľku nájdete na futbalnet.sk.</p>
+			<?php if (!empty($C['official'])): ?>
+				<p class="small text-muted-2 mt-3 mb-0"><i class="bi bi-patch-check me-1"></i>Oficiálna tabuľka zo Sportnetu (vrátane kontumácií a odpočtov bodov). Forma je vypočítaná z výsledkov.</p>
+			<?php else: ?>
+				<p class="small text-muted-2 mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>Sportnet k tejto súťaži neposlal oficiálnu tabuľku, preto je vypočítaná z výsledkov zápasov (výhra 3 body, remíza 1 bod). Kontumácie a odpočty bodov rozhodnuté mimo ihriska sa v nej nemusia prejaviť.</p>
+			<?php endif; ?>
 		</div>
 
 		<!-- KOLÁ -->

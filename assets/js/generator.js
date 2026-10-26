@@ -125,7 +125,7 @@
     function sourcePlayers() {
         if (SQUAD()) {
             const t = teamInfo || {};
-            const list = (t.players || []).filter((p) => p.apps > 0 || p.bench > 0);
+            const list = (t.players || []).filter((p) => p.apps > 0);
             return { list: list.map((p) => ({ nr: p.nr || '', name: p.name, role: 'show', captain: !!p.captain, gk: !!p.gk, apps: p.apps, goals: p.goals, starts: p.starts })), coach: t.coach || '' };
         }
         const l = ((matchInfo || {}).lineups || {})[side] || {};
@@ -202,7 +202,7 @@
         }
 
         if (type === 'stats') {
-            data.players = { scorers: leaders('goals'), apps: leaders('apps'), minutes: leaders('minutes'), cards: ((teamInfo && teamInfo.players) || []).filter((p) => p.yellow + p.red > 0).sort((a, b) => (b.red * 3 + b.yellow) - (a.red * 3 + a.yellow)).slice(0, 10) };
+            data.players = { scorers: leaders('goals'), apps: leaders('apps'), cards: ((teamInfo && teamInfo.players) || []).filter((p) => p.yellow + p.red > 0).sort((a, b) => (b.red * 3 + b.yellow) - (a.red * 3 + a.yellow)).slice(0, 10) };
         }
 
         if (type === 'round') {
@@ -256,7 +256,7 @@
         }
         // hráči
         if ($('#selPlayer').length) {
-            const list = (teamInfo.players || []).filter((p) => p.apps > 0 || p.bench > 0);
+            const list = (teamInfo.players || []).filter((p) => p.apps > 0);
             if (!playerKey && list.length) playerKey = list[0].key;
             $('#selPlayer').html(list.length ? list.map((p) => '<option value="' + esc(p.key) + '"' + (p.key === playerKey ? ' selected' : '') + '>' + esc((p.nr ? p.nr + ' · ' : '') + p.name) + '</option>').join('') : '<option value="">Žiadni hráči</option>');
             syncPlayerCard();
@@ -282,6 +282,13 @@
         if (MODE !== 'player' || !playerKey) return null;
         const b = await MD.store.getPhoto(photoKey());
         if (b) { photoUrl = URL.createObjectURL(b); photoImg = await MD.loadImage(photoUrl); }
+        else {
+            // fotka zo Sportnetu (ak ju zápis obsahuje) – vlastná nahratá fotka má vždy prednosť
+            const P = findPlayer();
+            if (P && P.photo) { photoImg = await MD.loadImage('api-logo?raw=1&url=' + encodeURIComponent(P.photo)); if (photoImg) $('#genPhotoImg').attr('src', photoImg.src).prop('hidden', false); }
+            $('#genPhotoRemove').prop('hidden', true);
+            return photoImg;
+        }
         $('#genPhotoImg').attr('src', photoUrl || '').prop('hidden', !photoUrl);
         $('#genPhotoRemove').prop('hidden', !photoUrl);
         return photoImg;
@@ -294,9 +301,9 @@
         $('#motmBox').prop('hidden', type !== 'motm');
         $('#milestoneBox').prop('hidden', type !== 'milestone');
         if (!P) { $('#playerStats').text(''); return; }
-        $('#playerStats').text(P.apps + ' zápasov · ' + P.goals + ' gólov · ' + P.minutes + ' min. · ' + P.yellow + ' ŽK / ' + P.red + ' ČK');
+        $('#playerStats').text(P.apps + ' zápasov · ' + P.goals + ' gólov · ' + P.yellow + ' ŽK / ' + P.red + ' ČK');
         // zápasy pre "Hráč zápasu"
-        const ms = P.matches.filter((m) => m.role !== 'bench' && m.score !== '').reverse();
+        const ms = P.matches.filter((m) => m.score !== '').reverse();
         if (!ms.find((m) => m.id === matchRef) && ms[0]) matchRef = ms[0].id;
         $('#selMatch').html(ms.map((m) => '<option value="' + esc(m.id) + '"' + (m.id === matchRef ? ' selected' : '') + '>' + esc(m.round + ' · ' + (m.home ? 'doma ' : 'vonku ') + m.opponent + ' ' + m.score + (m.goals ? ' · ' + m.goals + ' g.' : '')) + '</option>').join('') || '<option>Žiadne zápasy</option>');
         // jubileum
@@ -325,7 +332,9 @@
         } else {
             const a = data.players.start.length, b = data.players.subs.length;
             status = !a && !b ? '<div class="alert alert-warning py-2 mb-0"><i class="bi bi-exclamation-triangle me-1"></i>' + ((matchInfo || {}).failed ? 'Zápis o stretnutí sa nepodarilo načítať.' : 'Zostava zatiaľ nie je v zápise o stretnutí (klub ju zvyčajne zadáva pred zápasom).') + ' Môžete ju doplniť ručne.</div>'
-                : '<span class="text-muted-2">' + a + ' v základe · ' + b + ' náhradníkov' + (data.coach ? ' · tréner ' + esc(data.coach) : '') + '</span>';
+                : '<span class="text-muted-2">' + a + ' v základe · ' + b + ' náhradníkov' + (data.coach ? ' · tréner ' + esc(data.coach) : '') + '</span>'
+                  + (!eff.edited && (((matchInfo || {}).lineups || {})[side] || {}).guessed
+                      ? '<div class="alert alert-info py-2 mt-2 mb-0"><i class="bi bi-info-circle me-1"></i>Zápis nerozlišuje základ a náhradníkov – prvých 11 hráčov zo zápisu je v základe. Skontrolujte to cez <strong>Upraviť hráčov</strong>.</div>' : '');
         }
         $('#playersStatus').html(status);
 

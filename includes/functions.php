@@ -1003,11 +1003,15 @@ function sn_player($p) {
     if ($name === '') return null;
     $nr = sn_val($p, ['additionalData.nr', 'nr', 'number', 'dressNumber', 'shirtNumber', 'jerseyNumber', 'additionalData.number', 'additionalData.dressNumber']);
     $pos = (string)sn_val($p, ['additionalData.position', 'position', 'role', 'additionalData.role'], '');
+    $subRaw = sn_val($p, ['additionalData.substitute', 'substitute', 'isSubstitute', 'additionalData.isSubstitute'], null);
+    $photo = sn_val($p, ['sportnetUser.photo.public_url', 'sportnetUser.photo', 'sportnetUser.imagePublicUrl', 'sportnetUser.image', 'photo', 'imagePublicUrl', 'image', 'avatar'], '');
     return [
         'id'      => sn_person_id($p),
         'nr'      => is_scalar($nr) ? trim((string)$nr) : '',
         'name'    => $name,
-        'sub'     => sn_bool(sn_val($p, ['additionalData.substitute', 'substitute', 'isSubstitute', 'additionalData.isSubstitute'], false)),
+        'sub'     => $subRaw !== null && sn_bool($subRaw),
+        'subFlag' => $subRaw !== null,
+        'photo'   => is_string($photo) && preg_match('#^https?://#', $photo) ? $photo : '',
         'captain' => sn_bool(sn_val($p, ['additionalData.captain', 'captain', 'isCaptain', 'additionalData.isCaptain'], false)),
         'gk'      => sn_bool(sn_val($p, ['additionalData.goalkeeper', 'goalkeeper', 'isGoalkeeper', 'additionalData.isGoalkeeper'], false))
                      || (bool)preg_match('/brank|goal|^gk$/iu', $pos),
@@ -1025,7 +1029,13 @@ function sn_coach($crew) {
             if ($n !== '') return $n;
         }
     }
-    // zoznam [{ position: "trener", sportnetUser: {...} }]
+    // zoznam [{ position: "coach", sportnetUser: {...} }] – hlavný tréner má pozíciu presne "coach"
+    foreach ($crew as $v) {
+        if (is_array($v) && strtolower((string)sn_val($v, ['position', 'role', 'type'], '')) === 'coach') {
+            $n = sn_person_name($v);
+            if ($n !== '') return $n;
+        }
+    }
     foreach ($crew as $v) {
         if (!is_array($v)) continue;
         $pos = (string)sn_val($v, ['position', 'role', 'type', 'additionalData.position'], '');
@@ -1042,7 +1052,8 @@ function sn_coach($crew) {
  * @return array ['home' => ['start'=>[], 'subs'=>[], 'coach'=>''], 'away' => …]
  */
 function sportnet_lineups(array $match, $homeId = '', $awayId = '') {
-    $out = ['home' => ['start' => [], 'subs' => [], 'coach' => ''], 'away' => ['start' => [], 'subs' => [], 'coach' => '']];
+    $empty = ['start' => [], 'subs' => [], 'coach' => '', 'flagged' => false, 'guessed' => false];
+    $out = ['home' => $empty, 'away' => $empty];
     $homeId = $homeId ?: (string)sn_val($match, ['homeTeam._id', 'teams.0._id'], '');
     $awayId = $awayId ?: (string)sn_val($match, ['awayTeam._id', 'teams.1._id'], '');
 
@@ -1054,18 +1065,35 @@ function sportnet_lineups(array $match, $homeId = '', $awayId = '') {
         $tid = (string)sn_val($n, ['teamId', 'team._id', 'team.id', 'team'], is_string($key) ? $key : '');
         $list[] = [$tid, $n];
     }
+    // strana podľa ID družstva; nominácia bez zhody dostane stranu, ktorá ešte ostala voľná
+    $sides = [];
+    foreach ($list as $i => [$tid]) $sides[$i] = $tid !== '' && $tid === $homeId ? 'home' : ($tid !== '' && $tid === $awayId ? 'away' : null);
+    foreach ($sides as $i => $sd) {
+        if ($sd !== null || count($list) !== 2) continue;
+        $other = $sides[1 - $i];
+        $sides[$i] = $other === 'home' ? 'away' : ($other === 'away' ? 'home' : ($i === 0 ? 'home' : 'away'));
+    }
     foreach ($list as $i => [$tid, $n]) {
-        if ($tid !== '' && $tid === $homeId) $side = 'home';
-        elseif ($tid !== '' && $tid === $awayId) $side = 'away';
-        elseif (count($list) === 2) $side = $i === 0 ? 'home' : 'away'; // záložné poradie
-        else continue;
+        $side = $sides[$i];
+        if ($side === null) continue;
 
         $players = sn_val($n, ['athletes', 'players', 'squad.athletes', 'nominations'], []);
+        $all = [];
         foreach (is_array($players) ? $players : [] as $p) {
             $pl = sn_player($p);
-            if (!$pl) continue;
-            $out[$side][$pl['sub'] ? 'subs' : 'start'][] = $pl;
+            if ($pl) $all[] = $pl;
         }
+        // Príznak náhradníka je v zápisoch vyplnený len zriedka (SFZ uvádza ~7 % hráčov).
+        // Ak v tomto zápise nie je vyznačený nikde a hráčov je viac ako 11, rozdelí sa podľa poradia
+        // v zápise (základ býva uvedený prvý) – v generátore sa to zobrazí ako odhad.
+        $flagged = (bool)array_filter($all, fn($x) => $x['sub']);
+        if (!$flagged && count($all) > 11) {
+            foreach ($all as $i => $pl) { $pl['sub'] = $i >= 11; $out[$side][$pl['sub'] ? 'subs' : 'start'][] = $pl; }
+            $out[$side]['guessed'] = true;
+        } else {
+            foreach ($all as $pl) $out[$side][$pl['sub'] ? 'subs' : 'start'][] = $pl;
+        }
+        $out[$side]['flagged'] = $flagged;
         $out[$side]['coach'] = sn_coach(sn_val($n, ['crew', 'staff', 'officials'], []));
     }
     // brankár v základe ako prvý (ak zápis nemá poradie)
@@ -1205,7 +1233,7 @@ function sportnet_squad($teamId) {
     $t = sportnet_team($teamId);
     if (!empty($t['error'])) return $t;
     $players = array_map(fn($p) => ['nr' => $p['nr'], 'name' => $p['name'], 'apps' => $p['apps'], 'starts' => $p['starts'], 'goals' => $p['goals'],
-        'gk' => $p['gk'], 'captain' => $p['captain'], 'key' => $p['key']], array_values(array_filter($t['players'], fn($p) => $p['apps'] > 0 || $p['bench'] > 0)));
+        'gk' => $p['gk'], 'captain' => $p['captain'], 'key' => $p['key']], array_values(array_filter($t['players'], fn($p) => $p['apps'] > 0)));
     return ['players' => $players, 'coach' => $t['coach'], 'team' => $t['team']['name'], 'teamId' => $t['team']['id'], 'matches' => $t['matchesUsed'], 'played' => $t['played']];
 }
 

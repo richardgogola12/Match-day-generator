@@ -41,13 +41,13 @@ if (!empty($_GET['debug']) && is_admin()) {
         return $out;
     };
     json_response(['keys' => array_keys($data), 'nominations' => $short($data['nominations'] ?? null), 'protocol' => $short($data['protocol'] ?? null),
-        'other' => $short(array_diff_key($data, ['nominations' => 1, 'protocol' => 1])), 'parsed' => ['lineups' => sportnet_lineups($data, $home, $away), 'events' => sportnet_events($data, $home), 'report' => sportnet_report($data)]]);
+        'other' => $short(array_diff_key($data, ['nominations' => 1, 'protocol' => 1])), 'parsed' => ['lineups' => sportnet_lineups($data, $home, $away), 'events' => sportnet_events($data, $home), 'report' => sportnet_report($data), 'officialTable' => sn_results_table($data)]]);
 }
 
 $strip = fn($list) => array_map(fn($p) => ['nr' => $p['nr'], 'name' => $p['name'], 'captain' => $p['captain'], 'gk' => $p['gk']], $list);
 $lineups = sportnet_lineups($data, $home, $away);
 foreach ($lineups as $s => $l) {
-    $lineups[$s] = ['start' => $strip($l['start']), 'subs' => $strip($l['subs']), 'coach' => $l['coach']];
+    $lineups[$s] = ['start' => $strip($l['start']), 'subs' => $strip($l['subs']), 'coach' => $l['coach'], 'guessed' => $l['guessed']];
 }
 
 $events = sportnet_events($data, $home);

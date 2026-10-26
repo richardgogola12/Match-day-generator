@@ -84,8 +84,8 @@
         ['{season}', 'sezóna'], ['{coach}', 'tréner'], ['{players}', 'počet hráčov'],
         ['{halftime}', 'polčas'], ['{spectators}', 'diváci'], ['{referee}', 'rozhodca'], ['{venue}', 'štadión'],
         ['{player}', 'meno hráča'], ['{playerFirst}', 'krstné meno'], ['{playerLast}', 'priezvisko'], ['{playerNr}', 'číslo hráča'],
-        ['{apps}', 'zápasy hráča'], ['{starts}', 'v základe'], ['{goalsP}', 'góly hráča'], ['{minutes}', 'minúty'],
-        ['{yellow}', 'žlté karty'], ['{red}', 'červené karty'], ['{cleanSheets}', 'čisté kontá'],
+        ['{apps}', 'zápasy hráča'], ['{goalsP}', 'góly hráča'], ['{penalties}', 'góly z penalty'],
+        ['{yellow}', 'žlté karty'], ['{red}', 'červené karty'],
         ['{milestone}', 'jubileum (číslo)'], ['{milestoneLabel}', 'jubileum (text)'],
         ['{matchHome}', 'zápas – domáci'], ['{matchAway}', 'zápas – hostia'], ['{matchScore}', 'zápas – skóre'], ['{matchGoals}', 'góly hráča v zápase'],
         ['{roundTitle}', 'PROGRAM / VÝSLEDKY'], ['{afterRound}', 'po 13. kole'],
@@ -211,7 +211,7 @@
         const n = (v) => (v === undefined || v === null ? '' : String(v));
         return {
             player: name, playerFirst: parts.length > 1 ? parts.slice(0, -1).join(' ') : name, playerLast: parts.length > 1 ? parts[parts.length - 1] : '',
-            playerNr: n(p.nr), apps: n(p.apps), starts: n(p.starts), goalsP: n(p.goals), minutes: n(p.minutes), yellow: n(p.yellow), red: n(p.red), cleanSheets: n(p.cleanSheets),
+            playerNr: n(p.nr), apps: n(p.apps), goalsP: n(p.goals), penalties: n(p.penalties), yellow: n(p.yellow), red: n(p.red),
             milestone: n(ms.value), milestoneLabel: n(ms.label),
             matchHome: n(m.home), matchAway: n(m.away), matchScore: n(m.score), matchGoals: n(m.goals),
         };
@@ -422,8 +422,8 @@
     /* ------------------------------------------------------------------ */
     function playerLine(el, p) {
         const name = (p.name || '') + (p.captain && el.capMark ? el.capMark : '') + (p.gk && el.gkMark ? el.gkMark : '');
-        const map = { nr: p.nr ?? '', name, apps: p.apps ?? '', goals: p.goals ?? '', starts: p.starts ?? '', minutes: p.minutes ?? '', yellow: p.yellow ?? '', red: p.red ?? '', pos: p.pos ?? '' };
-        let full = String(el.format || '{nr}  {name}').replace(/\{(nr|name|apps|goals|starts|minutes|yellow|red|pos)\}/g, (m, k) => map[k]);
+        const map = { nr: p.nr ?? '', name, apps: p.apps ?? '', goals: p.goals ?? '', penalties: p.penalties ?? '', yellow: p.yellow ?? '', red: p.red ?? '', pos: p.pos ?? '' };
+        let full = String(el.format || '{nr}  {name}').replace(/\{(nr|name|apps|goals|penalties|yellow|red|pos)\}/g, (m, k) => map[k]);
         full = full.replace(/^\s+/, '');
         // číslo zvlášť (iná farba) – iba ak formát začína {nr}
         let num = '';
@@ -766,7 +766,7 @@
                 { minute: '51', name: 'Ján Novák', side: 'away', kind: 'yellow' },
                 { minute: '78', name: 'Marek Molnár', side: 'away', kind: 'red' },
             ],
-            player: { name: 'Martin Kováč', nr: '7', apps: 13, starts: 12, goals: 9, minutes: 1104, yellow: 2, red: 0, cleanSheets: 0 },
+            player: { name: 'Martin Kováč', nr: '7', apps: 13, goals: 9, penalties: 2, yellow: 2, red: 0 },
             playerMatch: { home: 'FK Slovan Horná Ves', away: 'TJ Družstevník Veľké Ludince', score: '3:2', goals: 2 },
             milestone: { value: 100, label: 'zápas za FK Slovan Horná Ves' },
             afterRound: 'po 12. kole',
@@ -794,11 +794,11 @@
         const nr = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 14, 3, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33];
         const mk = (i) => ({ nr: String(nr[i % nr.length]), name: SAMPLE_NAMES[i % SAMPLE_NAMES.length], gk: i === 0 || i === 12, captain: i === 6, apps: 12 - (i % 7), goals: i > 4 && i < 10 ? 9 - i : 0 });
         const squad = Array.from({ length: n || 24 }, (_, i) => mk(i)).sort((a, b) => a.nr - b.nr);
-        const all = Array.from({ length: 18 }, (_, i) => Object.assign(mk(i), { goals: [0, 1, 0, 2, 0, 9, 4, 6, 3, 2, 5, 0, 0, 1, 0, 0, 1, 0][i], minutes: 1100 - i * 37, yellow: [0, 2, 3, 1, 4, 2, 0, 1, 2, 0, 1, 0, 0, 0, 1, 0, 0, 0][i], red: i === 4 ? 1 : 0 }));
+        const all = Array.from({ length: 18 }, (_, i) => Object.assign(mk(i), { goals: [0, 1, 0, 2, 0, 9, 4, 6, 3, 2, 5, 0, 0, 1, 0, 0, 1, 0][i], yellow: [0, 2, 3, 1, 4, 2, 0, 1, 2, 0, 1, 0, 0, 0, 1, 0, 0, 0][i], red: i === 4 ? 1 : 0 }));
         const top = (f, n) => all.filter((p) => p[f] > 0).sort((a, b) => b[f] - a[f]).slice(0, n || 8);
         return {
             start: Array.from({ length: 11 }, (_, i) => mk(i)), subs: Array.from({ length: 7 }, (_, i) => mk(i + 11)), squad,
-            scorers: top('goals'), apps: top('apps'), minutes: top('minutes'),
+            scorers: top('goals'), apps: top('apps'),
             cards: all.filter((p) => p.yellow + p.red > 0).sort((a, b) => (b.red * 3 + b.yellow) - (a.red * 3 + a.yellow)).slice(0, 8),
         };
     };

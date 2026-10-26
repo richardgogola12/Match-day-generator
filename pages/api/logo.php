@@ -14,16 +14,26 @@ if ($url === '' || !is_public_http_url($url)) {
 }
 
 $cacheDir = sys_get_temp_dir() . '/match-day-logos';
-$cacheFile = $cacheDir . '/' . sha1($url) . '.png';
+// raw=1: fotka hráča – bez odstraňovania bieleho pozadia (to je iba pre logá)
+$raw = !empty($_GET['raw']);
+$cacheFile = $cacheDir . '/' . sha1(($raw ? 'raw|' : '') . $url) . '.png';
 
 if (!is_file($cacheFile) || filemtime($cacheFile) < time() - 7 * 86400) {
-    $raw = fetch_binary($url);
-    $img = $raw ? @imagecreatefromstring($raw) : false;
+    $bin = fetch_binary($url);
+    $img = $bin ? @imagecreatefromstring($bin) : false;
     if (!$img) {
         http_response_code(404);
         exit('Logo sa nepodarilo načítať');
     }
-    // odstráni biele pozadie (rovnaká logika ako imageFromUrl)
+    if ($raw) {
+        if (!is_dir($cacheDir)) @mkdir($cacheDir, 0775, true);
+        imagepalettetotruecolor($img);
+        imagesavealpha($img, true);
+        imagepng($img, $cacheFile);
+        unset($img);
+        goto send;
+    }
+    // logo: odstráni biele pozadie (rovnaká logika ako imageFromUrl);
     // priehľadnosť sa musí zachovať, inak by sa priehľadné logo uložilo s čiernym pozadím
     imagepalettetotruecolor($img);
     imagealphablending($img, false);
@@ -42,6 +52,7 @@ if (!is_file($cacheFile) || filemtime($cacheFile) < time() - 7 * 86400) {
     unset($clean);
 }
 
+send:
 while (ob_get_level() > 0) ob_end_clean();
 header('Content-Type: image/png');
 header('Cache-Control: public, max-age=604800');

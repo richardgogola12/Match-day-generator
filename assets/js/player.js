@@ -12,8 +12,9 @@
         const blob = await MD.store.getPhoto(key);
         if (url) URL.revokeObjectURL(url);
         url = blob ? URL.createObjectURL(blob) : null;
-        $img.attr('src', url || '').prop('hidden', !url);
-        box.classList.toggle('has-photo', !!url);
+        const src = url || box.dataset.remote || ''; // bez vlastnej fotky fotka zo Sportnetu, ak existuje
+        $img.attr('src', src).prop('hidden', !src);
+        box.classList.toggle('has-photo', !!src);
         $('#photoRemove').prop('hidden', !url);
     }
 

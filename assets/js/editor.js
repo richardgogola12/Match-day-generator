@@ -433,7 +433,7 @@
         ],
         players: [
             { prop: 'label', label: 'Názov prvku', type: 'text', col: 12 },
-            { prop: 'source', label: 'Zoznam', type: 'select', options: () => [['start', 'Základná zostava'], ['subs', 'Náhradníci'], ['squad', 'Súpiska družstva'], ['scorers', 'Najlepší strelci'], ['apps', 'Najviac zápasov'], ['minutes', 'Najviac minút'], ['cards', 'Najviac kariet']], col: 8 },
+            { prop: 'source', label: 'Zoznam', type: 'select', options: () => [['start', 'Základná zostava'], ['subs', 'Náhradníci'], ['squad', 'Súpiska družstva'], ['scorers', 'Najlepší strelci'], ['apps', 'Najviac zápasov'], ['cards', 'Najviac kariet']], col: 8 },
             { prop: 'limit', label: 'Max. hráčov (0 = všetci)', type: 'number', min: 0, max: 60, col: 4 },
             ...position,
             { section: 'Stĺpce a riadky' },
@@ -445,7 +445,7 @@
             { prop: 'minScale', label: 'Min. zmenšenie', type: 'select', options: () => [[0.4, '40 %'], [0.5, '50 %'], [0.55, '55 %'], [0.6, '60 %'], [0.7, '70 %'], [0.8, '80 %'], [1, 'nezmenšovať']], col: 6, number: true },
             { prop: 'autoFit', label: 'Automaticky zmenšiť, keď sa nezmestí', type: 'switch', col: 12 },
             { section: 'Formát riadku' },
-            { prop: 'format', label: 'Formát ({nr}, {name}, {apps}, {goals}, {minutes}, {yellow}, {red})', type: 'text', col: 12 },
+            { prop: 'format', label: 'Formát ({nr}, {name}, {apps}, {goals}, {penalties}, {yellow}, {red})', type: 'text', col: 12 },
             { prop: 'capMark', label: 'Kapitán', type: 'text', col: 6 },
             { prop: 'gkMark', label: 'Brankár', type: 'text', col: 6 },
             { prop: 'numColor', label: 'Farba čísla (prázdne = rovnaká)', type: 'colorOpt', col: 12 },
