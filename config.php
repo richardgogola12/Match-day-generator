@@ -70,6 +70,11 @@ define('API_CLUB_TEAMS', API_BASE . '/public/%s/teams?limit=100&offset=0&seasonN
 define('API_PART_TABLE', API_BASE . '/public/competitions/%s/parts/%s/results');                // oficiálna tabuľka časti súťaže
 define('API_COMP_PLAYERS', API_BASE . '/public/competitions/%s/players?%s');                    // štatistiky hráčov (minúty, štarty, striedania)
 define('API_PLAYER_STATS', API_BASE . '/player/%s/statistics');                                 // kariérne štatistiky hráča
+define('API_H2H', API_BASE . '/futbalnet/h2h-matches?teamAppSpaces=%s&teamAppSpaces=%s&limit=40');   // vzájomné zápasy klubov
+define('API_PLAYER_MATCHES', API_BASE . '/player-matches/ppo/%s/player/%s?limit=%d&closed=true&sorter=dateFromDesc');
+define('API_USER', 'https://api.sportnet.online/v1/ppo/futbalsfz.sk/users/%s');                     // hráč: meno, fotka, rok narodenia
+define('API_USER_CLUBS', 'https://api.sportnet.online/v1/users/%s');                                // kluby hráča
+define('API_PLAYER_SEARCH', 'https://api.sportnet.online/v1/ppo/futbalsfz.sk/users?q=%s&limit=%d');  // hľadanie hráčov
 define('API_CLUB_SEARCH', 'https://api.sportnet.online/v1/ppo/futbalsfz.sk/related-ppos?ppoType=club&limit=%d&offset=0&q=%s');
 
 // ---------------------------------------------------------------------------------
@@ -101,6 +106,8 @@ $routes = array(
     "api-save"                => "api/save",
     "api-gallery"             => "api/gallery",
     "api-search"              => "api/search",
+    "api-h2h"                 => "api/h2h",
+    "api-player"              => "api/player",
 
     // pôvodné serverové generátory (GD) – ponechané ako záloha
     "generate-match-result"   => "generate/generate-result",

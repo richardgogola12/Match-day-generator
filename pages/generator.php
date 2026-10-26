@@ -1,6 +1,6 @@
 <?php
 	$GROUPS = [
-		'match'  => ['matchday' => ['bi-calendar-event', 'Match day'], 'lineup' => ['bi-person-lines-fill', 'Zostava'], 'result' => ['bi-trophy', 'Výsledok'], 'goals' => ['bi-list-ol', 'Strelci'], 'report' => ['bi-file-text', 'Súhrn']],
+		'match'  => ['matchday' => ['bi-calendar-event', 'Match day'], 'lineup' => ['bi-person-lines-fill', 'Zostava'], 'result' => ['bi-trophy', 'Výsledok'], 'goals' => ['bi-list-ol', 'Strelci'], 'report' => ['bi-file-text', 'Súhrn'], 'h2h' => ['bi-bar-chart-steps', 'Vzájomné'], 'form' => ['bi-graph-up-arrow', 'Forma']],
 		'team'   => ['squad' => ['bi-people', 'Súpiska'], 'table' => ['bi-list-ol', 'Tabuľka'], 'round' => ['bi-calendar-week', 'Kolo'], 'stats' => ['bi-bar-chart-line', 'Štatistiky']],
 		'player' => ['player' => ['bi-person-vcard', 'Profil'], 'motm' => ['bi-award', 'Hráč zápasu'], 'milestone' => ['bi-trophy', 'Jubileum']],
 	];
@@ -26,6 +26,7 @@
 	$enabled = [
 		'lineup' => $match['matchID'] !== '', 'result' => $played,
 		'goals' => $played && $match['matchID'] !== '', 'report' => $played && $match['matchID'] !== '',
+		'h2h' => $match['matchID'] !== '', 'form' => $match['matchID'] !== '',
 	];
 	$teamListUrl = $match['team'] ? url('druzstvo') . '?' . http_build_query(['team' => $match['team'], 's' => $match['season'], 'cat' => $match['category']]) : '';
 
@@ -202,6 +203,18 @@
 			</div>
 
 			<?php if ($mode === 'match'): ?>
+			<!-- Vzájomné zápasy / forma -->
+			<div class="card-app mb-4" id="extraCard" hidden>
+				<div class="card-body">
+					<h2 class="h6 section-title text-uppercase text-muted-2 mb-3" id="extraTitle">Forma</h2>
+					<div class="btn-group w-100 mb-3" role="group" aria-label="Družstvo" id="formSide">
+						<button type="button" class="btn btn-outline-secondary text-truncate" data-side="home"><?= plain($match['d1name'] ?: 'Domáci') ?></button>
+						<button type="button" class="btn btn-outline-secondary text-truncate" data-side="away"><?= plain($match['d2name'] ?: 'Hostia') ?></button>
+					</div>
+					<div id="extraInfo" class="small"></div>
+				</div>
+			</div>
+
 			<div class="card-app">
 				<div class="card-body">
 					<h2 class="h6 section-title text-uppercase text-muted-2 mb-3">Údaje o zápase</h2>

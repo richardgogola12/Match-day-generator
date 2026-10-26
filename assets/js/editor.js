@@ -11,10 +11,10 @@
     const guideV = document.getElementById('guideV');
     const guideH = document.getElementById('guideH');
 
-    const TYPE_ICON = { text: 'bi-fonts', logo: 'bi-shield', goals: 'bi-list-ol', shape: 'bi-square-fill', players: 'bi-people', photo: 'bi-person-bounding-box', table: 'bi-table', fixtures: 'bi-calendar-week' };
-    const TYPE_NAME = { text: 'Text', logo: 'Logo', goals: 'Strelci / karty', shape: 'Obdĺžnik', players: 'Hráči', photo: 'Fotka hráča', table: 'Tabuľka', fixtures: 'Zápasy kola' };
+    const TYPE_ICON = { text: 'bi-fonts', logo: 'bi-shield', goals: 'bi-list-ol', shape: 'bi-square-fill', players: 'bi-people', photo: 'bi-person-bounding-box', table: 'bi-table', fixtures: 'bi-calendar-week', compare: 'bi-bar-chart-steps', formbadges: 'bi-circle-half' };
+    const TYPE_NAME = { text: 'Text', logo: 'Logo', goals: 'Strelci / karty', shape: 'Obdĺžnik', players: 'Hráči', photo: 'Fotka hráča', table: 'Tabuľka', fixtures: 'Zoznam zápasov', compare: 'Porovnanie tímov', formbadges: 'Forma (V/R/P)' };
     const LISTS = ['goals', 'players', 'table', 'fixtures']; // prvky so spodnou hranicou (maxY)
-    const FONTED = ['text', 'goals', 'players', 'table', 'fixtures']; // prvky s písmom
+    const FONTED = ['text', 'goals', 'players', 'table', 'fixtures', 'compare', 'formbadges']; // prvky s písmom
 
     const S = {
         tplId: null,
@@ -57,7 +57,7 @@
             const hasPlayers = lastMatch.players && ['start', 'subs', 'squad', 'scorers'].some((k) => (lastMatch.players[k] || []).length);
             // chýbajúce časti (tabuľka, kolo, hráč …) doplní ukážka
             const fill = {};
-            ['table', 'fixtures', 'player', 'playerMatch', 'milestone', 'cards', 'report', 'roundInfo', 'afterRound'].forEach((k) => {
+            ['table', 'fixtures', 'player', 'playerMatch', 'milestone', 'cards', 'report', 'roundInfo', 'afterRound', 'h2h', 'form'].forEach((k) => {
                 const v = lastMatch[k];
                 if (v === undefined || v === null || (Array.isArray(v) && !v.length)) fill[k] = sample[k];
             });
@@ -269,6 +269,11 @@
             } else if (el.type === 'table' || el.type === 'fixtures') {
                 el.w = Math.max(100, rnd(o.w + dx));
                 el.maxY = Math.round(o.maxY + dy);
+            } else if (el.type === 'compare') {
+                el.w = Math.max(100, rnd(o.w + dx));
+                el.rowH = Math.max(16, Math.round(o.rowH + dy / 6));
+            } else if (el.type === 'formbadges') {
+                el.size = Math.max(10, Math.round(o.size + Math.max(dx, dy) / 5));
             } else if (el.type === 'players') {
                 // šírka stĺpca podľa toho, koľko stĺpcov má zoznam
                 el.maxWidth = Math.max(40, rnd(o.maxWidth + dx / Math.max(1, o.columns || 1)));
@@ -521,6 +526,39 @@
             { prop: 'size', label: 'Veľkosť', type: 'number', min: 4, max: 200, col: 4 },
             { prop: 'opacity', label: 'Krytie', type: 'range', min: 0, max: 1, step: 0.05, col: 12 },
         ],
+        compare: [
+            { prop: 'label', label: 'Názov prvku', type: 'text', col: 12 },
+            ...position,
+            { prop: 'w', label: 'Šírka', type: 'number', min: 100, col: 4 },
+            { prop: 'rowH', label: 'Výška riadku', type: 'number', min: 10, col: 4 },
+            { prop: 'barH', label: 'Hrúbka pruhu', type: 'number', min: 0, max: 60, col: 4 },
+            { section: 'Farby' },
+            { prop: 'color', label: 'Čísla', type: 'color', col: 4 },
+            { prop: 'labelColor', label: 'Popisy', type: 'color', col: 4 },
+            { prop: 'barBg', label: 'Podklad pruhu', type: 'colorOpt', col: 4 },
+            { prop: 'barHome', label: 'Pruh domácich', type: 'color', col: 6 },
+            { prop: 'barAway', label: 'Pruh hostí', type: 'color', col: 6 },
+            { section: 'Písmo' },
+            { prop: 'font', label: 'Písmo', type: 'font', col: 8 },
+            { prop: 'size', label: 'Veľkosť', type: 'number', min: 4, max: 200, col: 4 },
+            { prop: 'uppercase', label: 'VEĽKÉ', type: 'switch', col: 6 },
+            { prop: 'opacity', label: 'Krytie', type: 'range', min: 0, max: 1, step: 0.05, col: 12 },
+        ],
+        formbadges: [
+            { prop: 'label', label: 'Názov prvku', type: 'text', col: 12 },
+            { prop: 'x', label: 'X (stred)', type: 'number', col: 6 },
+            { prop: 'y', label: 'Y', type: 'number', col: 6 },
+            { prop: 'size', label: 'Veľkosť krúžku', type: 'number', min: 10, max: 400, col: 4 },
+            { prop: 'gap', label: 'Medzera', type: 'number', min: 0, max: 200, col: 4 },
+            { prop: 'max', label: 'Počet zápasov', type: 'number', min: 1, max: 10, col: 4 },
+            { section: 'Farby' },
+            { prop: 'winColor', label: 'Výhra', type: 'color', col: 4 },
+            { prop: 'drawColor', label: 'Remíza', type: 'color', col: 4 },
+            { prop: 'lossColor', label: 'Prehra', type: 'color', col: 4 },
+            { prop: 'color', label: 'Písmeno', type: 'color', col: 6 },
+            { prop: 'font', label: 'Písmo', type: 'font', col: 6 },
+            { prop: 'opacity', label: 'Krytie', type: 'range', min: 0, max: 1, step: 0.05, col: 12 },
+        ],
         shape: [
             { prop: 'label', label: 'Názov prvku', type: 'text', col: 12 },
             ...position,
@@ -700,6 +738,8 @@
             photo: { x: Math.round(W / 2 - 120), y: Math.round(H / 2 - 120), w: 240, h: 240 },
             table: { x: Math.round(W * 0.16), y: Math.round(H * 0.32), w: Math.round(W * 0.68), maxY: Math.round(H * 0.92) },
             fixtures: { x: Math.round(W * 0.14), y: Math.round(H * 0.33), w: Math.round(W * 0.72), maxY: Math.round(H * 0.92) },
+            compare: { x: Math.round(W * 0.15), y: Math.round(H * 0.38), w: Math.round(W * 0.7) },
+            formbadges: { x: Math.round(W / 2), y: Math.round(H * 0.4) },
         }[type];
         const el = Object.assign({}, MD.TYPE_DEFAULTS[type], base, pos);
         if (type === 'shape') S.tpl.elements.unshift(el); // podklad dať pod ostatné

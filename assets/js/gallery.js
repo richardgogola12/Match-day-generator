@@ -23,13 +23,13 @@
     const bytes = (b) => b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round((b || 0) / 1024)) + ' kB';
     const fold = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
     const absUrl = (it) => (CFG.root || location.origin) + it.url.split('?')[0];
-    const MATCH_TYPES = ['matchday', 'lineup', 'result', 'goals', 'report'];
+    const MATCH_TYPES = ['matchday', 'lineup', 'result', 'goals', 'report', 'h2h', 'form'];
     const isMatch = (it) => MATCH_TYPES.includes(it.type);
     const title = (it) => (isMatch(it) ? it.d1name + ' vs ' + it.d2name : (it.player ? it.player + ' – ' : '') + it.d1name + (it.category && !it.player ? ' – ' + it.category : ''));
     // dátum zápasu, pri obrázkoch družstva / hráča sezóna (a kolo)
     const when = (it) => (isMatch(it) ? fmtDate(it.startDate) : [it.type === 'round' && it.roundNo ? it.roundNo + '. kolo' : '', it.type === 'milestone' && it.mvalue ? it.mvalue + '. ' : '', it.season ? 'Sezóna ' + it.season : ''].filter(Boolean).join(' · '));
     // pri zostave aj družstvo, ktorého zostava to je
-    const variantTxt = (it) => (it.type === 'lineup' && it.variant ? (it.variant === 'away' ? it.d2name : it.d1name) : '');
+    const variantTxt = (it) => ((it.type === 'lineup' || it.type === 'form') && it.variant ? (it.variant === 'away' ? it.d2name : it.d1name) : '');
     const typeName = (it) => it.typeName || TYPES[it.type] || it.type;
     const dlName = (it) => (it.type || 'obrazok') + '_' + it.file.split('/').pop();
 

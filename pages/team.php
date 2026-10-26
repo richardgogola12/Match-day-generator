@@ -12,7 +12,8 @@ if (!preg_match('/^[A-Za-z0-9_\-.]{2,80}$/', $teamId)) show_404();
 $T = sportnet_team($teamId);
 $C = sportnet_competition($teamId);
 $error = $T['error'] ?? ($C['error'] ?? null);
-$team = $T['team'] ?? ($C['team'] ?? ['id' => '', 'name' => '', 'logo' => '']);
+$team = ($T['team'] ?? ($C['team'] ?? [])) + ['id' => '', 'name' => '', 'logo' => '', 'club' => ''];
+if ($team['club'] === '') $team['club'] = (string)($C['team']['club'] ?? '');
 $players = $T['players'] ?? [];
 $st = $T['stats'] ?? [];
 $compName = $C['competition'] ?? ($T['competition'] ?? '');
@@ -38,12 +39,13 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 
 <section class="hero hero-sm">
 	<div class="container-xxl">
-		<button type="button" onclick="history.length > 1 ? history.back() : location.href='<?= url('/') ?>'" class="btn btn-sm btn-outline-light rounded-pill mb-3"><i class="bi bi-arrow-left me-1"></i> Späť na zápasy</button>
+		<?php if ($team['club']): ?><a href="<?= plain(md_club_url($team['club'], $season, $teamId)) ?>" class="btn btn-sm btn-outline-light rounded-pill mb-3"><i class="bi bi-arrow-left me-1"></i> Zápasy klubu</a><?php else: ?><button type="button" onclick="history.length > 1 ? history.back() : location.href='<?= url('/') ?>'" class="btn btn-sm btn-outline-light rounded-pill mb-3"><i class="bi bi-arrow-left me-1"></i> Späť</button><?php endif; ?>
 		<div class="d-flex align-items-center gap-3">
 			<?php if ($team['logo']): ?><img class="hero-logo" src="<?= plain(url('api-logo') . '?url=' . rawurlencode($team['logo'])) ?>" alt="" width="64" height="64"><?php endif; ?>
 			<div>
 				<h1 class="mb-1"><?= plain($team['name'] ?: 'Družstvo') ?> <span class="accent"><?= plain($cat) ?></span></h1>
 				<div class="d-flex flex-wrap gap-2">
+					<?php if ($team['club']): ?><a class="hero-eyebrow hero-link" href="<?= plain(md_club_url($team['club'], $season, $teamId)) ?>"><i class="bi bi-shield"></i> Klub a zápasy</a><?php endif; ?>
 					<?php if ($season): ?><span class="hero-eyebrow"><i class="bi bi-calendar3"></i> <?= plain($season) ?></span><?php endif; ?>
 					<?php if ($compName): ?><span class="hero-eyebrow"><i class="bi bi-trophy"></i> <?= plain($compName) ?></span><?php endif; ?>
 					<?php if (!empty($T['coach'])): ?><span class="hero-eyebrow"><i class="bi bi-person-badge"></i> Tréner <?= plain($T['coach']) ?></span><?php endif; ?>
@@ -119,7 +121,7 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 							<?php if (!$list): ?><div class="text-muted-2 small">Zatiaľ žiadne údaje.</div><?php endif; ?>
 							<ol class="leader-list">
 								<?php foreach ($list as $p): ?>
-									<li><a href="<?= plain(url('hrac') . '?' . $q(['p' => $p['key']])) ?>"><span class="nr"><?= plain($p['nr'] ?: '–') ?></span><span class="nm"><?= plain($p['name']) ?></span></a><span class="val"><?= (int)$p[$f] ?> <small><?= $unit ?></small></span></li>
+									<li><a href="<?= plain(md_player_url($p['id'], $teamId, $season, $cat, $p['key'])) ?>"><span class="nr"><?= plain($p['nr'] ?: '–') ?></span><span class="nm"><?= plain($p['name']) ?></span></a><span class="val"><?= (int)$p[$f] ?> <small><?= $unit ?></small></span></li>
 								<?php endforeach; ?>
 							</ol>
 						</div></div>
@@ -142,7 +144,7 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 							<th data-sort="num" class="text-end" title="Odohrané zápasy">Z</th><th data-sort="num" class="text-end" title="V základnej zostave">Š</th><?php if ($hasMin): ?><th data-sort="num" class="text-end" title="Odohrané minúty">Min</th><?php endif; ?><th data-sort="num" class="text-end" title="Góly">G</th><th data-sort="num" class="text-end" title="Góly z pokutového kopu">PK</th><th data-sort="num" class="text-end" title="Žlté karty">ŽK</th><th data-sort="num" class="text-end" title="Červené karty">ČK</th><th></th>
 						</tr></thead>
 						<tbody>
-							<?php foreach ($players as $p): $pl = url('hrac') . '?' . $q(['p' => $p['key']]); ?>
+							<?php foreach ($players as $p): $pl = md_player_url($p['id'], $teamId, $season, $cat, $p['key']); ?>
 								<tr>
 									<td class="fw-bold text-primary" data-v="<?= $p['nr'] === '' ? 999 : (int)$p['nr'] ?>"><?= plain($p['nr'] ?: '–') ?></td>
 									<td data-v="<?= plain($p['key']) ?>"><a class="fw-semibold text-reset text-decoration-none" href="<?= plain($pl) ?>"><?= plain($p['name']) ?></a>
@@ -173,7 +175,7 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 							<?php foreach ($C['table'] as $r): ?>
 								<tr class="<?= !empty($r['own']) ? 'is-own' : '' ?>">
 									<td class="fw-bold"><?= (int)$r['pos'] ?>.</td>
-									<td><span class="d-inline-flex align-items-center gap-2"><?php if ($r['logo']): ?><img src="<?= plain(url('api-logo') . '?url=' . rawurlencode($r['logo'])) ?>" alt="" width="26" height="26" loading="lazy"><?php endif; ?><span class="fw-semibold"><?= plain($r['name']) ?></span></span></td>
+									<td><a class="d-inline-flex align-items-center gap-2 text-reset text-decoration-none" href="<?= plain($r['id'] === $team['id'] ? '#' : md_team_url($r['id'], $season)) ?>"><?php if ($r['logo']): ?><img src="<?= plain(url('api-logo') . '?url=' . rawurlencode($r['logo'])) ?>" alt="" width="26" height="26" loading="lazy"><?php endif; ?><span class="fw-semibold"><?= plain($r['name']) ?></span></a></td>
 									<td class="text-end"><?= (int)$r['p'] ?></td><td class="text-end"><?= (int)$r['w'] ?></td><td class="text-end"><?= (int)$r['d'] ?></td><td class="text-end"><?= (int)$r['l'] ?></td>
 									<td class="text-end text-nowrap"><?= (int)$r['gf'] ?>:<?= (int)$r['ga'] ?></td>
 									<td class="text-end fw-bold"><?= (int)$r['pts'] ?></td>
@@ -215,13 +217,9 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 							<?php foreach ($r['matches'] as $m): [$dT, $tT] = format_match_date($m['date']); $own = $m['home']['id'] === $team['id'] || $m['away']['id'] === $team['id']; ?>
 								<li class="<?= $own ? 'is-own' : '' ?>">
 									<span class="when"><?= plain($dT) ?> <?= plain($tT) ?></span>
-									<span class="h"><?= plain($m['home']['name']) ?></span>
-									<?php if ($m['played']): ?>
-										<a class="sc" href="<?= plain(url('zapas') . '?' . http_build_query(md_match_params($m, $team['id']))) ?>" title="Zápis o stretnutí"><?= (int)$m['home']['score'] ?>:<?= (int)$m['away']['score'] ?></a>
-									<?php else: ?>
-										<span class="sc upcoming"><?= plain($tT ?: '–') ?></span>
-									<?php endif; ?>
-									<span class="a"><?= plain($m['away']['name']) ?></span>
+									<a class="h text-reset text-decoration-none" href="<?= plain(md_team_url($m['home']['id'], $season)) ?>"><?= plain($m['home']['name']) ?></a>
+									<a class="sc<?= $m['played'] ? '' : ' upcoming' ?>" href="<?= plain(md_match_url($m['id'], $team['id'])) ?>" title="Zápas"><?= $m['played'] ? (int)$m['home']['score'] . ':' . (int)$m['away']['score'] : plain($tT ?: '–') ?></a>
+									<a class="a text-reset text-decoration-none" href="<?= plain(md_team_url($m['away']['id'], $season)) ?>"><?= plain($m['away']['name']) ?></a>
 								</li>
 							<?php endforeach; ?>
 						</ul>
@@ -236,7 +234,7 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 $(function () {
 	// družstvo a hráči do globálneho hľadania (iba v tomto prehliadači)
 	window.MD.rememberTeam && window.MD.rememberTeam(<?= json_encode(['teamId' => $teamId, 'season' => $season, 'cat' => $cat, 'club' => $team['name'], 'logo' => $team['logo'],
-		'players' => array_map(fn($p) => ['key' => $p['key'], 'name' => $p['name'], 'nr' => $p['nr']], $players)], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>);
+		'players' => array_map(fn($p) => ['key' => $p['key'], 'name' => $p['name'], 'nr' => $p['nr'], 'id' => $p['id']], $players)], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>);
 	// karta v adrese (návrat späť ostane na rovnakej karte)
 	$('[data-tab]').on('shown.bs.tab', function () {
 		const u = new URL(location.href); u.searchParams.set('tab', this.dataset.tab); history.replaceState(null, '', u);

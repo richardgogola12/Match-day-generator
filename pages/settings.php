@@ -106,7 +106,9 @@
 									<li><button class="dropdown-item" data-add="players"><i class="bi bi-people me-2"></i>Zoznam hráčov</button></li>
 									<li><button class="dropdown-item" data-add="photo"><i class="bi bi-person-bounding-box me-2"></i>Fotka hráča</button></li>
 									<li><button class="dropdown-item" data-add="table"><i class="bi bi-table me-2"></i>Tabuľka súťaže</button></li>
-									<li><button class="dropdown-item" data-add="fixtures"><i class="bi bi-calendar-week me-2"></i>Zápasy kola</button></li>
+									<li><button class="dropdown-item" data-add="fixtures"><i class="bi bi-calendar-week me-2"></i>Zoznam zápasov</button></li>
+									<li><button class="dropdown-item" data-add="compare"><i class="bi bi-bar-chart-steps me-2"></i>Porovnanie tímov</button></li>
+									<li><button class="dropdown-item" data-add="formbadges"><i class="bi bi-circle-half me-2"></i>Forma (V/R/P)</button></li>
 								</ul>
 							</div>
 						</div>

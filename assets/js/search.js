@@ -27,14 +27,14 @@
 
     const clubUrl = (id, season) => BASE + '/match-day-season-detail?' + new URLSearchParams({ s: season || '', team: id });
     const teamUrl = (t) => BASE + '/druzstvo?' + new URLSearchParams({ team: t.teamId, s: t.season || '', cat: t.cat || '' });
-    const playerUrl = (t, p) => BASE + '/hrac?' + new URLSearchParams({ team: t.teamId, p: p.key, s: t.season || '', cat: t.cat || '' });
+    const playerUrl = (t, p) => BASE + '/hrac?' + new URLSearchParams(Object.assign(p.id ? { id: p.id } : {}, { team: t.teamId, p: p.key, s: t.season || '', cat: t.cat || '' }));
 
     function init(input) {
         const $in = $(input);
         const $form = $in.closest('.gsearch');
         const $menu = $form.find('.gsearch-menu');
         const seasonSel = input.dataset.seasonSelect;
-        let items = [], active = -1, timer = null, seq = 0, remote = { q: null, clubs: [], season: '', loading: false, error: false };
+        let items = [], active = -1, timer = null, seq = 0, remote = { q: null, clubs: [], players: [], season: '', loading: false, error: false };
 
         const season = () => (seasonSel && $(seasonSel).val()) || remote.season || '';
 
@@ -48,7 +48,7 @@
                 const label = (t.club || '') + (t.cat ? ' – ' + t.cat : '');
                 if (!f || fold(label).includes(f)) out.teams.push({ href: teamUrl(t), title: label, sub: 'Družstvo · ' + (t.season || ''), icon: 'bi-people', logo: t.logo });
                 if (f.length >= 2) (t.players || []).forEach((p) => {
-                    if (fold(p.name).includes(f)) out.players.push({ href: playerUrl(t, p), title: p.name, sub: (p.nr ? '#' + p.nr + ' · ' : '') + label, icon: 'bi-person' });
+                    if (fold(p.name).includes(f)) out.players.push({ href: playerUrl(t, p), title: p.name, sub: (p.nr ? '#' + p.nr + ' · ' : '') + label, icon: 'bi-person', pid: p.id || '' });
                 });
             });
             if (f) PAGES.forEach((p) => { if (fold(p.t + ' ' + p.k).includes(f)) out.pages.push({ href: BASE + p.u, title: p.t, sub: 'Stránka', icon: p.i }); });
@@ -68,7 +68,11 @@
             } else {
                 const clubs = remote.q === q ? remote.clubs.map((c) => ({ href: clubUrl(c.id, season()), title: c.name, sub: c.active === false ? 'Klub · neaktívny' : 'Klub · ' + season(), icon: 'bi-shield', logo: c.logo, club: c })) : [];
                 if (clubs.length) groups.push(['Kluby', clubs]);
-                if (L.players.length) groups.push(['Hráči', L.players]);
+                // hráči: najprv z prezeraných družstiev (s klubom), potom zo Sportnetu
+                const seenIds = new Set(L.players.map((p) => p.pid).filter(Boolean));
+                const remoteP = remote.q === q ? (remote.players || []).filter((p) => !seenIds.has(p.id)).map((p) => ({ href: BASE + '/hrac?id=' + encodeURIComponent(p.id), title: p.name, sub: 'Hráč' + (p.birthyear ? ' · nar. ' + p.birthyear : ''), icon: 'bi-person', logo: p.photo })) : [];
+                const players = L.players.concat(remoteP).slice(0, 8);
+                if (players.length) groups.push(['Hráči', players]);
                 if (L.teams.length) groups.push(['Družstvá', L.teams]);
                 if (L.recent.length && !clubs.length) groups.push(['Naposledy otvorené', L.recent]);
                 if (L.pages.length) groups.push(['Stránky', L.pages]);
@@ -84,7 +88,7 @@
                 });
             });
             if (q.length >= 2 && remote.loading && remote.q !== q) html += '<div class="gsearch-note"><span class="spinner-border spinner-border-sm me-2"></span>Hľadám kluby…</div>';
-            else if (q.length >= 2 && !items.length) html += '<div class="gsearch-note">' + (remote.error ? 'Hľadanie v Sportnete je teraz nedostupné.' : 'Nič sa nenašlo. Skúste časť názvu obce alebo klubu.') + '</div>';
+            else if (q.length >= 2 && !items.length) html += '<div class="gsearch-note">' + (remote.error ? 'Hľadanie v Sportnete je teraz nedostupné.' : 'Nič sa nenašlo. Skúste časť názvu obce, klubu alebo priezvisko hráča s diakritikou.') + '</div>';
             else if (q.length === 1) html += '<div class="gsearch-note">Napíšte aspoň 2 znaky…</div>';
             else if (!q && !items.length) html += '<div class="gsearch-note">Napíšte názov klubu (napr. obec) alebo meno hráča.</div>';
             $menu.html(html).prop('hidden', false);
@@ -110,8 +114,8 @@
                 const my = ++seq;
                 fetch(BASE + '/api-search?q=' + encodeURIComponent(q), { headers: { Accept: 'application/json' } })
                     .then((r) => r.json())
-                    .then((d) => { if (my !== seq) return; remote = { q, clubs: d.clubs || [], season: d.season || remote.season, loading: false, error: !!d.error }; render(); })
-                    .catch(() => { if (my !== seq) return; remote = { q, clubs: [], season: remote.season, loading: false, error: true }; render(); });
+                    .then((d) => { if (my !== seq) return; remote = { q, clubs: d.clubs || [], players: d.players || [], season: d.season || remote.season, loading: false, error: !!d.error }; render(); })
+                    .catch(() => { if (my !== seq) return; remote = { q, clubs: [], players: [], season: remote.season, loading: false, error: true }; render(); });
             }, 220);
         }
 

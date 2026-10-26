@@ -18,7 +18,7 @@
 
 		<form class="gsearch gsearch-hero mb-3" role="search" autocomplete="off">
 			<i class="bi bi-search gsearch-icon" aria-hidden="true"></i>
-			<input type="search" class="form-control gsearch-input" id="heroSearch" placeholder="Názov klubu alebo obce, napr. Nitra…" aria-label="Hľadať klub" aria-expanded="false" aria-controls="gsMenuHero" data-gsearch data-gsearch-main data-season-select="#season" autofocus>
+			<input type="search" class="form-control gsearch-input" id="heroSearch" placeholder="Klub, obec alebo hráč…" aria-label="Hľadať klub alebo hráča" aria-expanded="false" aria-controls="gsMenuHero" data-gsearch data-gsearch-main data-season-select="#season" autofocus>
 			<div class="gsearch-menu" id="gsMenuHero" role="listbox" hidden></div>
 		</form>
 		<?php if ($seasons): ?>

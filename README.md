@@ -2,13 +2,14 @@
 
 PHP + Bootstrap 5 aplikácia na generovanie zápasových grafík pre futbalové kluby (dáta zo Sportnet / Futbalnet SFZ).
 
-Dvanásť typov obrázkov:
-- k zápasu: **Match day**, **Zostava**, **Výsledok**, **Strelci**, **Súhrn zápasu**
+Štrnásť typov obrázkov:
+- k zápasu: **Match day**, **Zostava**, **Výsledok**, **Strelci**, **Súhrn zápasu**, **Vzájomné zápasy**, **Forma**
 - k družstvu: **Súpiska**, **Tabuľka**, **Kolo** (program / výsledky), **Štatistiky**
 - k hráčovi: **Profil hráča**, **Hráč zápasu**, **Jubileum** (s fotkou hráča uloženou v prehliadači)
 
 ## Funkcie
-- **Globálne hľadanie** v menu (kluby zo Sportnetu, prezerané družstvá a hráči, stránky; skratka `/` alebo Ctrl+K)
+- **Detail zápasu**: priebeh, štatistika vzájomných zápasov, forma, delegované osoby, štadión, zostavy, H2H a tabuľka – pri každej časti tlačidlo na obrázok; kluby, družstvá, hráči a zápasy sú navzájom prelinkované
+- **Globálne hľadanie** v menu (kluby a hráči zo Sportnetu, prezerané družstvá a hráči, stránky; skratka `/` alebo Ctrl+K)
 - Stránka klubu: záložky družstiev, výber sezóny, najbližší a posledný zápas navrchu, filter nadchádzajúce / odohraté
 - Zostava na zápas (základ, náhradníci, tréner) zo zápisu o stretnutí a súpiska družstva za sezónu zo zápisov odohratých zápasov; hráčov možno ručne upraviť (uloží sa v prehliadači)
 - Stránky: **zápis o stretnutí** (góly, karty, striedania, polčas, rozhodcovia, diváci, zostavy), **prehľad družstva** (štatistiky, hráči s minútami, oficiálna tabuľka, kolá celej súťaže) a **profil hráča** (štatistiky a zápasy sezóny s minútami, kariéra)
@@ -43,6 +44,9 @@ Používa [Sportnet Súťaže API v2](https://sutaze.api.sportnet.online/api/v2/
 | `API_PART_TABLE` | `/public/competitions/{id}/parts/{partId}/results` | oficiálna tabuľka |
 | `API_COMP_PLAYERS` | `/public/competitions/{id}/players?teamId=&partId=` | minúty, štarty, nástupy hráčov |
 | `API_PLAYER_STATS` | `/player/{sportnetId}/statistics` | kariéra hráča |
+| `API_H2H` | `/futbalnet/h2h-matches?teamAppSpaces=A&teamAppSpaces=B` | vzájomné zápasy klubov |
+| `API_PLAYER_MATCHES` | `/player-matches/ppo/{klub}/player/{id}` | posledné zápasy hráča |
+| `API_USER`, `API_USER_CLUBS`, `API_PLAYER_SEARCH` | `api.sportnet.online/v1/…/users` | hráč (fotka, rok narodenia, kluby) a hľadanie hráčov |
 
 ## Štruktúra
 | Cesta | Popis |

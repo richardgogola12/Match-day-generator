@@ -105,6 +105,40 @@
                 { id: 'competition', type: 'text', label: 'Súťaž | kolo', text: '{competition} | {roundLabel}', x: 500, y: 915, size: 16, align: 'center', opacity: 0.7 },
             ],
         },
+        h2h: {
+            name: 'Vzájomné zápasy',
+            icon: 'bi-bar-chart-steps',
+            width: 1000, height: 1000,
+            defaultBackground: 'img/team-bg.jpg',
+            elements: [
+                { id: 'title', type: 'text', label: 'Nadpis', text: 'VZÁJOMNÉ ZÁPASY', x: 500, y: 150, size: 64, align: 'center', color: '#e63946', strokeWidth: 4, strokeColor: '#ffffff', shadow: true, letterSpacing: 2 },
+                { id: 'logo1', type: 'logo', label: 'Logo domácich', team: 'home', x: 130, y: 190, size: 120 },
+                { id: 'logo2', type: 'logo', label: 'Logo hostí', team: 'away', x: 750, y: 190, size: 120 },
+                { id: 'name1', type: 'text', label: 'Názov domácich', text: '{d1name}', x: 190, y: 345, size: 22, align: 'center', maxWidth: 260 },
+                { id: 'name2', type: 'text', label: 'Názov hostí', text: '{d2name}', x: 810, y: 345, size: 22, align: 'center', maxWidth: 260 },
+                { id: 'played', type: 'text', label: 'Počet zápasov', text: '{h2hPlayed}', x: 500, y: 290, size: 90, align: 'center', color: yellow, shadow: true },
+                { id: 'playedL', type: 'text', label: 'Popis – počet', text: 'ZÁPASOV', x: 500, y: 330, size: 20, align: 'center', opacity: 0.8, letterSpacing: 3 },
+                { id: 'compare', type: 'compare', label: 'Porovnanie', x: 150, y: 380, w: 700, rowH: 56 },
+                { id: 'lastL', type: 'text', label: 'Nadpis – posledné zápasy', text: 'POSLEDNÉ ZÁPASY', x: 500, y: 742, size: 20, align: 'center', color: yellow, letterSpacing: 3 },
+                { id: 'fixtures', type: 'fixtures', label: 'Posledné vzájomné zápasy', x: 140, y: 760, w: 720, rowH: 40, size: 18, maxRows: 4, maxY: 925, showDate: false },
+                { id: 'competition', type: 'text', label: 'Súťaž | kolo', text: '{competition} | {roundLabel} | {date}', x: 500, y: 955, size: 16, align: 'center', opacity: 0.7 },
+            ],
+        },
+        form: {
+            name: 'Forma',
+            icon: 'bi-graph-up-arrow',
+            width: 1000, height: 1000,
+            defaultBackground: 'img/team-bg.jpg',
+            elements: [
+                { id: 'logoTeam', type: 'logo', label: 'Logo družstva', team: 'team', x: 430, y: 70, size: 140 },
+                { id: 'title', type: 'text', label: 'Nadpis', text: 'FORMA', x: 500, y: 300, size: 96, align: 'center', color: '#e63946', strokeWidth: 5, strokeColor: '#ffffff', shadow: true, letterSpacing: 4 },
+                { id: 'team', type: 'text', label: 'Družstvo', text: '{team}', x: 500, y: 350, size: 30, align: 'center', color: yellow, maxWidth: 800 },
+                { id: 'badges', type: 'formbadges', label: 'Forma (V/R/P)', x: 500, y: 385, size: 64, gap: 18 },
+                { id: 'lastL', type: 'text', label: 'Nadpis – zápasy', text: 'POSLEDNÝCH 5 ZÁPASOV', x: 500, y: 520, size: 20, align: 'center', opacity: 0.85, letterSpacing: 3 },
+                { id: 'fixtures', type: 'fixtures', label: 'Posledné zápasy', x: 140, y: 540, w: 720, rowH: 64, size: 22, maxRows: 5, maxY: 880 },
+                { id: 'next', type: 'text', label: 'Zápas', text: '{d1name} – {d2name} · {date} {time}', x: 500, y: 925, size: 18, align: 'center', opacity: 0.75, maxWidth: 860 },
+            ],
+        },
         table: {
             name: 'Tabuľka',
             icon: 'bi-list-ol',
@@ -244,13 +278,15 @@
         photo: { w: 300, h: 300, shape: 'circle', fit: 'cover', borderWidth: 6, borderColor: '#ffffff', bgColor: '#0b2a1a', fallbackText: '{playerNr}', fallbackColor: '#e63946', fallbackColor2: '#8d0f1a', font: 'Biome', color: '#ffffff', shadow: true, opacity: 1, radius: 24 },
         table: { w: 680, rowH: 42, size: 22, font: 'Biome', color: '#ffffff', headColor: '#ffd166', ownColor: '#ffffff', ptsColor: '#ffd166', highlight: 'rgba(230,57,70,0.85)', stripe: 'rgba(255,255,255,0.05)', header: true, showLogos: true, columns: 'p,w,d,l,score,pts', maxRows: 20, maxY: 915, autoFit: true, ownBold: true, uppercase: false, headName: 'Družstvo', opacity: 1 },
         fixtures: { w: 720, rowH: 72, size: 22, font: 'Biome', color: '#ffffff', pillColor: '#e63946', pillColor2: 'rgba(255,255,255,0.14)', pillText: '#ffffff', highlight: 'rgba(255,209,102,0.16)', showLogos: true, showDate: false, maxRows: 12, maxY: 915, autoFit: true, uppercase: false, opacity: 1 },
+        compare: { w: 700, rowH: 56, size: 22, font: 'Biome', color: '#ffffff', labelColor: '#ffffff', barHome: '#e63946', barAway: '#ffd166', barBg: 'rgba(255,255,255,0.15)', barH: 8, uppercase: true, opacity: 1 },
+        formbadges: { size: 64, gap: 18, font: 'Biome', color: '#ffffff', winColor: '#22a06b', drawColor: '#f2a516', lossColor: '#d93a3a', max: 5, opacity: 1 },
         players: { limit: 0, source: 'start', size: 26, font: 'Biome', color: '#ffffff', numColor: '#ffd166', align: 'left', letterSpacing: 0, italic: false, columns: 2, maxWidth: 330, colGap: 20, gap: 44, lineHeight: 1.2, maxY: 900, autoFit: true, minScale: 0.6, format: '{nr}  {name}', capMark: ' (C)', gkMark: ' (B)', emptyText: '', uppercase: false, bold: false, shadow: false, strokeWidth: 0, strokeColor: '#000000', opacity: 1 },
     };
     MD.TYPE_DEFAULTS = TYPE_DEFAULTS;
 
-    MD.TEMPLATE_IDS = ['matchday', 'lineup', 'result', 'goals', 'report', 'squad', 'table', 'round', 'stats', 'player', 'motm', 'milestone'];
+    MD.TEMPLATE_IDS = ['matchday', 'lineup', 'result', 'goals', 'report', 'h2h', 'form', 'squad', 'table', 'round', 'stats', 'player', 'motm', 'milestone'];
     /** Typy viazané na zápas / družstvo / hráča */
-    MD.TYPE_GROUPS = { match: ['matchday', 'lineup', 'result', 'goals', 'report'], team: ['squad', 'table', 'round', 'stats'], player: ['player', 'motm', 'milestone'] };
+    MD.TYPE_GROUPS = { match: ['matchday', 'lineup', 'result', 'goals', 'report', 'h2h', 'form'], team: ['squad', 'table', 'round', 'stats'], player: ['player', 'motm', 'milestone'] };
 
     const clone = (o) => JSON.parse(JSON.stringify(o));
 

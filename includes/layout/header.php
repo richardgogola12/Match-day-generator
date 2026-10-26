@@ -73,7 +73,7 @@
 		<?php if ($active !== ''): // na úvodnej stránke je veľké hľadanie priamo na stránke ?>
 		<form class="gsearch gsearch-nav" role="search" autocomplete="off">
 			<i class="bi bi-search gsearch-icon" aria-hidden="true"></i>
-			<input type="search" class="form-control gsearch-input" placeholder="Hľadať klub, družstvo, hráča…" aria-label="Hľadať klub, družstvo alebo hráča" aria-expanded="false" aria-controls="gsMenuNav" data-gsearch data-gsearch-main>
+			<input type="search" class="form-control gsearch-input" placeholder="Hľadať klub alebo hráča…" aria-label="Hľadať klub, družstvo alebo hráča" aria-expanded="false" aria-controls="gsMenuNav" data-gsearch data-gsearch-main>
 			<kbd class="gsearch-kbd" aria-hidden="true">/</kbd>
 			<div class="gsearch-menu" id="gsMenuNav" role="listbox" hidden></div>
 		</form>

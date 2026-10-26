@@ -615,6 +615,7 @@ function slugify($text, $max = 40) {
 /** Názvy typov obrázkov */
 function image_types() {
     return ['matchday' => 'Match day', 'lineup' => 'Zostava', 'result' => 'Výsledok', 'goals' => 'Strelci', 'report' => 'Súhrn zápasu',
+            'h2h' => 'Vzájomné zápasy', 'form' => 'Forma',
             'squad' => 'Súpiska', 'table' => 'Tabuľka', 'round' => 'Kolo', 'stats' => 'Štatistiky',
             'player' => 'Profil hráča', 'motm' => 'Hráč zápasu', 'milestone' => 'Jubileum'];
 }
@@ -859,7 +860,7 @@ function write_generation_log(array $entry) {
     }
 
     $txt  = str_repeat('=', 78) . "\n";
-    $isSquad = !in_array($entry['type'] ?? '', ['matchday', 'lineup', 'result', 'goals', 'report'], true);
+    $isSquad = !in_array($entry['type'] ?? '', ['matchday', 'lineup', 'result', 'goals', 'report', 'h2h', 'form'], true);
     $title = $isSquad ? (($entry['player'] ?? '') !== '' ? $entry['player'] . ' – ' : '') . $entry['d1name'] . (($entry['category'] ?? '') !== '' ? ' – ' . $entry['category'] : '') . (($entry['season'] ?? '') !== '' ? ' (' . $entry['season'] . ')' : '')
                       : $entry['d1name'] . ' vs ' . $entry['d2name'];
     $txt .= $now->format('Y-m-d H:i:s') . '  |  ' . $clean($entry['typeName']) . '  |  ' . $clean($title) . "\n";

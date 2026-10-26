@@ -117,6 +117,7 @@ function sn_results_table($doc) {
             'id'   => (string)(is_array($team) ? ($team['_id'] ?? $team['id'] ?? '') : $team),
             'name' => $name,
             'logo' => (string)sn_val(is_array($team) ? $team : [], ['logo_public_url', 'logo', 'logoUrl', 'organization.logo_public_url'], ''),
+            'club' => (string)sn_val(is_array($team) ? $team : [], ['organization._id', 'appSpace'], ''),
             'p'    => $num($r, ['stats.matches.played', 'stats.played', 'played', 'matches']) ?? 0,
             'w'    => $num($r, ['stats.matches.won', 'stats.won', 'won', 'wins']) ?? 0,
             'd'    => $num($r, ['stats.matches.draw', 'stats.draw', 'draw', 'draws']) ?? 0,
@@ -273,9 +274,10 @@ function sn_match_brief($m) {
         'date'      => (string)($m['startDate'] ?? ''),
         'state'     => (string)($m['matchState'] ?? ''),
         'played'    => sn_is_played($m),
-        'home'      => ['id' => (string)($m['homeTeam']['_id'] ?? ''), 'name' => (string)($m['homeTeam']['name'] ?? ''), 'logo' => (string)($m['homeTeam']['logoUrl'] ?? ''), 'score' => $m['homeTeam']['score'] ?? null],
-        'away'      => ['id' => (string)($m['awayTeam']['_id'] ?? ''), 'name' => (string)($m['awayTeam']['name'] ?? ''), 'logo' => (string)($m['awayTeam']['logoUrl'] ?? ''), 'score' => $m['awayTeam']['score'] ?? null],
+        'home'      => ['id' => (string)($m['homeTeam']['_id'] ?? ''), 'name' => (string)($m['homeTeam']['name'] ?? ''), 'logo' => (string)($m['homeTeam']['logoUrl'] ?? ''), 'score' => $m['homeTeam']['score'] ?? null, 'club' => (string)($m['homeTeam']['appSpace'] ?? '')],
+        'away'      => ['id' => (string)($m['awayTeam']['_id'] ?? ''), 'name' => (string)($m['awayTeam']['name'] ?? ''), 'logo' => (string)($m['awayTeam']['logoUrl'] ?? ''), 'score' => $m['awayTeam']['score'] ?? null, 'club' => (string)($m['awayTeam']['appSpace'] ?? '')],
         'competition' => (string)($m['competitionPart']['name'] ?? ''),
+        'season'    => (string)($m['season']['name'] ?? ''),
     ];
 }
 
@@ -307,7 +309,7 @@ function sportnet_competition($teamId) {
         if ($partKey($m) !== $part) continue;
         foreach (['homeTeam', 'awayTeam'] as $s) {
             $id = (string)($m[$s]['_id'] ?? '');
-            if ($id !== '') $teams[$id] = ['id' => $id, 'name' => $m[$s]['name'] ?? '', 'logo' => $m[$s]['logoUrl'] ?? ''];
+            if ($id !== '') $teams[$id] = ['id' => $id, 'name' => $m[$s]['name'] ?? '', 'logo' => $m[$s]['logoUrl'] ?? '', 'club' => $m[$s]['appSpace'] ?? ''];
         }
     }
     $others = array_values(array_filter(array_keys($teams), fn($id) => $id !== $ownId && $id !== $teamId));
@@ -320,7 +322,7 @@ function sportnet_competition($teamId) {
             $all[$m['_id']] = $m;
             foreach (['homeTeam', 'awayTeam'] as $s) {
                 $id = (string)($m[$s]['_id'] ?? '');
-                if ($id !== '' && !isset($teams[$id])) $teams[$id] = ['id' => $id, 'name' => $m[$s]['name'] ?? '', 'logo' => $m[$s]['logoUrl'] ?? ''];
+                if ($id !== '' && !isset($teams[$id])) $teams[$id] = ['id' => $id, 'name' => $m[$s]['name'] ?? '', 'logo' => $m[$s]['logoUrl'] ?? '', 'club' => $m[$s]['appSpace'] ?? ''];
             }
         }
     }
@@ -359,7 +361,7 @@ function sportnet_competition($teamId) {
         foreach ($table as $r) { $byId[$r['id']] = $r; $byName[sn_name_key($r['name'])] = $r; }
         $table = array_map(function ($o) use ($byId, $byName) {
             $calc = $byId[$o['id']] ?? $byName[sn_name_key($o['name'])] ?? [];
-            return ['id' => $calc['id'] ?? $o['id'], 'name' => $o['name'], 'logo' => $calc['logo'] ?? $o['logo'],
+            return ['id' => $calc['id'] ?? $o['id'], 'name' => $o['name'], 'logo' => $calc['logo'] ?? $o['logo'], 'club' => $o['club'] ?: ($calc['club'] ?? ''),
                     'p' => $o['p'], 'w' => $o['w'], 'd' => $o['d'], 'l' => $o['l'], 'gf' => $o['gf'], 'ga' => $o['ga'], 'pts' => $o['pts'],
                     'form' => $o['form'] ?: ($calc['form'] ?? []), 'note' => $o['note']];
         }, $rt);
@@ -386,7 +388,7 @@ function sportnet_competition($teamId) {
         if ($next === null && !$playedAll) $next = $i;
     }
 
-    $res = ['team' => ['id' => $ownId, 'name' => $ownName, 'logo' => $ownLogo], 'competition' => $partName, 'table' => $table,
+    $res = ['team' => ['id' => $ownId, 'name' => $ownName, 'logo' => $ownLogo, 'club' => (string)($teams[$ownId]['club'] ?? '')], 'competition' => $partName, 'table' => $table,
             'rounds' => $rounds, 'lastRound' => $last, 'nextRound' => $next, 'matches' => array_map('sn_match_brief', $all), 'computed' => !$official, 'official' => $official];
     @file_put_contents($cacheF, json_encode($res, JSON_UNESCAPED_UNICODE), LOCK_EX);
     return $res;
@@ -533,7 +535,9 @@ function sportnet_team($teamId) {
     });
     $teamStats['form'] = array_slice($teamStats['form'], -5);
 
-    $res = ['team' => ['id' => $ownId, 'name' => $ownName, 'logo' => $ownLogo], 'players' => $out, 'coach' => $coach, 'stats' => $teamStats,
+    $ownClub = '';
+    foreach ($matches as $m) foreach (['homeTeam', 'awayTeam'] as $sd) if (($m[$sd]['_id'] ?? '') === $ownId && !empty($m[$sd]['appSpace'])) $ownClub = (string)$m[$sd]['appSpace'];
+    $res = ['team' => ['id' => $ownId, 'name' => $ownName, 'logo' => $ownLogo, 'club' => $ownClub], 'players' => $out, 'coach' => $coach, 'stats' => $teamStats,
             'matchesUsed' => $used, 'played' => count($done), 'competition' => $matches[0]['competitionPart']['name'] ?? '',
             'officialStats' => (bool)$official, 'hasMinutes' => (bool)array_filter($out, fn($p) => $p['minutes'] !== null)];
     @file_put_contents($cacheF, json_encode($res, JSON_UNESCAPED_UNICODE), LOCK_EX);
@@ -604,3 +608,5 @@ function md_form_badges(array $form) {
     $c = ['V' => 'success', 'R' => 'secondary', 'P' => 'danger'];
     return implode('', array_map(fn($f) => '<span class="form-badge text-bg-' . ($c[$f] ?? 'light') . '" title="' . ['V' => 'výhra', 'R' => 'remíza', 'P' => 'prehra'][$f] . '">' . $f . '</span>', $form));
 }
+
+require_once __DIR__ . '/sportnet-extra.php';

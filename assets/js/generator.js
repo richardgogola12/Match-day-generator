@@ -82,6 +82,31 @@
         return matchPromise;
     }
 
+    /** Vzájomné zápasy a forma oboch družstiev – načíta sa raz */
+    let extraPromise = null, extraInfo = null;
+    function loadExtra(force) {
+        if (!M.matchID) return Promise.resolve(null);
+        if (!extraPromise || force) {
+            $('#loadingText').text('Načítavam vzájomné zápasy a formu…');
+            extraPromise = getJson('api-h2h?id=' + encodeURIComponent(M.matchID) + (force ? '&_=' + Date.now() : ''))
+                .then((j) => { extraInfo = j; return j; })
+                .catch((e) => {
+                    MD.toast('Vzájomné zápasy sa nepodarilo načítať: ' + e.message, 'danger');
+                    extraInfo = { h2h: { played: 0, matches: [], home: {}, away: {} }, form: { home: [], away: [] }, failed: true };
+                    return extraInfo;
+                });
+        }
+        return extraPromise;
+    }
+
+    /** Zápas -> riadok pre prvok "fixtures" */
+    function fixtureRow(m, ownId) {
+        const d = m.date ? new Date(m.date) : null;
+        const date = d && !isNaN(d) ? d.toLocaleDateString('sk-SK', { day: 'numeric', month: 'numeric', year: '2-digit', timeZone: 'Europe/Bratislava' }) : '';
+        return { home: m.home.name, away: m.away.name, hs: m.home.score, as: m.away.score, played: m.home.score !== null && m.home.score !== undefined,
+            time: date, day: '', own: !!ownId && (m.home.id === ownId || m.away.id === ownId), homeLogo: m.home.logo, awayLogo: m.away.logo, date: m.date, result: m.result || '' };
+    }
+
     /** Družstvo: hráči, štatistiky, tabuľka a kolá */
     function loadTeam(force) {
         if (!M.team) return Promise.resolve(null);
@@ -215,6 +240,21 @@
             data.startDate = r && r.matches[0] ? r.matches[0].date : '';
         }
 
+        if (type === 'h2h' && extraInfo) {
+            const h = extraInfo.h2h || {};
+            const v = (o, k) => (o && o[k]) || 0;
+            data.h2h = { played: h.played || 0, rows: [['VÝHRY', 'w'], ['REMÍZY', 'd'], ['PREHRY', 'l'], ['GÓLY', 'gf'], ['ŽLTÉ KARTY', 'yellow'], ['ČERVENÉ KARTY', 'red']].map(([label, k]) => ({ label, home: v(h.home, k), away: v(h.away, k) })) };
+            data.fixtures = (h.matches || []).slice(0, 5).map((m) => fixtureRow(m, ''));
+        }
+        if (type === 'form' && extraInfo) {
+            const list = ((extraInfo.form || {})[side] || []);
+            const id = side === 'away' ? M.team2ID : M.team1ID;
+            data.team = side === 'away' ? M.d2name : M.d1name;
+            data.opponent = side === 'away' ? M.d1name : M.d2name;
+            data.fixtures = list.map((m) => fixtureRow(m, id));
+            data.form = list.map((m) => m.result).reverse();
+        }
+
         if (MODE === 'player') {
             const P = findPlayer();
             data.player = P || { name: '', nr: '' };
@@ -276,6 +316,7 @@
     function photoKey() { return MD.store.photoKey(ownTeam().id || M.team, playerKey); }
     let photoUrl = null;
     let photoImg = null;
+    const remotePhotos = {};
     async function loadPhoto() {
         if (photoUrl) URL.revokeObjectURL(photoUrl);
         photoUrl = null; photoImg = null;
@@ -285,7 +326,12 @@
         else {
             // fotka zo Sportnetu (ak ju zápis obsahuje) – vlastná nahratá fotka má vždy prednosť
             const P = findPlayer();
-            if (P && P.photo) { photoImg = await MD.loadImage('api-logo?raw=1&url=' + encodeURIComponent(P.photo)); if (photoImg) $('#genPhotoImg').attr('src', photoImg.src).prop('hidden', false); }
+            let src = P && P.photo ? 'api-logo?raw=1&url=' + encodeURIComponent(P.photo) : '';
+            if (!src && P && P.id) {
+                remotePhotos[P.id] = remotePhotos[P.id] || getJson('api-player?id=' + encodeURIComponent(P.id)).then((j) => j.photo || '').catch(() => '');
+                src = await remotePhotos[P.id];
+            }
+            if (src) { photoImg = await MD.loadImage(src); if (photoImg) $('#genPhotoImg').attr('src', photoImg.src).prop('hidden', false); }
             $('#genPhotoRemove').prop('hidden', true);
             return photoImg;
         }
@@ -312,10 +358,29 @@
         $('#msHint').text(P.apps + ' zápasov, ' + P.goals + ' gólov');
     }
 
+    function renderExtraCard() {
+        const show = MODE === 'match' && (type === 'h2h' || type === 'form');
+        $('#extraCard').prop('hidden', !show);
+        if (!show) return;
+        $('#extraTitle').text(type === 'h2h' ? 'Vzájomné zápasy' : 'Forma');
+        $('#formSide').prop('hidden', type !== 'form');
+        $('#formSide [data-side]').removeClass('active').filter('[data-side="' + side + '"]').addClass('active');
+        if (!extraInfo) { $('#extraInfo').html('<span class="text-muted-2">Načítavam…</span>'); return; }
+        const h = extraInfo.h2h || {};
+        const res = { V: 'success', R: 'warning', P: 'danger' };
+        const rows = (type === 'h2h' ? (h.matches || []).slice(0, 5) : ((extraInfo.form || {})[side] || []));
+        const head = type === 'h2h'
+            ? (h.played ? '<div class="mb-2">' + h.played + ' vzájomných zápasov · ' + esc(M.d1name) + ' ' + ((h.home || {}).w || 0) + ' V / ' + ((h.home || {}).d || 0) + ' R / ' + ((h.home || {}).l || 0) + ' P</div>' : '<div class="alert alert-info py-2 mb-0">Tímy spolu v tejto kategórii ešte nehrali.</div>')
+            : (!rows.length ? '<div class="alert alert-info py-2 mb-0">Družstvo zatiaľ nemá odohraté zápasy.</div>' : '');
+        $('#extraInfo').html(head + rows.map((m) => '<div class="d-flex justify-content-between gap-2 py-1 border-top"><span class="text-truncate">' + esc(m.home.name) + ' – ' + esc(m.away.name) + '</span><span class="text-nowrap"><strong>' + m.home.score + ':' + m.away.score + '</strong>'
+            + (m.result ? ' <span class="badge text-bg-' + (res[m.result] || 'secondary') + '">' + m.result + '</span>' : '') + '</span></div>').join(''));
+    }
+
     function renderPlayersCard() {
         const show = type === 'lineup' || SQUAD();
         $('#playersCard').prop('hidden', !show);
         $('#roundCard').prop('hidden', type !== 'round');
+        renderExtraCard();
         if (MODE === 'player') syncPlayerCard();
         if (!show) return;
         const eff = applyTypeData();
@@ -364,6 +429,7 @@
                 MD.store.backgroundUrl(type).then((b) => MD.loadImage(b.url)),
                 loadLogos(),
                 needMatch ? loadMatch() : Promise.resolve(),
+                MODE === 'match' && ['h2h', 'form'].includes(type) ? loadExtra() : Promise.resolve(),
                 MODE !== 'match' ? loadTeam() : Promise.resolve(),
             ]);
             if (seq !== renderSeq) return;
@@ -376,6 +442,11 @@
             if (MODE === 'match') {
                 assets.logos.team = side === 'away' ? logos.away : logos.home;
                 assets.logos.opponent = side === 'away' ? logos.home : logos.away;
+                if (type === 'h2h' || type === 'form') {
+                    const urls = [...new Set((data.fixtures || []).flatMap((m) => [m.homeLogo, m.awayLogo]).filter(Boolean))];
+                    const imgs = await Promise.all(urls.map(logo));
+                    urls.forEach((u, i) => { if (imgs[i]) assets.teamLogos[u] = imgs[i]; });
+                }
             } else {
                 assets.logos.team = await logo(T.logo || M.d1url);
                 let oppUrl = '';
@@ -394,7 +465,7 @@
             MD.render(canvas, tpl, data, assets);
             $('#btnDownload, #btnCopy, #btnSaveServer').prop('disabled', false);
             const empty = (type === 'lineup' && !data.players.start.length && !data.players.subs.length) || (SQUAD() && !data.players.squad.length)
-                || (MODE === 'player' && !findPlayer()) || (type === 'table' && !(data.table || []).length) || (type === 'round' && !(data.fixtures || []).length);
+                || (MODE === 'player' && !findPlayer()) || (type === 'table' && !(data.table || []).length) || (type === 'round' && !(data.fixtures || []).length) || ((type === 'h2h' || type === 'form') && !(data.fixtures || []).length);
             if (empty) srvState('idle', 'Uloženie na server', 'Bez údajov sa obrázok automaticky neukladá – doplňte údaje alebo kliknite na Uložiť.');
             else if ($('#autoSave').is(':checked')) saveToServer();
             else srvState('idle', 'Uloženie na server', 'Automatické ukladanie je vypnuté – kliknite na Uložiť.');
@@ -419,8 +490,8 @@
 
     const slug = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase();
     function fileName() {
-        const prefix = { matchday: 'matchday', lineup: 'zostava', result: 'vysledok', goals: 'strelci', report: 'suhrn', squad: 'supiska', table: 'tabulka', round: 'kolo', stats: 'statistiky', player: 'profil', motm: 'hrac-zapasu', milestone: 'jubileum' }[type] || type;
-        if (MODE === 'match') return [prefix, slug(M.d1name), 'vs', slug(M.d2name)].join('_') + (type === 'lineup' ? '_' + slug(data.team) : '') + '.png';
+        const prefix = { matchday: 'matchday', lineup: 'zostava', result: 'vysledok', goals: 'strelci', report: 'suhrn', squad: 'supiska', table: 'tabulka', round: 'kolo', stats: 'statistiky', player: 'profil', motm: 'hrac-zapasu', milestone: 'jubileum', h2h: 'vzajomne', form: 'forma' }[type] || type;
+        if (MODE === 'match') return [prefix, slug(M.d1name), 'vs', slug(M.d2name)].join('_') + ((type === 'lineup' || type === 'form') ? '_' + slug(data.team) : '') + '.png';
         if (MODE === 'player') return [prefix, slug((findPlayer() || {}).name), slug(M.d1name)].filter(Boolean).join('_') + '.png';
         return [prefix, slug(M.d1name), slug(M.category), type === 'round' ? (data.round || '') + '-kolo' : '', slug(M.season)].filter(Boolean).join('_') + '.png';
     }
@@ -454,7 +525,7 @@
                 startDate: isMatch ? (M.startDate || '') : (savedType === 'motm' || savedType === 'round' ? data.startDate || '' : ''),
                 competition: data.competition || M.competition || '', round: isMatch || savedType === 'round' || savedType === 'motm' ? String(data.round || M.round || '') : '',
                 score1: isMatch ? (M.score1 || '') : '', score2: isMatch ? (M.score2 || '') : '', matchID: isMatch ? (M.matchID || '') : (savedType === 'motm' ? matchRef : ''),
-                season: M.season || '', category: M.category || '', teamID: M.team || '', variant: savedType === 'lineup' ? side : '',
+                season: M.season || '', category: M.category || '', teamID: M.team || '', variant: (savedType === 'lineup' || savedType === 'form') ? side : '',
                 player: MODE === 'player' && P ? P.name : '', playerKey: MODE === 'player' && P ? P.key : '',
                 roundNo: savedType === 'round' ? String((data.roundInfo || {}).no || '') : '',
                 mvalue: savedType === 'milestone' ? String((data.milestone || {}).value || '') : '',
@@ -491,6 +562,13 @@
     $('#templateSwitch').on('click', '[data-type]', function () {
         type = this.dataset.type;
         setQs('type', type);
+        render();
+    });
+
+    $('#formSide').on('click', '[data-side]', function () {
+        if (this.dataset.side === side) return;
+        side = this.dataset.side;
+        setQs('side', side);
         render();
     });
 
