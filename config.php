@@ -74,6 +74,7 @@ $routes = array(
     "nastavenia"              => "settings",
     "galeria"                 => "gallery",
     "spravca"                 => "admin",
+    "navod"                   => "navod",
 
     // PWA
     "manifest.webmanifest"    => "pwa/manifest",

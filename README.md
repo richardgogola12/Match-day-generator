@@ -14,6 +14,7 @@ Tri typy obrázkov: **Match day** (pozvánka), **Výsledok** a **Strelci**.
 - Ukladanie vygenerovaných obrázkov na server + galéria (obrázky z daného prehliadača): náhľady, filter, hľadanie, zoradenie, prezeranie na celú obrazovku s listovaním, stiahnutie, zdieľanie
 - Správca (heslo v `config.local.php`): galéria všetkých prehliadačov, mazanie obrázkov, log generovania
 - Log generovania **bez osobných údajov** – žiadne IP adresy, User-Agent ani údaje o zariadení; iba čo a kedy sa vygenerovalo, rodina prehliadača/systému a anonymné ID
+- Podrobný návod priamo v aplikácii (`/navod`, odkaz v menu) so snímkami obrazovky
 - PWA – inštalácia do zariadenia, offline stránka, svetlý / tmavý režim
 
 ## Inštalácia
@@ -44,6 +45,7 @@ Tri typy obrázkov: **Match day** (pozvánka), **Výsledok** a **Strelci**.
 | `/generator?type=matchday\|result\|goals&…` | náhľad a stiahnutie obrázka |
 | `/nastavenia` | editor šablón |
 | `/galeria` | uložené obrázky |
+| `/navod` | podrobný návod so snímkami obrazovky |
 | `/spravca` | prihlásenie a prehľad správcu |
 | `/galeria?vsetky=1` | galéria všetkých prehliadačov (iba správca) |
 | `/log` | log generovania (iba správca) |

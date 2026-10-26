@@ -100,6 +100,11 @@
 						<i class="bi bi-sliders"></i><span>Nastavenie šablón</span>
 					</a>
 				</li>
+				<li class="nav-item">
+					<a class="nav-link<?= $nav('navod') ?>" href="<?= url("navod") ?>">
+						<i class="bi bi-book"></i><span>Návod</span>
+					</a>
+				</li>
 				<?php if ($isAdminNav): ?>
 				<li class="nav-item dropdown">
 					<a class="nav-link dropdown-toggle<?= $nav(['spravca', 'log']) ?>" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">

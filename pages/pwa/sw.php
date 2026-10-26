@@ -13,6 +13,7 @@ $precache = [
     asset('js/editor.js'),
     asset('js/generator.js'),
     asset('js/gallery.js'),
+    asset('js/guide.js'),
     asset('fonts/biome-w04-regular.otf'),
     asset('img/match-day-bg.png'),
     asset('img/match-result-bg.png'),

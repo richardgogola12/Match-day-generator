@@ -24,6 +24,10 @@ if (!is_file($cacheFile) || filemtime($cacheFile) < time() - 7 * 86400) {
         exit('Logo sa nepodarilo načítať');
     }
     // odstráni biele pozadie (rovnaká logika ako imageFromUrl)
+    // priehľadnosť sa musí zachovať, inak by sa priehľadné logo uložilo s čiernym pozadím
+    imagepalettetotruecolor($img);
+    imagealphablending($img, false);
+    imagesavealpha($img, true);
     $tmp = tempnam(sys_get_temp_dir(), 'logo');
     imagepng($img, $tmp);
     unset($img);
