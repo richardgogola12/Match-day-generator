@@ -1,0 +1,18 @@
+# tajné nastavenia servera
+config.local.php
+
+# vygenerované obrázky a logy (priečinky ostávajú kvôli ochrane .htaccess)
+storage/generated/*
+!storage/generated/.htaccess
+!storage/generated/index.html
+storage/logs/*
+!storage/logs/.htaccess
+!storage/logs/index.html
+
+# systémové súbory
+.DS_Store
+Thumbs.db
+*.tmp*
+
+# komerčné písmo (licencia nedovoľuje zverejnenie) – nahrajte ho na server ručne
+assets/fonts/*.otf
