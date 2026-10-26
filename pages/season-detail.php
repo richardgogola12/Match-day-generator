@@ -99,6 +99,7 @@
 			'team' => $team_id, 'd1name' => $ownName ?: $team_name, 'd1url' => $ownLogo, 'category' => $team_name,
 			'season' => $season, 'competitionName' => $matches[0]['competitionPart']['name'] ?? '',
 		]);
+		$teamLink = url('druzstvo') . '?' . http_build_query(['team' => $team_id, 's' => $season, 'cat' => $team_name]);
 	?>
 		<section class="card-app team-card mb-4" id="team-<?= plain($team_id) ?>">
 			<div class="card-header">
@@ -113,6 +114,7 @@
 						<button type="button" class="btn btn-outline-secondary" data-filter="played">Odohraté</button>
 					</div>
 					<?php if ($matches): ?>
+						<a class="btn btn-sm btn-outline-primary rounded-pill px-3" href="<?= plain($teamLink) ?>" title="Hráči, tabuľka, kolá a štatistiky družstva"><i class="bi bi-bar-chart-line me-1"></i>Prehľad družstva</a>
 						<a class="btn btn-sm btn-primary rounded-pill px-3" href="<?= plain($squadLink) ?>" title="Obrázok so súpiskou družstva za sezónu"><i class="bi bi-people me-1"></i>Súpiska</a>
 					<?php endif; ?>
 				</div>
@@ -170,7 +172,7 @@
 							<?php if ($logo1): ?><img class="team-logo" src="<?= plain($logo1) ?>" alt="" loading="lazy"><?php else: ?><span class="team-logo empty"><i class="bi bi-shield"></i></span><?php endif; ?>
 						</div>
 						<?php if ($isPlayed): ?>
-							<div class="match-score"><?= plain($home['score'] ?? '') ?> : <?= plain($away['score'] ?? '') ?></div>
+							<a class="match-score" href="<?= plain(url('zapas') . '?' . http_build_query($params)) ?>" title="Celý zápis o stretnutí"><?= plain($home['score'] ?? '') ?> : <?= plain($away['score'] ?? '') ?></a>
 						<?php else: ?>
 							<div class="match-score upcoming"><?= $isBye ? '–' : plain($timeTxt) ?></div>
 						<?php endif; ?>
@@ -182,6 +184,9 @@
 
 					<div class="match-actions">
 						<?php if (!$isBye): ?>
+							<?php if ($params['matchID'] !== ''): ?>
+								<a class="btn btn-outline-secondary" href="<?= plain(url('zapas') . '?' . http_build_query($params)) ?>" title="Celý zápis o stretnutí"><i class="bi bi-file-text me-1"></i>Zápis</a>
+							<?php endif; ?>
 							<a class="btn btn-outline-primary" href="<?= plain(gen_link('matchday', $params)) ?>"><i class="bi bi-calendar-event me-1"></i>Match day</a>
 							<?php if ($params['matchID'] !== ''): ?>
 								<a class="btn btn-outline-primary" href="<?= plain(gen_link('lineup', $params)) ?>" title="Zostava zo zápisu o stretnutí"><i class="bi bi-person-lines-fill me-1"></i>Zostava</a>

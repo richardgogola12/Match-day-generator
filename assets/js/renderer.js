@@ -82,6 +82,14 @@
         ['{competition}', 'súťaž'], ['{round}', 'kolo'], ['{roundLabel}', '„10. Kolo“'],
         ['{team}', 'družstvo (zostava, súpiska)'], ['{opponent}', 'súper (zostava)'], ['{category}', 'kategória (Muži A)'],
         ['{season}', 'sezóna'], ['{coach}', 'tréner'], ['{players}', 'počet hráčov'],
+        ['{halftime}', 'polčas'], ['{spectators}', 'diváci'], ['{referee}', 'rozhodca'], ['{venue}', 'štadión'],
+        ['{player}', 'meno hráča'], ['{playerFirst}', 'krstné meno'], ['{playerLast}', 'priezvisko'], ['{playerNr}', 'číslo hráča'],
+        ['{apps}', 'zápasy hráča'], ['{starts}', 'v základe'], ['{goalsP}', 'góly hráča'], ['{minutes}', 'minúty'],
+        ['{yellow}', 'žlté karty'], ['{red}', 'červené karty'], ['{cleanSheets}', 'čisté kontá'],
+        ['{milestone}', 'jubileum (číslo)'], ['{milestoneLabel}', 'jubileum (text)'],
+        ['{matchHome}', 'zápas – domáci'], ['{matchAway}', 'zápas – hostia'], ['{matchScore}', 'zápas – skóre'], ['{matchGoals}', 'góly hráča v zápase'],
+        ['{roundTitle}', 'PROGRAM / VÝSLEDKY'], ['{afterRound}', 'po 13. kole'],
+        ['{tpos}', 'miesto v tabuľke'], ['{tpts}', 'body'], ['{tp}', 'zápasy'], ['{tw}', 'výhry'], ['{td}', 'remízy'], ['{tl}', 'prehry'], ['{tgf}', 'strelené'], ['{tga}', 'inkasované'],
     ];
 
     /* ------------------------------------------------------------------ */
@@ -189,8 +197,35 @@
             team: data.team || '', opponent: data.opponent || '', category: data.category || '',
             season: data.season || '', coach: data.coach || '',
             players: String(((data.players || {}).squad || []).length || ((data.players || {}).start || []).length || ''),
-        }, dateParts(data.startDate));
+            halftime: (data.report || {}).halftime || '', spectators: (data.report || {}).spectators || '',
+            referee: (data.report || {}).referee || '', venue: (data.report || {}).venue || '',
+        }, playerTokens(data), teamTokens(data), dateParts(data.startDate));
     };
+
+    function playerTokens(data) {
+        const p = data.player || {};
+        const name = String(p.name || '');
+        const parts = name.split(/\s+/);
+        const m = data.playerMatch || {};
+        const ms = data.milestone || {};
+        const n = (v) => (v === undefined || v === null ? '' : String(v));
+        return {
+            player: name, playerFirst: parts.length > 1 ? parts.slice(0, -1).join(' ') : name, playerLast: parts.length > 1 ? parts[parts.length - 1] : '',
+            playerNr: n(p.nr), apps: n(p.apps), starts: n(p.starts), goalsP: n(p.goals), minutes: n(p.minutes), yellow: n(p.yellow), red: n(p.red), cleanSheets: n(p.cleanSheets),
+            milestone: n(ms.value), milestoneLabel: n(ms.label),
+            matchHome: n(m.home), matchAway: n(m.away), matchScore: n(m.score), matchGoals: n(m.goals),
+        };
+    }
+
+    function teamTokens(data) {
+        const own = (data.table || []).find((r) => r.own) || {};
+        const r = data.roundInfo || {};
+        const n = (v) => (v === undefined || v === null ? '' : String(v));
+        return {
+            roundTitle: r.title || '', afterRound: data.afterRound || '',
+            tpos: n(own.pos), tpts: n(own.pts), tp: n(own.p), tw: n(own.w), td: n(own.d), tl: n(own.l), tgf: n(own.gf), tga: n(own.ga),
+        };
+    }
 
     MD.fillTokens = (text, tokens) => String(text || '').replace(/\{(\w+)\}/g, (m, k) => (k in tokens ? tokens[k] : m));
 
@@ -335,14 +370,16 @@
             if (el.uppercase) txt = txt.toLocaleUpperCase('sk');
             const lines = wrap(ctx, txt, el.maxWidth);
             if (i > 0) y += gap;
-            rows.push({ lines, y, own: g.own });
+            rows.push({ lines, y, own: g.own, card: g.card });
             y += (lines.length - 1) * lh;
         });
         return { size, lh, rows, bottom: rows.length ? y + desc : el.y };
     }
 
     function drawGoals(ctx, el, data, opts) {
-        let goals = (data.goals || []).filter((g) => g.side === el.side);
+        let goals = el.events === 'cards'
+            ? (data.cards || []).filter((g) => g.side === el.side).map((c) => Object.assign({}, c, { card: c.kind }))
+            : (data.goals || []).filter((g) => g.side === el.side);
         let layout = layoutGoals(ctx, el, goals, 1);
         if (el.autoFit && el.maxY) {
             const min = el.minScale || 0.5;
@@ -358,7 +395,18 @@
                 row.lines.forEach((line, i) => {
                     const ly = row.y + i * layout.lh;
                     if (el.maxY && ly > el.maxY) return;
-                    drawLines(ctx, el, [line], el.x, ly, 0, layout.size);
+                    let lx = el.x;
+                    if (row.card && i === 0) {
+                        // farebná kartička pred menom
+                        const ch = layout.size * 0.8, cw = ch * 0.68;
+                        const bx = el.align === 'right' ? el.x - ctx.measureText(line).width - cw - 8 : el.align === 'center' ? el.x - ctx.measureText(line).width / 2 - cw - 8 : el.x;
+                        ctx.save();
+                        ctx.fillStyle = row.card === 'red' ? '#dc2626' : '#facc15';
+                        ctx.fillRect(bx, ly - ch * 0.85, cw, ch);
+                        ctx.restore();
+                        if (el.align !== 'right' && el.align !== 'center') lx = el.x + cw + 8;
+                    }
+                    drawLines(ctx, el, [line], lx, ly, 0, layout.size);
                 });
             });
         });
@@ -374,8 +422,8 @@
     /* ------------------------------------------------------------------ */
     function playerLine(el, p) {
         const name = (p.name || '') + (p.captain && el.capMark ? el.capMark : '') + (p.gk && el.gkMark ? el.gkMark : '');
-        const map = { nr: p.nr ?? '', name, apps: p.apps ?? '', goals: p.goals ?? '', starts: p.starts ?? '' };
-        let full = String(el.format || '{nr}  {name}').replace(/\{(nr|name|apps|goals|starts)\}/g, (m, k) => map[k]);
+        const map = { nr: p.nr ?? '', name, apps: p.apps ?? '', goals: p.goals ?? '', starts: p.starts ?? '', minutes: p.minutes ?? '', yellow: p.yellow ?? '', red: p.red ?? '', pos: p.pos ?? '' };
+        let full = String(el.format || '{nr}  {name}').replace(/\{(nr|name|apps|goals|starts|minutes|yellow|red|pos)\}/g, (m, k) => map[k]);
         full = full.replace(/^\s+/, '');
         // číslo zvlášť (iná farba) – iba ak formát začína {nr}
         let num = '';
@@ -413,7 +461,8 @@
 
     function drawPlayers(ctx, el, data, opts) {
         const all = (data.players || {})[el.source] || [];
-        const list = all.filter((p) => p && p.hidden !== true);
+        let list = all.filter((p) => p && p.hidden !== true);
+        if (el.limit > 0) list = list.slice(0, el.limit);
         let layout = layoutPlayers(ctx, el, list, 1);
         if (el.autoFit && el.maxY) {
             const min = el.minScale || 0.5;
@@ -447,6 +496,187 @@
         const top = el.y - layout.asc;
         const bottom = Math.max(layout.bottom, opts.editor ? top + size * 3 : top);
         return { x: el.x, y: top, w, h: Math.min(bottom, el.maxY || bottom) - top, maxY: el.maxY, scale: size / el.size };
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Fotka hráča (kruh / obdĺžnik); bez fotky číslo dresu v kruhu         */
+    /* ------------------------------------------------------------------ */
+    function shapePath(ctx, el) {
+        ctx.beginPath();
+        if (el.shape === 'circle') ctx.ellipse(el.x + el.w / 2, el.y + el.h / 2, el.w / 2, el.h / 2, 0, 0, Math.PI * 2);
+        else if (ctx.roundRect) ctx.roundRect(el.x, el.y, el.w, el.h, Math.min(el.radius || 0, el.w / 2, el.h / 2));
+        else ctx.rect(el.x, el.y, el.w, el.h);
+    }
+
+    function drawPhoto(ctx, el, data, assets, opts, tokens) {
+        const img = assets.photo;
+        ctx.save();
+        ctx.globalAlpha = el.opacity ?? 1;
+        if (el.shadow) { ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 10; }
+        if (img) {
+            if (el.shape !== 'none') {
+                shapePath(ctx, el);
+                ctx.fillStyle = el.bgColor || '#0b2a1a';
+                ctx.fill();
+                ctx.shadowColor = 'transparent';
+                ctx.save();
+                shapePath(ctx, el);
+                ctx.clip();
+            }
+            // "cover" – vyplní celý tvar, zarovnané hore (tvár)
+            const r = el.fit === 'contain' ? Math.min(el.w / img.naturalWidth, el.h / img.naturalHeight) : Math.max(el.w / img.naturalWidth, el.h / img.naturalHeight);
+            const w = img.naturalWidth * r, h = img.naturalHeight * r;
+            ctx.drawImage(img, el.x + (el.w - w) / 2, el.fit === 'contain' ? el.y + (el.h - h) / 2 : el.y, w, h);
+            if (el.shape !== 'none') ctx.restore();
+        } else if (el.shape !== 'none' || opts.editor) {
+            shapePath(ctx, el);
+            const g = ctx.createLinearGradient(el.x, el.y, el.x + el.w, el.y + el.h);
+            g.addColorStop(0, el.fallbackColor || '#e63946');
+            g.addColorStop(1, el.fallbackColor2 || '#8d0f1a');
+            ctx.fillStyle = g;
+            ctx.fill();
+            ctx.shadowColor = 'transparent';
+            const txt = MD.fillTokens(el.fallbackText ?? '{playerNr}', tokens);
+            if (txt) {
+                const size = Math.round(Math.min(el.w, el.h) * 0.45);
+                ctx.font = size + 'px "' + (el.font || 'Biome') + '", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = el.color || '#fff';
+                ctx.fillText(txt, el.x + el.w / 2, el.y + el.h / 2 + size * 0.05);
+            }
+        }
+        ctx.restore();
+        if (el.borderWidth > 0 && el.shape !== 'none') {
+            ctx.save();
+            shapePath(ctx, el);
+            ctx.lineWidth = el.borderWidth;
+            ctx.strokeStyle = el.borderColor || '#fff';
+            ctx.stroke();
+            ctx.restore();
+        }
+        return { x: el.x, y: el.y, w: el.w, h: el.h };
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Tabuľka súťaže                                                      */
+    /* ------------------------------------------------------------------ */
+    function drawTable(ctx, el, data, assets, opts) {
+        let rows = (data.table || []).slice(0, el.maxRows || 99);
+        const n = Math.max(1, rows.length + (el.header ? 1 : 0));
+        let rowH = el.rowH || 40;
+        if (el.autoFit && el.maxY && el.y + n * rowH > el.maxY) rowH = Math.max(14, (el.maxY - el.y) / n);
+        const size = Math.max(6, Math.round(Math.min(el.size || 22, rowH * 0.55)));
+        const W = el.w || 700;
+        const cols = String(el.columns || 'p,w,d,l,score,pts').split(',').map((c) => c.trim()).filter(Boolean);
+        const colW = Math.round(size * 2.3);
+        const scoreW = Math.round(size * 3.6);
+        const numW = cols.reduce((a, c) => a + (c === 'score' ? scoreW : colW), 0);
+        const logoS = el.showLogos ? Math.round(rowH * 0.72) : 0;
+        const posW = Math.round(size * 2);
+        const nameX = el.x + posW + (logoS ? logoS + 10 : 0);
+        const nameW = W - (nameX - el.x) - numW - 8;
+        const HEAD = { p: 'Z', w: 'V', d: 'R', l: 'P', score: 'Skóre', pts: 'B', gd: '+/-' };
+        const val = (r, c) => (c === 'score' ? r.gf + ':' + r.ga : c === 'gd' ? (r.gf - r.ga > 0 ? '+' : '') + (r.gf - r.ga) : r[c]);
+        ctx.save();
+        ctx.globalAlpha = el.opacity ?? 1;
+        let y = el.y;
+        const line = (r, isHead) => {
+            const mid = y + rowH / 2;
+            if (!isHead && r.own && el.highlight) {
+                ctx.fillStyle = el.highlight;
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(el.x - 8, y + 2, W + 16, rowH - 4, 8); else ctx.rect(el.x - 8, y + 2, W + 16, rowH - 4);
+                ctx.fill();
+            } else if (!isHead && el.stripe && (r.pos % 2 === 0)) {
+                ctx.fillStyle = el.stripe;
+                ctx.fillRect(el.x - 8, y + 2, W + 16, rowH - 4);
+            }
+            ctx.textBaseline = 'middle';
+            const f = (bold) => (bold ? 'bold ' : '') + size + 'px "' + (el.font || 'Biome') + '", sans-serif';
+            const color = isHead ? (el.headColor || '#ffd166') : (r.own && el.ownColor ? el.ownColor : (el.color || '#fff'));
+            ctx.fillStyle = color;
+            ctx.font = f(false);
+            ctx.textAlign = 'right';
+            if (!isHead) ctx.fillText(r.pos + '.', el.x + posW - 8, mid);
+            if (!isHead && logoS) {
+                const img = assets.teamLogos && assets.teamLogos[r.logo];
+                if (img) {
+                    const k = Math.min(logoS / img.naturalWidth, logoS / img.naturalHeight);
+                    ctx.drawImage(img, el.x + posW + (logoS - img.naturalWidth * k) / 2, mid - img.naturalHeight * k / 2, img.naturalWidth * k, img.naturalHeight * k);
+                }
+            }
+            ctx.textAlign = 'left';
+            ctx.font = f(!isHead && r.own && el.ownBold);
+            ctx.fillText(isHead ? (el.headName || 'Družstvo') : fitText(ctx, el.uppercase ? r.name.toLocaleUpperCase('sk') : r.name, nameW), nameX, mid);
+            ctx.textAlign = 'center';
+            let cx = el.x + W - numW;
+            cols.forEach((c) => {
+                const w = c === 'score' ? scoreW : colW;
+                ctx.font = f(c === 'pts' && !isHead);
+                ctx.fillStyle = isHead ? color : (c === 'pts' && el.ptsColor ? el.ptsColor : color);
+                ctx.fillText(isHead ? HEAD[c] || c : String(val(r, c)), cx + w / 2, mid);
+                cx += w;
+            });
+            y += rowH;
+        };
+        if (el.header) line({}, true);
+        rows.forEach((r) => line(r, false));
+        if (!rows.length && opts.editor) { ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.font = size + 'px sans-serif'; ctx.fillText('Tabuľka', el.x, el.y + rowH / 2); y += rowH; }
+        ctx.restore();
+        return { x: el.x - 8, y: el.y, w: W + 16, h: Math.max(rowH, y - el.y), maxY: el.maxY };
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Zápasy kola (program / výsledky)                                    */
+    /* ------------------------------------------------------------------ */
+    function drawFixtures(ctx, el, data, assets, opts) {
+        const list = (data.fixtures || []).slice(0, el.maxRows || 99);
+        let rowH = el.rowH || 70;
+        if (el.autoFit && el.maxY && el.y + list.length * rowH > el.maxY) rowH = Math.max(18, (el.maxY - el.y) / Math.max(1, list.length));
+        const size = Math.max(6, Math.round(Math.min(el.size || 24, rowH * 0.42)));
+        const W = el.w || 720;
+        const cx = el.x + W / 2;
+        const pillW = Math.round(size * 3.8), pillH = Math.round(size * 1.6);
+        const logoS = el.showLogos ? Math.round(Math.min(rowH * 0.7, size * 2)) : 0;
+        const sideW = W / 2 - pillW / 2 - (logoS ? logoS + 12 : 0) - 12;
+        ctx.save();
+        ctx.globalAlpha = el.opacity ?? 1;
+        list.forEach((m, i) => {
+            const mid = el.y + i * rowH + rowH / 2;
+            if (m.own && el.highlight) {
+                ctx.fillStyle = el.highlight;
+                ctx.beginPath();
+                if (ctx.roundRect) ctx.roundRect(el.x - 8, mid - rowH / 2 + 3, W + 16, rowH - 6, 10); else ctx.rect(el.x - 8, mid - rowH / 2 + 3, W + 16, rowH - 6);
+                ctx.fill();
+            }
+            ctx.textBaseline = 'middle';
+            ctx.font = size + 'px "' + (el.font || 'Biome') + '", sans-serif';
+            ctx.fillStyle = el.color || '#fff';
+            const name = (s) => fitText(ctx, el.uppercase ? s.toLocaleUpperCase('sk') : s, sideW);
+            ctx.textAlign = 'right';
+            ctx.fillText(name(m.home || ''), cx - pillW / 2 - (logoS ? logoS + 12 : 0) - 10, mid);
+            ctx.textAlign = 'left';
+            ctx.fillText(name(m.away || ''), cx + pillW / 2 + (logoS ? logoS + 12 : 0) + 10, mid);
+            if (logoS) {
+                [[m.homeLogo, cx - pillW / 2 - 8 - logoS], [m.awayLogo, cx + pillW / 2 + 8]].forEach(([u, lx]) => {
+                    const img = assets.teamLogos && assets.teamLogos[u];
+                    if (!img) return;
+                    const k = Math.min(logoS / img.naturalWidth, logoS / img.naturalHeight);
+                    ctx.drawImage(img, lx + (logoS - img.naturalWidth * k) / 2, mid - img.naturalHeight * k / 2, img.naturalWidth * k, img.naturalHeight * k);
+                });
+            }
+            ctx.fillStyle = m.played ? (el.pillColor || '#e63946') : (el.pillColor2 || 'rgba(255,255,255,.14)');
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(cx - pillW / 2, mid - pillH / 2, pillW, pillH, pillH / 2); else ctx.rect(cx - pillW / 2, mid - pillH / 2, pillW, pillH);
+            ctx.fill();
+            ctx.fillStyle = el.pillText || '#fff';
+            ctx.textAlign = 'center';
+            ctx.font = (m.played ? 'bold ' : '') + Math.round(size * (m.played ? 1 : 0.8)) + 'px "' + (el.font || 'Biome') + '", sans-serif';
+            ctx.fillText(m.played ? m.hs + ':' + m.as : (el.showDate && m.day ? m.day + ' ' : '') + (m.time || '–'), cx, mid + 1);
+        });
+        ctx.restore();
+        return { x: el.x - 8, y: el.y, w: W + 16, h: Math.max(rowH, list.length * rowH), maxY: el.maxY };
     }
 
     function drawBackground(ctx, tpl, img) {
@@ -486,6 +716,9 @@
         const boxes = {};
         tpl.elements.forEach((el) => {
             if (el.visible === false) return;
+            // podmienené prvky (napr. číslo dresu iba vtedy, keď je nahratá fotka)
+            if (el.showIf === 'photo' && !assets.photo && !opts.editor) return;
+            if (el.showIf === 'noPhoto' && assets.photo) return;
             ctx.save();
             try {
                 if (el.type === 'text') boxes[el.id] = drawText(ctx, el, tokens);
@@ -493,6 +726,9 @@
                 else if (el.type === 'goals') boxes[el.id] = drawGoals(ctx, el, data || {}, opts);
                 else if (el.type === 'shape') boxes[el.id] = drawShape(ctx, el);
                 else if (el.type === 'players') boxes[el.id] = drawPlayers(ctx, el, data || {}, opts);
+                else if (el.type === 'photo') boxes[el.id] = drawPhoto(ctx, el, data || {}, assets, opts, tokens);
+                else if (el.type === 'table') boxes[el.id] = drawTable(ctx, el, data || {}, assets, opts);
+                else if (el.type === 'fixtures') boxes[el.id] = drawFixtures(ctx, el, data || {}, assets, opts);
             } catch (e) { console.error('Chyba pri kreslení prvku', el, e); }
             ctx.restore();
         });
@@ -524,6 +760,27 @@
                 { minute: '89', name: 'Marek Molnár', side: 'away' },
             ],
             team: 'FK Slovan Horná Ves', opponent: 'TJ Družstevník Veľké Ludince', category: 'Muži A', season: '2026/2027', coach: 'Jozef Hrubý',
+            report: { halftime: '1:1', spectators: '240', referee: 'Ivan Kráľ', venue: 'Štadión Horná Ves' },
+            cards: [
+                { minute: '23', name: 'Peter Horváth', side: 'home', kind: 'yellow' },
+                { minute: '51', name: 'Ján Novák', side: 'away', kind: 'yellow' },
+                { minute: '78', name: 'Marek Molnár', side: 'away', kind: 'red' },
+            ],
+            player: { name: 'Martin Kováč', nr: '7', apps: 13, starts: 12, goals: 9, minutes: 1104, yellow: 2, red: 0, cleanSheets: 0 },
+            playerMatch: { home: 'FK Slovan Horná Ves', away: 'TJ Družstevník Veľké Ludince', score: '3:2', goals: 2 },
+            milestone: { value: 100, label: 'zápas za FK Slovan Horná Ves' },
+            afterRound: 'po 12. kole',
+            roundInfo: { title: 'VÝSLEDKY KOLA', no: 12 },
+            table: [
+                ['FK Slovan Horná Ves', 12, 8, 2, 2, 27, 12], ['TJ Sokol Podhradie', 12, 7, 3, 2, 21, 13], ['MFK Považan', 12, 7, 1, 4, 19, 15],
+                ['ŠK Kamenec', 12, 6, 2, 4, 18, 16], ['OFK Lipové 1921', 12, 5, 3, 4, 17, 17], ['TJ Družstevník Veľké Ludince', 12, 4, 3, 5, 15, 18],
+                ['FC Hrabové', 12, 4, 2, 6, 14, 19], ['TJ Javorina Horná Ves', 12, 3, 4, 5, 13, 16], ['FK Dolná Lúka', 12, 3, 2, 7, 12, 21],
+                ['TJ Slovan Brezina', 12, 3, 1, 8, 11, 22], ['ŠK Vŕbové', 12, 2, 3, 7, 10, 20], ['FK Lehota', 12, 1, 4, 7, 9, 18],
+            ].map(([name, p, w, d, l, gf, ga], i) => ({ pos: i + 1, name, p, w, d, l, gf, ga, pts: w * 3 + d, own: i === 0, logo: '' })),
+            fixtures: [
+                ['FK Slovan Horná Ves', 'TJ Družstevník Veľké Ludince', 3, 2], ['TJ Sokol Podhradie', 'MFK Považan', 1, 1], ['ŠK Kamenec', 'OFK Lipové 1921', 2, 0],
+                ['FC Hrabové', 'TJ Javorina Horná Ves', 0, 1], ['FK Dolná Lúka', 'TJ Slovan Brezina', 2, 2], ['ŠK Vŕbové', 'FK Lehota', null, null],
+            ].map(([home, away, hs, as], i) => ({ home, away, hs, as, played: hs !== null, time: '14:30', day: 'Ne', own: i === 0, homeLogo: '', awayLogo: '' })),
         },
         logos: { home: sampleLogo('H', '#e63946', '#8d0f1a'), away: sampleLogo('L', '#1d7bf2', '#0b3a8a') },
     };
@@ -537,6 +794,12 @@
         const nr = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 14, 3, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33];
         const mk = (i) => ({ nr: String(nr[i % nr.length]), name: SAMPLE_NAMES[i % SAMPLE_NAMES.length], gk: i === 0 || i === 12, captain: i === 6, apps: 12 - (i % 7), goals: i > 4 && i < 10 ? 9 - i : 0 });
         const squad = Array.from({ length: n || 24 }, (_, i) => mk(i)).sort((a, b) => a.nr - b.nr);
-        return { start: Array.from({ length: 11 }, (_, i) => mk(i)), subs: Array.from({ length: 7 }, (_, i) => mk(i + 11)), squad };
+        const all = Array.from({ length: 18 }, (_, i) => Object.assign(mk(i), { goals: [0, 1, 0, 2, 0, 9, 4, 6, 3, 2, 5, 0, 0, 1, 0, 0, 1, 0][i], minutes: 1100 - i * 37, yellow: [0, 2, 3, 1, 4, 2, 0, 1, 2, 0, 1, 0, 0, 0, 1, 0, 0, 0][i], red: i === 4 ? 1 : 0 }));
+        const top = (f, n) => all.filter((p) => p[f] > 0).sort((a, b) => b[f] - a[f]).slice(0, n || 8);
+        return {
+            start: Array.from({ length: 11 }, (_, i) => mk(i)), subs: Array.from({ length: 7 }, (_, i) => mk(i + 11)), squad,
+            scorers: top('goals'), apps: top('apps'), minutes: top('minutes'),
+            cards: all.filter((p) => p.yellow + p.red > 0).sort((a, b) => (b.red * 3 + b.yellow) - (a.red * 3 + a.yellow)).slice(0, 8),
+        };
     };
 })(window);

@@ -6,6 +6,9 @@
  *
  * Vracia:
  *   goals:   [ { minute, name, side: "home"|"away", own: bool } ]   (vlastný gól sa pripíše súperovi)
+ *   cards:   [ { minute, name, side, kind: "yellow"|"red" } ]
+ *   subs:    [ { minute, out, in, side } ]
+ *   report:  { halftime, spectators, referee, officials: [ {role, name} ], venue }
  *   lineups: { home: { start: [ {nr, name, captain, gk} ], subs: [...], coach }, away: {...} }
  *
  * Správca: &debug=1 vráti skrátenú surovú štruktúru zápisu (na kontrolu formátu dát Sportnetu).
@@ -37,7 +40,8 @@ if (!empty($_GET['debug']) && is_admin()) {
         }
         return $out;
     };
-    json_response(['keys' => array_keys($data), 'nominations' => $short($data['nominations'] ?? null), 'protocol' => $short($data['protocol'] ?? null), 'parsed' => sportnet_lineups($data, $home, $away)]);
+    json_response(['keys' => array_keys($data), 'nominations' => $short($data['nominations'] ?? null), 'protocol' => $short($data['protocol'] ?? null),
+        'other' => $short(array_diff_key($data, ['nominations' => 1, 'protocol' => 1])), 'parsed' => ['lineups' => sportnet_lineups($data, $home, $away), 'events' => sportnet_events($data, $home), 'report' => sportnet_report($data)]]);
 }
 
 $strip = fn($list) => array_map(fn($p) => ['nr' => $p['nr'], 'name' => $p['name'], 'captain' => $p['captain'], 'gk' => $p['gk']], $list);
@@ -46,7 +50,12 @@ foreach ($lineups as $s => $l) {
     $lineups[$s] = ['start' => $strip($l['start']), 'subs' => $strip($l['subs']), 'coach' => $l['coach']];
 }
 
+$events = sportnet_events($data, $home);
 json_response([
-    'goals'   => array_map(fn($g) => ['minute' => $g['minute'], 'name' => $g['name'], 'side' => $g['side'], 'own' => $g['own']], sportnet_goals($data, $home)),
+    'goals'   => array_values(array_map(fn($g) => ['minute' => (string)$g['minute'], 'name' => $g['name'], 'side' => $g['side'], 'own' => $g['own'], 'penalty' => !empty($g['penalty'])],
+                 array_filter($events, fn($e) => $e['kind'] === 'goal'))) ?: array_map(fn($g) => ['minute' => $g['minute'], 'name' => $g['name'], 'side' => $g['side'], 'own' => $g['own']], sportnet_goals($data, $home)),
+    'cards'   => array_values(array_map(fn($e) => ['minute' => (string)$e['minute'], 'name' => $e['name'], 'side' => $e['side'], 'kind' => $e['kind']], array_filter($events, fn($e) => in_array($e['kind'], ['yellow', 'red'], true)))),
+    'subs'    => array_values(array_map(fn($e) => ['minute' => (string)$e['minute'], 'out' => $e['name'], 'in' => $e['in'], 'side' => $e['side']], array_filter($events, fn($e) => $e['kind'] === 'sub'))),
+    'report'  => sportnet_report($data),
     'lineups' => $lineups,
 ]);

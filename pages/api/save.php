@@ -36,7 +36,7 @@ if (!$info || $info['mime'] !== 'image/png' || $info[0] > MAX_IMAGE_SIDE || $inf
 
 // metadáta
 $m = [];
-foreach (['d1name', 'd2name', 'startDate', 'competition', 'round', 'score1', 'score2', 'matchID', 'season', 'category', 'teamID', 'variant'] as $k) {
+foreach (['d1name', 'd2name', 'startDate', 'competition', 'round', 'score1', 'score2', 'matchID', 'season', 'category', 'teamID', 'variant', 'player', 'playerKey', 'roundNo', 'mvalue'] as $k) {
     $m[$k] = mb_substr(trim((string)($_GET[$k] ?? '')), 0, 200, 'UTF-8');
 }
 
@@ -47,13 +47,15 @@ try {
 }
 
 if (!in_array($m['variant'], ['', 'home', 'away'], true)) $m['variant'] = '';
-if ($type === 'squad') {
-    // súpiska nie je viazaná na zápas – jeden súbor na družstvo a sezónu
-    // stály názov aj priečinok (podľa začiatku sezóny), aby sa súpiska pri ďalšom uložení prepísala
-    $key  = 'squad|' . ($m['teamID'] ?: $m['d1name']) . '|' . $m['season'];
+if (in_array($type, ['squad', 'table', 'round', 'stats', 'player', 'motm', 'milestone'], true)) {
+    // obrázky družstva / hráča nie sú viazané na jeden zápas – stály názov aj priečinok (podľa začiatku sezóny),
+    // aby sa pri ďalšom uložení prepísali (tabuľka je vždy aktuálna, kolo a jubileum podľa čísla …)
+    $extra = ['round' => 'kolo-' . $m['roundNo'], 'player' => $m['playerKey'], 'motm' => $m['playerKey'] . '|' . $m['matchID'], 'milestone' => $m['playerKey'] . '|' . $m['mvalue']][$type] ?? '';
+    $key  = $type . '|' . ($m['teamID'] ?: $m['d1name']) . '|' . $m['season'] . '|' . $extra;
     $y = preg_match('/^(\d{4})/', $m['season'], $sy) ? (int)$sy[1] : (int)$date->format('Y');
     $date = new DateTime($y . '-07-01', new DateTimeZone('Europe/Bratislava'));
-    $name = 'squad_' . slugify($m['d1name'], 30) . '-' . slugify($m['category'] ?: 'druzstvo', 20) . '-' . slugify($m['season'] ?: 'sezona', 12);
+    $who  = $m['player'] !== '' ? slugify($m['player'], 30) : slugify($m['d1name'], 30) . '-' . slugify($m['category'] ?: 'druzstvo', 20);
+    $name = $type . '_' . $who . ($type === 'round' ? '-' . (int)$m['roundNo'] . '-kolo' : '') . ($type === 'milestone' ? '-' . (int)$m['mvalue'] : '') . '-' . slugify($m['season'] ?: 'sezona', 12);
 } else {
     $key  = ($m['matchID'] !== '' ? $m['matchID'] : ($m['d1name'] . '|' . $m['d2name'] . '|' . $m['startDate'])) . ($m['variant'] !== '' ? '|' . $m['variant'] : '');
     $name = $date->format('Y-m-d') . '_' . $type . '_' . slugify($m['d1name'], 30) . '-vs-' . slugify($m['d2name'], 30);

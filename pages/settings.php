@@ -104,6 +104,9 @@
 									<li><button class="dropdown-item" data-add="logo"><i class="bi bi-shield me-2"></i>Logo družstva</button></li>
 									<li><button class="dropdown-item" data-add="goals"><i class="bi bi-list-ol me-2"></i>Zoznam strelcov</button></li>
 									<li><button class="dropdown-item" data-add="players"><i class="bi bi-people me-2"></i>Zoznam hráčov</button></li>
+									<li><button class="dropdown-item" data-add="photo"><i class="bi bi-person-bounding-box me-2"></i>Fotka hráča</button></li>
+									<li><button class="dropdown-item" data-add="table"><i class="bi bi-table me-2"></i>Tabuľka súťaže</button></li>
+									<li><button class="dropdown-item" data-add="fixtures"><i class="bi bi-calendar-week me-2"></i>Zápasy kola</button></li>
 								</ul>
 							</div>
 						</div>

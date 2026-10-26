@@ -23,9 +23,11 @@
     const bytes = (b) => b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round((b || 0) / 1024)) + ' kB';
     const fold = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
     const absUrl = (it) => (CFG.root || location.origin) + it.url.split('?')[0];
-    const title = (it) => (it.type === 'squad' ? it.d1name + (it.category ? ' – ' + it.category : '') : it.d1name + ' vs ' + it.d2name);
-    // dátum zápasu, pri súpiske sezóna
-    const when = (it) => (it.type === 'squad' ? (it.season ? 'Sezóna ' + it.season : '') : fmtDate(it.startDate));
+    const MATCH_TYPES = ['matchday', 'lineup', 'result', 'goals', 'report'];
+    const isMatch = (it) => MATCH_TYPES.includes(it.type);
+    const title = (it) => (isMatch(it) ? it.d1name + ' vs ' + it.d2name : (it.player ? it.player + ' – ' : '') + it.d1name + (it.category && !it.player ? ' – ' + it.category : ''));
+    // dátum zápasu, pri obrázkoch družstva / hráča sezóna (a kolo)
+    const when = (it) => (isMatch(it) ? fmtDate(it.startDate) : [it.type === 'round' && it.roundNo ? it.roundNo + '. kolo' : '', it.type === 'milestone' && it.mvalue ? it.mvalue + '. ' : '', it.season ? 'Sezóna ' + it.season : ''].filter(Boolean).join(' · '));
     // pri zostave aj družstvo, ktorého zostava to je
     const variantTxt = (it) => (it.type === 'lineup' && it.variant ? (it.variant === 'away' ? it.d2name : it.d1name) : '');
     const typeName = (it) => it.typeName || TYPES[it.type] || it.type;
@@ -68,7 +70,7 @@
             (it.hidden ? '<span class="badge rounded-pill text-bg-warning g-hidden-badge"><i class="bi bi-eye-slash me-1"></i>skryté</span>' : '') +
             '<span class="gallery-zoom"><i class="bi bi-arrows-fullscreen"></i></span></button>' +
             '<div class="card-body">' +
-            '<div class="g-title">' + (it.type === 'squad' ? esc(title(it)) : esc(it.d1name) + ' <span class="text-muted-2">vs</span> ' + esc(it.d2name)) + '</div>' +
+            '<div class="g-title">' + (!isMatch(it) ? esc(title(it)) : esc(it.d1name) + ' <span class="text-muted-2">vs</span> ' + esc(it.d2name)) + '</div>' +
             '<div class="g-meta">' + score + esc(when(it)) + '</div>' +
             (variantTxt(it) ? '<div class="g-meta text-truncate"><i class="bi bi-person-lines-fill me-1"></i>' + esc(variantTxt(it)) + '</div>' : '') +
             '<div class="g-meta text-truncate">' + esc(it.competition) + '</div>' +
@@ -85,7 +87,7 @@
         view = items.filter((it) => {
             if (type && it.type !== type) return false;
             if (!showHidden && it.hidden) return false;
-            if (qq && !fold([it.d1name, it.d2name, it.competition, it.round, it.category, it.season, typeName(it), fmtDate(it.startDate)].join(' ')).includes(qq)) return false;
+            if (qq && !fold([it.d1name, it.d2name, it.player, it.competition, it.round, it.category, it.season, typeName(it), fmtDate(it.startDate)].join(' ')).includes(qq)) return false;
             return true;
         });
         const by = {
@@ -107,7 +109,10 @@
         const base = items.filter((i) => showHidden || !i.hidden);
         $('[data-count]').each(function () {
             const t = this.dataset.count;
-            this.textContent = t ? base.filter((i) => i.type === t).length : base.length;
+            const n = t ? base.filter((i) => i.type === t).length : base.length;
+            this.textContent = n;
+            // typy bez obrázkov sa v filtri nezobrazujú (okrem práve vybraného)
+            if (t) $(this).closest('[data-type]').prop('hidden', n === 0 && type !== t);
         });
         const total = base.reduce((a, i) => a + (i.bytes || 0), 0);
         const filtered = view.length !== base.length ? ' · zobrazených ' + view.length : '';

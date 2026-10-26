@@ -75,6 +75,9 @@ $routes = array(
     "galeria"                 => "gallery",
     "spravca"                 => "admin",
     "navod"                   => "navod",
+    "druzstvo"                => "team",
+    "hrac"                    => "player",
+    "zapas"                   => "match",
 
     // PWA
     "manifest.webmanifest"    => "pwa/manifest",
@@ -86,6 +89,7 @@ $routes = array(
     "api-logo"                => "api/logo",
     "api-match"               => "api/match",
     "api-squad"               => "api/squad",
+    "api-team"                => "api/team",
     "api-save"                => "api/save",
     "api-gallery"             => "api/gallery",
 

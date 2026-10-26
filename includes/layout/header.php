@@ -86,7 +86,7 @@
 		<div class="collapse navbar-collapse" id="mainNav">
 			<ul class="navbar-nav ms-auto me-md-3 gap-md-1">
 				<li class="nav-item">
-					<a class="nav-link<?= $nav(['', 'match-day-season-detail', 'generator']) ?>" href="<?= url("/") ?>">
+					<a class="nav-link<?= $nav(['', 'match-day-season-detail', 'generator', 'druzstvo', 'hrac', 'zapas']) ?>" href="<?= url("/") ?>">
 						<i class="bi bi-search"></i><span>Zápasy</span>
 					</a>
 				</li>
