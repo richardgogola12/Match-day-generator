@@ -1,5 +1,10 @@
 <?php
 	$active = current_page();
+	$isAdminNav = is_admin();
+	if ($isAdminNav || !empty($noindex)) no_store_headers(); // stránky s menu správcu nesmú ísť do cache
+	$nav = function ($pages) use ($active) {
+		return in_array($active, (array)$pages, true) ? ' active" aria-current="page' : '';
+	};
 	// skripty stránky sa vložia do pätičky
 	$GLOBALS['page_scripts'] = $_scripts ?? [];
 ?>
@@ -81,20 +86,40 @@
 		<div class="collapse navbar-collapse" id="mainNav">
 			<ul class="navbar-nav ms-auto me-md-3 gap-md-1">
 				<li class="nav-item">
-					<a class="nav-link <?= in_array($active, ['', 'match-day-season-detail']) ? 'active' : '' ?>" href="<?= url("/") ?>">
-						<i class="bi bi-search me-1"></i> Zápasy
+					<a class="nav-link<?= $nav(['', 'match-day-season-detail', 'generator']) ?>" href="<?= url("/") ?>">
+						<i class="bi bi-search"></i><span>Zápasy</span>
 					</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link <?= $active === 'galeria' ? 'active' : '' ?>" href="<?= url("galeria") ?>">
-						<i class="bi bi-images me-1"></i> Galéria
+					<a class="nav-link<?= $nav('galeria') ?>" href="<?= url("galeria") ?>">
+						<i class="bi bi-images"></i><span>Galéria</span>
 					</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link <?= $active === 'nastavenia' ? 'active' : '' ?>" href="<?= url("nastavenia") ?>">
-						<i class="bi bi-sliders me-1"></i> Nastavenie šablón
+					<a class="nav-link<?= $nav('nastavenia') ?>" href="<?= url("nastavenia") ?>">
+						<i class="bi bi-sliders"></i><span>Nastavenie šablón</span>
 					</a>
 				</li>
+				<?php if ($isAdminNav): ?>
+				<li class="nav-item dropdown">
+					<a class="nav-link dropdown-toggle<?= $nav(['spravca', 'log']) ?>" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+						<i class="bi bi-shield-lock"></i><span>Správca</span>
+					</a>
+					<ul class="dropdown-menu dropdown-menu-end app-dropdown">
+						<li><a class="dropdown-item" href="<?= url("spravca") ?>"><i class="bi bi-speedometer2"></i>Prehľad</a></li>
+						<li><a class="dropdown-item" href="<?= url("galeria?vsetky=1") ?>"><i class="bi bi-collection"></i>Galéria všetkých</a></li>
+						<li><a class="dropdown-item" href="<?= url("log") ?>"><i class="bi bi-journal-text"></i>Log generovania</a></li>
+						<li><hr class="dropdown-divider"></li>
+						<li>
+							<form method="post" action="<?= url("spravca") ?>" class="m-0">
+								<input type="hidden" name="action" value="logout">
+								<input type="hidden" name="csrf" value="<?= plain(csrf_token()) ?>">
+								<button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right"></i>Odhlásiť</button>
+							</form>
+						</li>
+					</ul>
+				</li>
+				<?php endif; ?>
 			</ul>
 		</div>
 	</div>

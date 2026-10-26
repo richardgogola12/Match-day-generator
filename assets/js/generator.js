@@ -132,7 +132,7 @@
                 type: savedType, d1name: M.d1name || '', d2name: M.d2name || '', startDate: M.startDate || '',
                 competition: M.competition || '', round: M.round || '', score1: M.score1 || '', score2: M.score2 || '', matchID: M.matchID || '',
             });
-            const r = await fetch('api-save?' + q.toString(), { method: 'POST', headers: MD.clientHeaders({ 'Content-Type': 'image/png', 'X-MD-Info': await MD.clientInfoHeader(), 'X-MD-Mode': $('#autoSave').is(':checked') ? 'auto' : 'manual' }), body: blob });
+            const r = await fetch('api-save?' + q.toString(), { method: 'POST', headers: MD.clientHeaders({ 'Content-Type': 'image/png', 'X-MD-Mode': $('#autoSave').is(':checked') ? 'auto' : 'manual' }), body: blob });
             const txt = await r.text();
             let j;
             try { j = JSON.parse(txt); } catch (e) { throw new Error('server vrátil chybu (HTTP ' + r.status + ')'); }

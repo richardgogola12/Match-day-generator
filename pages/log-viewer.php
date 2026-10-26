@@ -1,14 +1,12 @@
 <?php
 /**
- * Tajný prehliadač logu generovania:  /match-day/log/<LOG_SECRET>[?m=RRRR-MM][&raw=1][&download=1]
- * Pri nesprávnom kľúči sa zobrazí bežná stránka 404 (neprezradí, že niečo také existuje).
+ * Prehliadač logu generovania:  /match-day/log[?m=RRRR-MM][&raw=1][&download=1]
+ * Iba pre prihláseného správcu. Log neobsahuje IP adresy ani údaje o zariadení.
  */
-$token = segment(2);
-if (LOG_SECRET === '' || !is_string($token) || !hash_equals(LOG_SECRET, $token)) show_404();
+if (!is_admin()) redirect('spravca?dalej=log', 303);
 
-header('X-Robots-Tag: noindex, nofollow, noarchive');
-header('Referrer-Policy: no-referrer');
-header('Cache-Control: no-store');
+no_store_headers();
+scrub_legacy_logs(); // staršie záznamy s osobnými údajmi sa pri prvom otvorení vyčistia
 
 // dostupné mesiace
 $months = [];
@@ -41,9 +39,7 @@ foreach (preg_split('/^={20,}\s*$/m', $content) as $block) {
     };
     $entries[] = [
         'time' => $h[1], 'type' => $h[2], 'match' => $h[3],
-        'ip' => preg_replace('/\s+\(.*$/', '', $field('IP adresa')),
-        'ipExtra' => preg_match('/\((.+)\)/', $field('IP adresa'), $x) ? $x[1] : '',
-        'client' => $field('ID prehliadača'),
+        'client' => $field('Anonymné ID'),
         'browser' => $field('Prehliadač'), 'os' => $field('Systém'), 'device' => $field('Zariadenie'),
         'action' => $field('Akcia'),
         'text' => $block,
@@ -52,18 +48,17 @@ foreach (preg_split('/^={20,}\s*$/m', $content) as $block) {
 $entries = array_reverse($entries); // najnovšie hore
 
 $byType = array_count_values(array_column($entries, 'type'));
-$ips = count(array_unique(array_column($entries, 'ip')));
 $clients = count(array_unique(array_column($entries, 'client')));
-$base = url('log/' . LOG_SECRET);
+$base = url('log');
 
 add_layout("header", array("title" => "Log generovania " . $m, "noindex" => true));
 ?>
 
 <section class="hero hero-sm">
 	<div class="container-xxl">
-		<span class="hero-eyebrow mb-3"><i class="bi bi-incognito"></i> Tajná stránka – nezdieľajte odkaz</span>
+		<span class="hero-eyebrow mb-3"><i class="bi bi-shield-lock"></i> Iba pre správcu · bez osobných údajov</span>
 		<h1 class="mb-2">Log <span class="accent">generovania</span></h1>
-		<p class="lead mb-0">Kto, kedy a aký obrázok vygeneroval · <?= plain($m) ?></p>
+		<p class="lead mb-0">Kedy a aký obrázok sa vygeneroval · <?= plain($m) ?></p>
 	</div>
 </section>
 
@@ -84,7 +79,7 @@ add_layout("header", array("title" => "Log generovania " . $m, "noindex" => true
 					<label class="form-label small fw-semibold" for="logSearch">Hľadať</label>
 					<div class="input-group">
 						<span class="input-group-text"><i class="bi bi-search"></i></span>
-						<input type="search" class="form-control" id="logSearch" placeholder="IP, tím, prehliadač, Windows 11, iPhone…">
+						<input type="search" class="form-control" id="logSearch" placeholder="Tím, súťaž, prehliadač, Android…">
 					</div>
 				</div>
 				<div class="col-lg-4 d-flex gap-2 justify-content-lg-end">
@@ -94,10 +89,9 @@ add_layout("header", array("title" => "Log generovania " . $m, "noindex" => true
 			</div>
 
 			<div class="row g-3 mt-1">
-				<div class="col-6 col-md-3"><div class="stat-tile"><div class="stat-num"><?= count($entries) ?></div><div class="stat-label">obrázkov</div></div></div>
-				<div class="col-6 col-md-3"><div class="stat-tile"><div class="stat-num"><?= $ips ?></div><div class="stat-label">rôznych IP adries</div></div></div>
-				<div class="col-6 col-md-3"><div class="stat-tile"><div class="stat-num"><?= $clients ?></div><div class="stat-label">rôznych prehliadačov</div></div></div>
-				<div class="col-6 col-md-3"><div class="stat-tile">
+				<div class="col-6 col-md-4"><div class="stat-tile"><div class="stat-num"><?= count($entries) ?></div><div class="stat-label">obrázkov</div></div></div>
+				<div class="col-6 col-md-4"><div class="stat-tile"><div class="stat-num"><?= $clients ?></div><div class="stat-label">rôznych prehliadačov (anonymne)</div></div></div>
+				<div class="col-12 col-md-4"><div class="stat-tile">
 					<div class="stat-label mb-1">podľa typu</div>
 					<?php foreach ($byType as $t => $c): ?><span class="badge text-bg-secondary me-1"><?= plain($t) ?> <?= $c ?></span><?php endforeach; ?>
 					<?php if (!$byType): ?><span class="text-muted-2 small">–</span><?php endif; ?>
@@ -120,9 +114,9 @@ add_layout("header", array("title" => "Log generovania " . $m, "noindex" => true
 									<span class="badge rounded-pill text-bg-dark log-type"><?= plain($e['type']) ?></span>
 									<span class="log-match"><?= plain($e['match']) ?></span>
 									<span class="log-who">
-										<span title="IP adresa<?= $e['ipExtra'] ? ' – ' . plain($e['ipExtra']) : '' ?>"><i class="bi bi-globe2 me-1"></i><?= plain($e['ip']) ?></span>
+										<?php if ($e['client'] !== ''): ?><span title="Anonymné ID prehliadača"><i class="bi bi-person-badge me-1"></i><?= plain($e['client']) ?></span><?php endif; ?>
 										<span><i class="bi bi-window me-1"></i><?= plain($e['browser']) ?></span>
-										<span><i class="bi bi-pc-display me-1"></i><?= plain(preg_replace('/\s*\(verzia.*$/', '', $e['os'])) ?></span>
+										<span><i class="bi bi-pc-display me-1"></i><?= plain($e['os']) ?></span>
 										<span><i class="bi bi-phone me-1"></i><?= plain($e['device']) ?></span>
 									</span>
 								</div>

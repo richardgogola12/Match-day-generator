@@ -10,6 +10,9 @@ if (is_file(__DIR__ . '/config.local.php')) require __DIR__ . '/config.local.php
 // ---------------------------------------------------------------------------------
 define('APP_NAME', 'Match Day Generator');
 
+// Vývojový režim: zobrazuje chyby PHP na stránke. Na produkcii nechajte false (nastavte v config.local.php).
+defined('APP_DEBUG') || define('APP_DEBUG', false);
+
 // ---------------------------------------------------------------------------------
 // PROJECT BASE PATH (priečinok, v ktorom aplikácia beží, bez lomky na konci)
 // ---------------------------------------------------------------------------------
@@ -40,18 +43,18 @@ define('STORAGE_URL', BASE_PATH . '/storage/generated/');
 define('MAX_IMAGE_BYTES', 15 * 1024 * 1024);                // max. veľkosť jedného PNG
 define('MAX_IMAGE_SIDE', 4000);                             // max. šírka / výška v px
 // Galéria zobrazuje iba obrázky vytvorené v danom prehliadači; na serveri sa ukladajú všetky.
-// Ak nastavíte heslo, na adrese galeria?admin=HESLO uvidíte obrázky zo všetkých prehliadačov.
+// Heslo správcu: po prihlásení na adrese /spravca uvidíte obrázky zo všetkých prehliadačov a log.
+// Heslo sa zadáva iba do formulára (nikdy nie do adresy), preto sa nedostane do logov servera.
 defined('GALLERY_ADMIN_KEY') || define('GALLERY_ADMIN_KEY', '');   // nastavte v config.local.php
 
 // ---------------------------------------------------------------------------------
 // LOG GENEROVANIA (storage/logs/generovanie-RRRR-MM.txt, z webu nedostupné)
+// Zapisuje sa iba čo, kedy a aký typ zariadenia – žiadne IP adresy ani údaje o zariadení.
+// Prehliadanie: /log (iba prihlásený správca).
 // ---------------------------------------------------------------------------------
 defined('LOG_ENABLED') || define('LOG_ENABLED', true);
 define('LOG_DIR', APP_DIR . '/storage/logs/');
-define('LOG_RETENTION_MONTHS', 12);                        // staršie mesačné logy sa automaticky zmažú (0 = nikdy)
-// Tajný odkaz na prehliadanie logu: https://VAŠA-DOMÉNA/match-day/log/<LOG_SECRET>
-// Nikomu ho neposielajte. Zmenou hodnoty starý odkaz prestane fungovať; '' = vypnuté.
-defined('LOG_SECRET') || define('LOG_SECRET', '');                 // nastavte v config.local.php
+defined('LOG_RETENTION_MONTHS') || define('LOG_RETENTION_MONTHS', 12); // staršie mesačné logy sa automaticky zmažú (0 = nikdy)
 
 // ---------------------------------------------------------------------------------
 // EXTERNÉ API
@@ -70,6 +73,7 @@ $routes = array(
     "generator"               => "generator",
     "nastavenia"              => "settings",
     "galeria"                 => "gallery",
+    "spravca"                 => "admin",
 
     // PWA
     "manifest.webmanifest"    => "pwa/manifest",
@@ -82,7 +86,6 @@ $routes = array(
     "api-match"               => "api/match",
     "api-save"                => "api/save",
     "api-gallery"             => "api/gallery",
-    "api-log"                 => "api/log",
 
     // pôvodné serverové generátory (GD) – ponechané ako záloha
     "generate-match-result"   => "generate/generate-result",

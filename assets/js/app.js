@@ -85,6 +85,17 @@
     });
     window.matchMedia('(display-mode: standalone)').addEventListener?.('change', (e) => { if (e.matches) $install.prop('hidden', true); });
 
+    /* ------------------------------------------------------------------ */
+    /* Mobilné menu – zatvorí sa po kliknutí na odkaz, mimo menu alebo Esc  */
+    /* ------------------------------------------------------------------ */
+    const navEl = document.getElementById('mainNav');
+    if (navEl) {
+        const collapse = () => { if (navEl.classList.contains('show')) bootstrap.Collapse.getOrCreateInstance(navEl, { toggle: false }).hide(); };
+        navEl.addEventListener('click', (e) => { if (e.target.closest('a.nav-link:not(.dropdown-toggle), a.dropdown-item')) collapse(); });
+        document.addEventListener('click', (e) => { if (!e.target.closest('.app-navbar')) collapse(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') collapse(); });
+    }
+
     /* Tooltipy */
     document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((el) => new bootstrap.Tooltip(el));
 })(jQuery);

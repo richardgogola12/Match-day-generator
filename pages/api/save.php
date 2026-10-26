@@ -79,6 +79,7 @@ $meta = $m + [
 file_put_contents($jsonFile, json_encode($meta, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
 
 $rel = $date->format('Y-m') . '/' . $name . '.png';
+gallery_thumb($png); // náhľad do galérie (zlyhanie nevadí – galéria použije PNG)
 
 // záznam do TXT logu (chyba logu nesmie zablokovať uloženie obrázka)
 try {

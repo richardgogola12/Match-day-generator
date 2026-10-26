@@ -511,7 +511,7 @@ function getTeamsContent(string $url)
 function json_response($data, $status = 200) {
     // zahodí čokoľvek, čo sa vypísalo pred tým (varovania PHP a pod.)
     while (ob_get_level() > 0) ob_end_clean();
-    if ($status >= 400 && !empty($GLOBALS['php_warnings'])) {
+    if (APP_DEBUG && $status >= 400 && !empty($GLOBALS['php_warnings'])) {
         $data['php_warnings'] = array_slice($GLOBALS['php_warnings'], 0, 5);
     }
     http_response_code($status);
@@ -639,16 +639,13 @@ function client_hash() {
     return preg_match('/^[a-f0-9]{32}$/', $id) ? hash('sha256', 'match-day|' . $id) : '';
 }
 
-/** Je zadané správne admin heslo galérie? */
-function gallery_is_admin($key) {
-    return GALLERY_ADMIN_KEY !== '' && is_string($key) && hash_equals(GALLERY_ADMIN_KEY, $key);
-}
 
 /**
  * Zoznam uložených obrázkov (najnovšie prvé)
- * @param string|null $client hash prehliadača; null = všetky (admin)
+ * @param string|null $client hash prehliadača; null = všetky (správca)
+ * @param string      $viewer hash prehliadača, ktorý sa pozerá (kvôli príznaku "owner")
  */
-function gallery_items($client = null) {
+function gallery_items($client = null, $viewer = '') {
     $items = [];
     foreach (glob(STORAGE_DIR . '*/*.json') ?: [] as $jsonFile) {
         $meta = json_decode((string)@file_get_contents($jsonFile), true);
@@ -656,10 +653,15 @@ function gallery_items($client = null) {
         if (!is_array($meta) || !is_file($png)) continue;
         if ($client !== null && (($meta['client'] ?? '') !== $client || !empty($meta['hidden']))) continue;
         $rel = basename(dirname($png)) . '/' . basename($png);
+        $v = filemtime($png);
         $meta['file'] = $rel;
-        $meta['url'] = STORAGE_URL . $rel . '?v=' . filemtime($png);
+        $meta['url'] = STORAGE_URL . $rel . '?v=' . $v;
+        $thumb = gallery_thumb($png);
+        $meta['thumb'] = $thumb ? STORAGE_URL . basename(dirname($png)) . '/' . basename($thumb) . '?v=' . $v : $meta['url'];
         $meta['bytes'] = filesize($png);
-        unset($meta['client']);
+        $meta['owner'] = $viewer !== '' && ($meta['client'] ?? '') === $viewer;
+        $meta['hidden'] = !empty($meta['hidden']);
+        unset($meta['client'], $meta['hiddenAt']);
         $items[] = $meta;
     }
     usort($items, fn($a, $b) => strcmp($b['updated'] ?? '', $a['updated'] ?? ''));
@@ -678,6 +680,38 @@ function gallery_path($rel) {
     return $real;
 }
 
+/**
+ * Zmenšený náhľad do galérie (JPEG, max. 480 px) – vytvorí sa raz a uloží vedľa PNG.
+ * Galéria tak nesťahuje plné PNG (často niekoľko MB). Vracia cestu k náhľadu alebo false.
+ */
+function gallery_thumb($png, $max = 480) {
+    $thumb = substr($png, 0, -4) . '.thumb.jpg';
+    if (is_file($thumb) && filemtime($thumb) >= filemtime($png)) return $thumb;
+    if (!function_exists('imagecreatefrompng')) return false;
+
+    $src = @imagecreatefrompng($png);
+    if (!$src) return false;
+    $w = imagesx($src); $h = imagesy($src);
+    $r = min(1, $max / max($w, $h));
+    $nw = max(1, (int)round($w * $r)); $nh = max(1, (int)round($h * $r));
+    $dst = imagecreatetruecolor($nw, $nh);
+    imagefill($dst, 0, 0, imagecolorallocate($dst, 255, 255, 255)); // priehľadnosť -> biela
+    imagecopyresampled($dst, $src, 0, 0, 0, 0, $nw, $nh, $w, $h);
+    $tmp = $thumb . '.tmp' . bin2hex(random_bytes(3));
+    $ok = @imagejpeg($dst, $tmp, 82) && @rename($tmp, $thumb);
+    if (!$ok) @unlink($tmp);
+    return $ok ? $thumb : false;
+}
+
+/** Zmaže obrázok zo servera (PNG, metadáta aj náhľad) – iba pre správcu */
+function gallery_delete($png) {
+    $base = substr($png, 0, -4);
+    $ok = @unlink($png);
+    @unlink($base . '.json');
+    @unlink($base . '.thumb.jpg');
+    return $ok;
+}
+
 /** Ľudsky čitateľná veľkosť súboru */
 function human_bytes($b) {
     return $b >= 1048576 ? round($b / 1048576, 1) . ' MB' : max(1, round($b / 1024)) . ' kB';
@@ -685,160 +719,159 @@ function human_bytes($b) {
 
 
 // =================================================================================
-// Log generovania obrázkov
+// Správca (prihlásenie heslom GALLERY_ADMIN_KEY cez session – heslo nikdy nie je v URL,
+// takže sa nedostane do logov servera, histórie prehliadača ani do offline cache)
 // =================================================================================
 
-/**
- * IP adresa klienta. REMOTE_ADDR je spoľahlivá; hlavičky proxy sa zapisujú zvlášť
- * (klient si ich môže podvrhnúť, ale za Cloudflare/proxy obsahujú skutočnú IP).
- */
-function client_ip_info() {
-    $out = ['ip' => $_SERVER['REMOTE_ADDR'] ?? '?'];
-    foreach (['HTTP_CF_CONNECTING_IP' => 'cf', 'HTTP_X_FORWARDED_FOR' => 'forwarded', 'HTTP_X_REAL_IP' => 'real'] as $h => $k) {
-        if (!empty($_SERVER[$h])) $out[$k] = substr($_SERVER[$h], 0, 200);
-    }
-    return $out;
+/** Je správca prihlásený? (zmena hesla v config.local.php automaticky odhlási) */
+function is_admin() {
+    return GALLERY_ADMIN_KEY !== ''
+        && isset($_SESSION['md_admin'])
+        && hash_equals(hash('sha256', 'md-admin|' . GALLERY_ADMIN_KEY), (string)$_SESSION['md_admin']);
 }
 
 /**
- * Rozpozná prehliadač, systém a typ zariadenia z User-Agent (+ Client Hints, ak sú)
+ * Prihlásenie správcu. Vracia true / false; po 5 neúspešných pokusoch je 10 minút pauza.
  */
-function parse_client($ua, $info = []) {
-    $browser = 'Neznámy';
-    $patterns = [
-        '/Edg(?:A|iOS)?\/([\d.]+)/'        => 'Microsoft Edge',
-        '/OPR\/([\d.]+)/'                  => 'Opera',
-        '/SamsungBrowser\/([\d.]+)/'       => 'Samsung Internet',
-        '/YaBrowser\/([\d.]+)/'            => 'Yandex',
-        '/Vivaldi\/([\d.]+)/'              => 'Vivaldi',
-        '/Firefox\/([\d.]+)/'              => 'Firefox',
-        '/FxiOS\/([\d.]+)/'                => 'Firefox (iOS)',
-        '/CriOS\/([\d.]+)/'                => 'Chrome (iOS)',
-        '/Chrome\/([\d.]+)/'               => 'Chrome',
-        '/Version\/([\d.]+).*Safari/'      => 'Safari',
-    ];
-    foreach ($patterns as $re => $name) {
-        if (preg_match($re, $ua, $m)) { $browser = $name . ' ' . $m[1]; break; }
+function admin_login($password) {
+    if (GALLERY_ADMIN_KEY === '') return false;
+    $fail = $_SESSION['md_admin_fail'] ?? ['n' => 0, 't' => 0];
+    if ($fail['n'] >= 5 && time() - $fail['t'] < 600) return false;
+
+    if (is_string($password) && hash_equals(GALLERY_ADMIN_KEY, $password)) {
+        session_regenerate_id(true);
+        $_SESSION['md_admin'] = hash('sha256', 'md-admin|' . GALLERY_ADMIN_KEY);
+        unset($_SESSION['md_admin_fail']);
+        return true;
     }
-    // presnejšia verzia z Client Hints
-    if (!empty($info['chFullVersions']) && preg_match('/(Microsoft Edge|Opera|Google Chrome|Brave|Vivaldi) ([\d.]+)/', $info['chFullVersions'], $m)) {
-        $browser = str_replace('Google ', '', $m[1]) . ' ' . $m[2];
+    usleep(800000); // spomalenie hádania hesla
+    $_SESSION['md_admin_fail'] = ['n' => ($fail['n'] >= 5 ? 0 : $fail['n']) + 1, 't' => time()];
+    return false;
+}
+
+/** Zostávajúce minúty blokovania po neúspešných pokusoch (0 = neblokované) */
+function admin_lock_minutes() {
+    $fail = $_SESSION['md_admin_fail'] ?? ['n' => 0, 't' => 0];
+    return ($fail['n'] >= 5 && time() - $fail['t'] < 600) ? (int)ceil((600 - (time() - $fail['t'])) / 60) : 0;
+}
+
+function admin_logout() {
+    unset($_SESSION['md_admin']);
+    session_regenerate_id(true);
+}
+
+/** CSRF token pre formuláre a POST požiadavky správcu */
+function csrf_token() {
+    if (empty($_SESSION['md_csrf'])) $_SESSION['md_csrf'] = bin2hex(random_bytes(16));
+    return $_SESSION['md_csrf'];
+}
+
+function csrf_ok($token) {
+    return !empty($_SESSION['md_csrf']) && is_string($token) && hash_equals($_SESSION['md_csrf'], $token);
+}
+
+/** Stránky správcu sa nesmú ukladať do cache (ani do offline cache PWA) */
+function no_store_headers() {
+    if (headers_sent()) return;
+    header('Cache-Control: no-store, private');
+    header('X-Robots-Tag: noindex, nofollow, noarchive');
+    header('Referrer-Policy: no-referrer');
+}
+
+
+// =================================================================================
+// Log generovania obrázkov
+//
+// Zapisujú sa IBA údaje o obrázku a hrubý typ zariadenia. Neukladá sa IP adresa,
+// User-Agent, jazyk, časové pásmo, rozlíšenie, hardvér, sieť, referrer ani adresa stránky.
+// Prehliadač je v logu len ako krátke anonymné ID (jednosmerný hash), ktoré sa nedá
+// spätne priradiť ku konkrétnemu človeku – slúži iba na rozlíšenie "rôznych prehliadačov".
+// =================================================================================
+
+/** Krátke anonymné ID prehliadača pre log (hash z hashu, nedá sa spätne zistiť) */
+function log_pseudonym($clientHash) {
+    return $clientHash === '' ? '–' : substr(hash('sha256', 'md-log|' . $clientHash), 0, 8);
+}
+
+/**
+ * Hrubé zaradenie klienta – iba rodina prehliadača / systému a typ zariadenia,
+ * bez verzií, modelu zariadenia a celého User-Agent reťazca.
+ */
+function client_summary($ua) {
+    $ua = (string)$ua;
+    $browser = 'Iný';
+    foreach ([
+        '/Edg(?:A|iOS)?\//'   => 'Edge',
+        '/OPR\//'             => 'Opera',
+        '/SamsungBrowser\//'  => 'Samsung Internet',
+        '/Firefox\/|FxiOS\//' => 'Firefox',
+        '/Chrome\/|CriOS\//'  => 'Chrome',
+        '/Safari\//'          => 'Safari',
+    ] as $re => $name) {
+        if (preg_match($re, $ua)) { $browser = $name; break; }
     }
 
-    $os = 'Neznámy';
-    if (preg_match('/Windows NT ([\d.]+)/', $ua, $m)) {
-        $os = ['10.0' => 'Windows 10/11', '6.3' => 'Windows 8.1', '6.2' => 'Windows 8', '6.1' => 'Windows 7'][$m[1]] ?? 'Windows NT ' . $m[1];
-    } elseif (preg_match('/Android ([\d.]+)/', $ua, $m)) {
-        $os = 'Android ' . $m[1];
-    } elseif (preg_match('/(iPhone|iPad|iPod).*OS ([\d_]+)/', $ua, $m)) {
-        $os = ($m[1] === 'iPad' ? 'iPadOS ' : 'iOS ') . str_replace('_', '.', $m[2]);
-    } elseif (preg_match('/Mac OS X ([\d_.]+)/', $ua, $m)) {
-        $os = 'macOS ' . str_replace('_', '.', $m[1]);
-    } elseif (stripos($ua, 'CrOS') !== false) {
-        $os = 'ChromeOS';
-    } elseif (stripos($ua, 'Linux') !== false) {
-        $os = 'Linux';
-    }
-    // Client Hints vedia rozlíšiť Windows 10 a 11 a presnú verziu systému
-    $p = $info['chPlatform'] ?? '';
-    $pv = $info['chPlatformVersion'] ?? '';
-    if ($p === 'Windows' && $pv !== '') {
-        $major = (int)explode('.', $pv)[0];
-        $os = ($major >= 13 ? 'Windows 11' : ($major > 0 ? 'Windows 10' : 'Windows 7/8')) . ' (verzia ' . $pv . ')';
-    } elseif ($p === 'macOS' && $pv !== '') {
-        $os = 'macOS ' . $pv;
-    } elseif ($p === 'Android' && $pv !== '') {
-        $os = 'Android ' . $pv;
-    } elseif ($p !== '' && $pv !== '' && $os === 'Neznámy') {
-        $os = $p . ' ' . $pv;
-    }
-    // architektúru pridať, len ak Client Hints zodpovedajú systému z User-Agent
-    $osFamily = ['Windows' => 'Windows', 'macOS' => 'macOS', 'Linux' => 'Linux', 'Android' => 'Android', 'Chrome OS' => 'ChromeOS'][$p] ?? null;
-    if (!empty($info['chArchitecture']) && $osFamily && str_starts_with($os, $osFamily)) $os .= ', ' . $info['chArchitecture'] . (!empty($info['chBitness']) ? ' ' . $info['chBitness'] . '-bit' : '');
+    $os = 'Iný';
+    if (stripos($ua, 'Windows') !== false)                 $os = 'Windows';
+    elseif (stripos($ua, 'Android') !== false)             $os = 'Android';
+    elseif (preg_match('/iPhone|iPad|iPod/', $ua))         $os = 'iOS / iPadOS';
+    elseif (stripos($ua, 'Mac OS X') !== false)            $os = 'macOS';
+    elseif (stripos($ua, 'CrOS') !== false)                $os = 'ChromeOS';
+    elseif (stripos($ua, 'Linux') !== false)               $os = 'Linux';
 
     $device = 'Počítač';
     if (preg_match('/iPad|Tablet/i', $ua) || (stripos($ua, 'Android') !== false && stripos($ua, 'Mobile') === false)) $device = 'Tablet';
-    elseif (preg_match('/Mobile|iPhone|iPod/i', $ua) || !empty($info['uaMobile'])) $device = 'Mobil';
-    if (!empty($info['chModel'])) $device .= ' (' . $info['chModel'] . ')';
-    elseif (preg_match('/Android [\d.]+; ([^;)]+?)(?: Build|\))/', $ua, $m) && strtolower(trim($m[1])) !== 'k') $device .= ' (' . trim($m[1]) . ')';
+    elseif (preg_match('/Mobile|iPhone|iPod/i', $ua)) $device = 'Mobil';
 
     return ['browser' => $browser, 'os' => $os, 'device' => $device];
+}
+
+/** Pripraví priečinok logov (vrátane zákazu prístupu z webu) */
+function ensure_log_dir() {
+    if (!is_dir(LOG_DIR)) @mkdir(LOG_DIR, 0775, true);
+    if (!is_file(LOG_DIR . '.htaccess')) {
+        @file_put_contents(LOG_DIR . '.htaccess', "Require all denied\n<IfModule !mod_authz_core.c>\n    Order allow,deny\n    Deny from all\n</IfModule>\n");
+    }
+    if (!is_file(LOG_DIR . 'index.html')) @file_put_contents(LOG_DIR . 'index.html', '');
+    return is_dir(LOG_DIR) && is_writable(LOG_DIR);
 }
 
 /**
  * Zapíše záznam o vygenerovanom obrázku do mesačného TXT logu
  */
 function write_generation_log(array $entry) {
-    if (!LOG_ENABLED) return;
-    if (!is_dir(LOG_DIR)) @mkdir(LOG_DIR, 0775, true);
-    if (!is_file(LOG_DIR . '.htaccess')) {
-        @file_put_contents(LOG_DIR . '.htaccess', "Require all denied\n<IfModule !mod_authz_core.c>\n    Order allow,deny\n    Deny from all\n</IfModule>\n");
-        @file_put_contents(LOG_DIR . 'index.html', '');
-    }
+    if (!LOG_ENABLED || !ensure_log_dir()) return;
+    scrub_legacy_logs();
 
-    // údaje z prehliadača (hlavička X-MD-Info = base64 JSON)
-    $info = [];
-    $raw = $_SERVER['HTTP_X_MD_INFO'] ?? '';
-    if ($raw !== '' && strlen($raw) < 16000) {
-        $dec = json_decode((string)base64_decode($raw, true), true);
-        if (is_array($dec)) $info = $dec;
-    }
-    $ua = (string)($_SERVER['HTTP_USER_AGENT'] ?? ($info['userAgent'] ?? ''));
-    $client = parse_client($ua, $info);
-    $ipInfo = client_ip_info();
+    $client = client_summary($_SERVER['HTTP_USER_AGENT'] ?? '');
     $now = new DateTime('now', new DateTimeZone('Europe/Bratislava'));
 
-    $clean = fn($v) => is_bool($v) ? ($v ? 'áno' : 'nie') : trim(preg_replace('/[\r\n\t]+/', ' ', mb_substr((string)$v, 0, 500, 'UTF-8')));
+    $clean = fn($v) => trim(preg_replace('/[\r\n\t]+/', ' ', mb_substr((string)$v, 0, 300, 'UTF-8')));
     // zarovnanie podľa počtu znakov (nie bajtov), aby diakritika neposúvala stĺpce
     $line = fn($label, $value) => ($value === '' || $value === null) ? '' : '  ' . $label . ':' . str_repeat(' ', max(1, 23 - mb_strlen($label, 'UTF-8'))) . $clean($value) . "\n";
 
-    $ip = $ipInfo['ip'];
-    foreach (['cf' => 'Cloudflare', 'forwarded' => 'X-Forwarded-For', 'real' => 'X-Real-IP'] as $k => $l) {
-        if (isset($ipInfo[$k])) $ip .= '  (' . $l . ': ' . $ipInfo[$k] . ')';
+    $startDate = '';
+    if (!empty($entry['startDate'])) {
+        try { $startDate = (new DateTime($entry['startDate']))->setTimezone(new DateTimeZone('Europe/Bratislava'))->format('j.n.Y H:i'); }
+        catch (Throwable $e) { $startDate = ''; }
     }
 
     $txt  = str_repeat('=', 78) . "\n";
-    $txt .= $now->format('Y-m-d H:i:s') . '  |  ' . $entry['typeName'] . '  |  ' . $entry['d1name'] . ' vs ' . $entry['d2name'] . "\n";
+    $txt .= $now->format('Y-m-d H:i:s') . '  |  ' . $clean($entry['typeName']) . '  |  ' . $clean($entry['d1name'] . ' vs ' . $entry['d2name']) . "\n";
     $txt .= str_repeat('-', 78) . "\n";
     $txt .= "OBRÁZOK\n";
     $txt .= $line('Typ', $entry['typeName'] . ' (' . $entry['type'] . ')');
     $txt .= $line('Zápas', $entry['d1name'] . ' vs ' . $entry['d2name'] . (($entry['score1'] ?? '') !== '' ? '  ' . $entry['score1'] . ':' . $entry['score2'] : ''));
-    $txt .= $line('Dátum zápasu', $entry['startDate'] ? (new DateTime($entry['startDate']))->setTimezone(new DateTimeZone('Europe/Bratislava'))->format('j.n.Y H:i') : '');
+    $txt .= $line('Dátum zápasu', $startDate);
     $txt .= $line('Súťaž / kolo', trim(($entry['competition'] ?? '') . ' / ' . ($entry['round'] ?? ''), ' /'));
     $txt .= $line('ID zápasu', $entry['matchID'] ?? '');
     $txt .= $line('Súbor', $entry['file'] . '  (' . $entry['width'] . '×' . $entry['height'] . ' px, ' . human_bytes($entry['bytes']) . ')');
     $txt .= $line('Akcia', ($entry['replaced'] ? 'prepísaný existujúci' : 'nový') . ', ' . (($_SERVER['HTTP_X_MD_MODE'] ?? '') === 'manual' ? 'uložené ručne' : 'uložené automaticky'));
-    $txt .= "KTO\n";
-    $txt .= $line('IP adresa', $ip);
-    $txt .= $line('ID prehliadača', substr($entry['client'], 0, 16) . '…');
+    $txt .= "ZARIADENIE (anonymne)\n";
+    $txt .= $line('Anonymné ID', log_pseudonym($entry['client'] ?? ''));
     $txt .= $line('Prehliadač', $client['browser']);
     $txt .= $line('Systém', $client['os']);
     $txt .= $line('Zariadenie', $client['device']);
-    $txt .= $line('User-Agent', $ua);
-    $txt .= $line('Jazyk', ($info['language'] ?? '') . (($info['languages'] ?? '') !== '' ? '  [' . $info['languages'] . ']' : ''));
-    $txt .= $line('Accept-Language', $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '');
-    $txt .= $line('Časové pásmo', ($info['timezone'] ?? '') . (isset($info['tzOffsetMin']) ? sprintf(' (UTC%+d:%02d)', intdiv($info['tzOffsetMin'], 60), abs($info['tzOffsetMin']) % 60) : ''));
-    $txt .= $line('Čas na zariadení', $info['localTime'] ?? '');
-    if ($info) {
-        $txt .= "ZARIADENIE\n";
-        if (!empty($info['screen'])) $txt .= $line('Obrazovka', ($info['screen'] ?? '') . ' (dostupné ' . ($info['screenAvail'] ?? '') . '), ' . ($info['colorDepth'] ?? '') . '-bit, DPR ' . ($info['pixelRatio'] ?? ''));
-        $txt .= $line('Okno prehliadača', ($info['viewport'] ?? '') . (($info['orientation'] ?? '') !== '' ? ', ' . $info['orientation'] : ''));
-        $txt .= $line('Procesor (jadrá)', $info['cpuCores'] ?? '');
-        $txt .= $line('Pamäť RAM (GB)', ($info['memoryGB'] ?? '') !== '' ? '≥ ' . $info['memoryGB'] . ' (prehliadač zaokrúhľuje)' : '');
-        $txt .= $line('Dotykové body', $info['touchPoints'] ?? '');
-        $txt .= $line('Platforma', trim(($info['platform'] ?? '') . ' ' . ($info['vendor'] ?? '')));
-        $txt .= $line('Značky (Client Hints)', $info['chFullVersions'] ?? ($info['uaBrands'] ?? ''));
-        $txt .= $line('Typ zariadenia (CH)', $info['chFormFactors'] ?? '');
-        $txt .= $line('Sieť', ($info['netType'] ?? '') !== '' ? $info['netType'] . ', ' . ($info['netDownlinkMbps'] ?? '?') . ' Mb/s, RTT ' . ($info['netRttMs'] ?? '?') . ' ms' . (!empty($info['saveData']) ? ', šetrenie dát' : '') : '');
-        $txt .= $line('Nainštalovaná PWA', $info['pwaInstalled'] ?? '');
-        $txt .= $line('Tmavý režim systému', $info['darkMode'] ?? '');
-        $txt .= $line('Téma aplikácie', $info['appTheme'] ?? '');
-        $txt .= $line('Do Not Track', $info['doNotTrack'] ?? '');
-        $txt .= $line('Cookies povolené', $info['cookies'] ?? '');
-        $txt .= $line('Úložisko webu (MB)', $info['storageUsedMB'] ?? '');
-        $txt .= $line('Stránka', $info['page'] ?? '');
-        $txt .= $line('Prišiel z (referrer)', $info['referrer'] ?? '');
-    }
     $txt .= "\n";
 
     $file = LOG_DIR . 'generovanie-' . $now->format('Y-m') . '.txt';
@@ -852,4 +885,55 @@ function write_generation_log(array $entry) {
             if (preg_match('/generovanie-(\d{4}-\d{2})\.txt$/', $f, $m) && $m[1] < $limit) @unlink($f);
         }
     }
+}
+
+/**
+ * Jednorazovo vyčistí staršie logy, ktoré ešte obsahovali IP adresy, User-Agent,
+ * jazyk, časové pásmo, údaje o hardvéri, sieti, referrer a pod.
+ * Ponechá iba údaje o obrázku a hrubý typ zariadenia (rovnako ako nové záznamy).
+ * Po vyčistení vytvorí značku storage/logs/.scrubbed-v2, takže sa už nespúšťa.
+ */
+function scrub_legacy_logs($force = false) {
+    $marker = LOG_DIR . '.scrubbed-v2';
+    if (!$force && is_file($marker)) return 0;
+    if (!is_dir(LOG_DIR) || !is_writable(LOG_DIR)) return 0;
+
+    $keep = ['Typ', 'Zápas', 'Dátum zápasu', 'Súťaž / kolo', 'ID zápasu', 'Súbor', 'Akcia', 'Anonymné ID'];
+    $fmt = fn($label, $value) => '  ' . $label . ':' . str_repeat(' ', max(1, 23 - mb_strlen($label, 'UTF-8'))) . $value;
+    $changed = 0;
+
+    foreach (glob(LOG_DIR . 'generovanie-*.txt') ?: [] as $file) {
+        $src = (string)@file_get_contents($file);
+        if ($src === '') continue;
+        $out = [];
+        foreach (preg_split('/\r?\n/', $src) as $row) {
+            if ($row === 'KTO') { $out[] = 'ZARIADENIE (anonymne)'; continue; }
+            if ($row === 'ZARIADENIE') continue;                      // stará sekcia s hardvérom
+            if (!preg_match('/^  ([^:]+):\s+(.*)$/u', $row, $m)) { $out[] = $row; continue; }
+
+            [$label, $value] = [trim($m[1]), trim($m[2])];
+            if (in_array($label, $keep, true)) {
+                $out[] = $row;
+            } elseif ($label === 'ID prehliadača') {
+                $out[] = $fmt('Anonymné ID', log_pseudonym(rtrim($value, '…')));
+            } elseif ($label === 'Prehliadač') {
+                $out[] = $fmt('Prehliadač', trim(preg_replace('/\s*[\d.]+.*$/', '', $value)) ?: 'Iný');
+            } elseif ($label === 'Systém') {
+                // len rodina systému, bez verzie a architektúry
+                $fam = preg_match('/^(Windows|Android|iOS|iPadOS|macOS|ChromeOS|Linux)/', $value, $x) ? $x[1] : 'Iný';
+                $out[] = $fmt('Systém', in_array($fam, ['iOS', 'iPadOS'], true) ? 'iOS / iPadOS' : $fam);
+            } elseif ($label === 'Zariadenie') {
+                $out[] = $fmt('Zariadenie', trim(preg_replace('/\s*\(.*$/', '', $value)));
+            }
+            // všetko ostatné (IP adresa, User-Agent, jazyk, časové pásmo, obrazovka, sieť, referrer…) sa vynechá
+        }
+        $new = implode("\n", $out);
+        if ($new !== $src) {
+            $tmp = $file . '.tmp' . bin2hex(random_bytes(3));
+            if (@file_put_contents($tmp, $new, LOCK_EX) !== false && @rename($tmp, $file)) $changed++;
+            else @unlink($tmp);
+        }
+    }
+    @file_put_contents($marker, date('c') . "\n");
+    return $changed;
 }

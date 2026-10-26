@@ -3,7 +3,10 @@
 <footer class="app-footer">
 	<div class="container-xxl d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
 		<span><i class="bi bi-dribbble me-1"></i> Match Day Generator</span>
-		<span class="text-body-secondary small"><i class="bi bi-shield-lock me-1"></i>Nastavenia a galéria sú viazané na tento prehliadač</span>
+		<span class="text-body-secondary small d-flex flex-wrap justify-content-center gap-2 gap-sm-3">
+			<span><i class="bi bi-shield-lock me-1"></i>Nastavenia a galéria sú viazané na tento prehliadač</span>
+			<?php if (GALLERY_ADMIN_KEY !== '' && !is_admin()): ?><a class="footer-link" href="<?= url('spravca') ?>" rel="nofollow">Správca</a><?php endif; ?>
+		</span>
 	</div>
 </footer>
 
