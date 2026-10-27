@@ -2,11 +2,11 @@
 
 PHP + Bootstrap 5 aplikácia na generovanie zápasových grafík pre futbalové kluby (dáta zo Sportnet / Futbalnet SFZ).
 
-Pätnásť typov obrázkov:
+Sedemnásť typov obrázkov, každý ako štvorcový príspevok (1000 × 1000) aj **story 9:16** (1080 × 1920):
 - ku klubu: **Víkend klubu** (program / výsledky všetkých družstiev v týždni)
 - k zápasu: **Match day**, **Zostava**, **Výsledok**, **Strelci**, **Súhrn zápasu**, **Vzájomné zápasy**, **Forma**
-- k družstvu: **Súpiska**, **Tabuľka**, **Kolo** (program / výsledky), **Štatistiky**
-- k hráčovi: **Profil hráča**, **Hráč zápasu**, **Jubileum** (s fotkou hráča uloženou v prehliadači)
+- k družstvu: **Súpiska**, **Tabuľka**, **Kolo** (program / výsledky), **Štatistiky**, **Hráč / strelec mesiaca**
+- k hráčovi: **Profil hráča**, **Hráč zápasu**, **Jubileum**, **Narodeniny** (s fotkou hráča zo Sportnetu alebo uloženou v prehliadači)
 
 ## Funkcie
 - **Detail zápasu**: priebeh, štatistika vzájomných zápasov, forma, delegované osoby, štadión, zostavy, H2H a tabuľka – pri každej časti tlačidlo na obrázok; kluby, družstvá, hráči a zápasy sú navzájom prelinkované
@@ -14,7 +14,11 @@ Pätnásť typov obrázkov:
 - Stránka klubu: záložky družstiev, výber sezóny, najbližší a posledný zápas navrchu, filter nadchádzajúce / odohraté
 - Zostava na zápas (základ, náhradníci, tréner) zo zápisu o stretnutí a súpiska družstva za sezónu zo zápisov odohratých zápasov; hráčov možno ručne upraviť (uloží sa v prehliadači)
 - Stránky: **zápis o stretnutí** (góly, karty, striedania, polčas, rozhodcovia, diváci, zostavy), **prehľad družstva** (štatistiky, hráči s minútami, oficiálna tabuľka, kolá celej súťaže) a **profil hráča** (štatistiky a zápasy sezóny s minútami, kariéra)
-- Generovanie obrázka priamo v prehliadači (HTML canvas) – stiahnutie PNG, kopírovanie, zdieľanie
+- Generovanie obrázka priamo v prehliadači (HTML canvas) – stiahnutie PNG, kopírovanie, zdieľanie, **všetky typy naraz v ZIP**
+- **Text príspevku** na Facebook / Instagram (skóre, strelci, súťaž, hashtagy) s tlačidlom Kopírovať
+- **Značka klubu** (`/znacka`): logo klubu a pás sponzorov sa vložia do každého obrázka; **klubové farby** prefarbia predvolené pozadia aj prvky šablón (predvoľby alebo farby zistené z loga)
+- **Môj klub** – najbližšie zápasy a posledné výsledky obľúbeného klubu priamo na úvodnej stránke s tlačidlami na obrázky
+- **Verejná stránka obrázka** (`/zdielaj?f=…`) s náhľadom pre sociálne siete (Open Graph) – odkaz z generátora aj galérie
 - **Drag & drop editor šablón** – pozície prvkov, písmo, farby, obrys, tieň, vlastné texty a podklady
 - Nastavenie zoznamu strelcov (osadenie, rozostupy, šírka stĺpca, automatické zmenšenie)
 - Jednotné písmo **Barlow Condensed** (OFL, v `assets/fonts`) pre obrázky aj stránku; ďalších 25 Google Fonts + nahranie vlastného písma
@@ -59,7 +63,8 @@ Používa [Sportnet Súťaže API v2](https://sutaze.api.sportnet.online/api/v2/
 | `pages/pwa/` | manifest a service worker |
 | `assets/js/renderer.js` | kreslenie obrázka (spoločné pre editor aj generátor) |
 | `assets/js/editor.js` | drag & drop editor šablón |
-| `assets/js/storage.js` | ukladanie nastavení v prehliadači |
+| `assets/js/storage.js` | ukladanie nastavení v prehliadači (šablóny, pozadia, fotky, značka klubu) |
+| `assets/js/brand.js` | stránka Značka klubu |
 | `includes/sportnet.php` | spracovanie dát Sportnetu: zápis, tabuľka, kolá, štatistiky, hráči |
 | `storage/` | uložené obrázky a logy (mimo gitu) |
 
@@ -74,7 +79,10 @@ Používa [Sportnet Súťaže API v2](https://sutaze.api.sportnet.online/api/v2/
 | `/navod` | podrobný návod so snímkami obrazovky |
 | `/zapas?matchID=…` | celý zápis o stretnutí |
 | `/druzstvo?team=…` | prehľad družstva (štatistiky, hráči, tabuľka, kolá) |
-| `/hrac?team=…&p=…` | profil hráča |
+| `/hrac?team=…&p=…` alebo `/hrac?id=…` | profil hráča |
+| `/znacka` | logo klubu, sponzori a klubové farby |
+| `/zdielaj?f=…` | verejná stránka uloženého obrázka (náhľad pre sociálne siete) |
 | `/spravca` | prihlásenie a prehľad správcu |
 | `/galeria?vsetky=1` | galéria všetkých prehliadačov (iba správca) |
 | `/log` | log generovania (iba správca) |
+| `/kontrola` | kontrola zdrojov dát Sportnetu (iba správca) |

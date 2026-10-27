@@ -16,6 +16,7 @@ $precache = [
     asset('js/gallery.js'),
     asset('js/guide.js'),
     asset('js/player.js'),
+    asset('js/brand.js'),
     asset('fonts/barlow-condensed-semibold.ttf'),
     asset('fonts/barlow-condensed-extrabold.ttf'),
     asset('fonts/barlow-condensed-semibolditalic.ttf'),

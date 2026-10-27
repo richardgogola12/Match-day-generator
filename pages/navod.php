@@ -21,6 +21,7 @@
 		'rychly'     => ['bi-lightning-charge', 'Rýchly štart'],
 		'vyhladanie' => ['bi-search', '1. Vyhľadanie klubu'],
 		'zapasy'     => ['bi-list-ul', '2. Zoznam zápasov'],
+		'moj-klub'   => ['bi-star', 'Môj klub na úvodnej stránke'],
 		'generator'  => ['bi-image', '3. Generovanie obrázka'],
 		'strelci'    => ['bi-list-ol', 'Strelci gólov'],
 		'zostava'    => ['bi-person-lines-fill', 'Zostava na zápas'],
@@ -32,7 +33,10 @@
 		'vikend'       => ['bi-calendar2-week', 'Víkend klubu'],
 		'profil'     => ['bi-person-vcard', 'Profil hráča'],
 		'obr-hrac'   => ['bi-award', 'Hráč zápasu a jubileum'],
-		'ulozenie'   => ['bi-cloud-check', 'Uloženie na server'],
+		'mesiac'     => ['bi-star', 'Hráč mesiaca a narodeniny'],
+		'formaty'    => ['bi-phone', 'Story, ZIP a text príspevku'],
+		'ulozenie'   => ['bi-cloud-check', 'Uloženie a zdieľanie'],
+		'znacka-klubu' => ['bi-palette', 'Značka klubu: logo, sponzori, farby'],
 		'editor'     => ['bi-sliders', 'Editor šablón'],
 		'prvky'      => ['bi-layers', 'Prvky a ich vlastnosti'],
 		'znacky'     => ['bi-braces', 'Zástupné značky'],
@@ -92,7 +96,7 @@
 <section id="uvod">
 	<h2><i class="bi bi-info-circle"></i>Čo aplikácia robí</h2>
 	<p><strong>Match Day Generator</strong> vytvára hotové grafiky k futbalovým zápasom z oficiálnych údajov <strong>Futbalnet / Sportnet SFZ</strong>. Nemusíte nič prepisovať – názvy tímov, logá, dátum, čas, výsledok, strelcov, zostavy, tabuľku aj štatistiky hráčov si aplikácia načíta sama. Vy si iba vyberiete zápas a stiahnete obrázok.</p>
-	<p>K dispozícii je pätnásť typov obrázkov – k <strong>klubu</strong> (Víkend klubu) a v troch skupinách – k <strong>zápasu</strong> (Match day, Zostava, Výsledok, Strelci, Súhrn, Vzájomné zápasy, Forma), k <strong>družstvu</strong> (Súpiska, Tabuľka, Kolo, Štatistiky) a k <strong>hráčovi</strong> (Profil, Hráč zápasu, Jubileum). Niekoľko ukážok:</p>
+	<p>K dispozícii je sedemnásť typov obrázkov – k <strong>klubu</strong> (Víkend klubu) a v troch skupinách – k <strong>zápasu</strong> (Match day, Zostava, Výsledok, Strelci, Súhrn, Vzájomné zápasy, Forma), k <strong>družstvu</strong> (Súpiska, Tabuľka, Kolo, Štatistiky, Hráč mesiaca) a k <strong>hráčovi</strong> (Profil, Hráč zápasu, Jubileum, Narodeniny). Každý obrázok je ako štvorcový príspevok aj ako <strong>story 9:16</strong>. Niekoľko ukážok:</p>
 	<div class="row g-3 my-3">
 		<div class="col-6 col-md-4">
 			<?= guide_shot('ukazka-matchday.webp', 'Ukážka obrázka Match day', '<strong>Match day</strong> – pozvánka na zápas: logá, dátum, čas výkopu, súťaž a kolo.', 'guide-shot-tile') ?>
@@ -138,6 +142,15 @@
 		</div>
 		<div class="col-6 col-md-4">
 			<?= guide_shot('ukazka-jubileum.webp', 'Ukážka obrázka Jubileum', '<strong>Jubileum</strong> – napr. 100. zápas alebo 50. gól za klub.', 'guide-shot-tile') ?>
+		</div>
+		<div class="col-6 col-md-4">
+			<?= guide_shot('ukazka-mesiac.webp', 'Ukážka obrázka Hráč mesiaca', '<strong>Hráč / strelec mesiaca</strong> – podľa gólov, minút alebo zápasov v mesiaci.', 'guide-shot-tile') ?>
+		</div>
+		<div class="col-6 col-md-4">
+			<?= guide_shot('ukazka-narodeniny.webp', 'Ukážka obrázka Narodeniny', '<strong>Narodeniny</strong> – blahoželanie hráčovi s vekom a prianím.', 'guide-shot-tile') ?>
+		</div>
+		<div class="col-6 col-md-4">
+			<?= guide_shot('ukazka-story.webp', 'Ukážka story formátu', '<strong>Story 9:16</strong> – ľubovoľný obrázok na výšku pre Instagram a Facebook stories.', 'guide-shot-tile') ?>
 		</div>
 	</div>
 	<div class="guide-note">
@@ -186,6 +199,17 @@
 		<li><strong>Filter</strong> <em>Všetky / Nadchádzajúce / Odohraté</em> skryje zápasy, ktoré práve nepotrebujete. Víťaz je zvýraznený zelenou.</li>
 		<li><strong>Družstvo</strong> otvorí prehľad družstva (viď <a href="#druzstvo">Prehľad družstva</a>), <strong>Súpiska</strong> vytvorí obrázok so všetkými hráčmi.</li>
 		<li>Kliknutím na <strong>výsledok</strong> otvoríte celý zápis o stretnutí.</li>
+	</ul>
+</section>
+
+<!-- ================================================================== -->
+<section id="moj-klub">
+	<h2><i class="bi bi-star"></i>Môj klub na úvodnej stránke</h2>
+	<p>Na stránke klubu kliknite pod názvom na <strong><i class="bi bi-star"></i> Nastaviť ako môj klub</strong>. Odteraz uvidíte hneď na úvodnej stránke <strong>najbližšie zápasy</strong> a <strong>posledné výsledky všetkých družstiev klubu</strong> – každý s tlačidlami na obrázky (Match day, Zostava, Výsledok, Strelci) a tlačidlo <strong>Víkend klubu</strong>.</p>
+	<?= guide_shot('29-moj-klub.webp', 'Karta Môj klub na úvodnej stránke', 'Najbližšie zápasy a posledné výsledky klubu s tlačidlami na obrázky.') ?>
+	<ul class="guide-list">
+		<li>Kliknutím na zápas otvoríte jeho detail, kliknutím na názov klubu stránku klubu.</li>
+		<li>Obľúbený klub môže byť jeden; krížikom v karte ho zrušíte, inú sezónu vyberiete pod hľadaním.</li>
 	</ul>
 </section>
 
@@ -381,14 +405,54 @@
 </section>
 
 <!-- ================================================================== -->
+<section id="mesiac">
+	<h2><i class="bi bi-star"></i>Hráč mesiaca a narodeniny</h2>
+	<p><strong>Hráč / strelec mesiaca</strong> nájdete v prehľade družstva (tlačidlo <em>Vytvoriť obrázok</em> alebo <em>Hráč mesiaca</em> v záložke Štatistiky hráčov) a v generátore družstva.</p>
+	<?= guide_shot('25-mesiac.webp', 'Generátor s obrázkom Hráč mesiaca', 'Karta Hráč mesiaca: výber mesiaca a podľa čoho sa hodnotí; vpravo poradie.') ?>
+	<ul class="guide-list">
+		<li>V karte <strong>Hráč mesiaca</strong> vyberte <strong>mesiac</strong> (ponúkajú sa mesiace s odohratými zápasmi) a hodnotenie <strong>podľa gólov, minút alebo zápasov</strong>. Pri góloch je nadpis <em>STRELEC MESIACA</em>, inak <em>HRÁČ MESIACA</em>.</li>
+		<li>Na obrázku je víťaz s fotkou (ak ju má), jeho hodnota a ďalší štyria v poradí. Údaje sa počítajú zo zápisov o stretnutí.</li>
+		<li><strong>Narodeniny</strong> vytvoríte v profile hráča tlačidlom <strong><i class="bi bi-cake2"></i> Narodeniny</strong>. Vek sa doplní z roku narodenia na Sportnete (ak ho uvádza); vek aj prianie môžete v generátore prepísať.</li>
+	</ul>
+</section>
+
+<!-- ================================================================== -->
+<section id="formaty">
+	<h2><i class="bi bi-phone"></i>Story, ZIP a text príspevku</h2>
+	<p>Pod typmi obrázkov v generátore je prepínač <strong>Formát</strong>:</p>
+	<ul class="guide-list">
+		<li><strong>Príspevok 1:1</strong> – štvorcový obrázok (1000 × 1000 px) na bežný príspevok.</li>
+		<li><strong>Story 9:16</strong> – obrázok na výšku (1080 × 1920 px) pre Instagram a Facebook stories: hore logo a súťaž, v strede šablóna, dole dátum alebo pás sponzorov. Voľba sa zapamätá a na server sa ukladá ako samostatný súbor.</li>
+	</ul>
+	<?= guide_shot('26-story.webp', 'Generátor v story formáte', 'Story 9:16 – ten istý obrázok na výšku.') ?>
+	<p>Tlačidlo <strong><i class="bi bi-file-zip"></i> Všetky (ZIP)</strong> vytvorí naraz všetky typy obrázkov zápasu (alebo družstva, hráča) a stiahne ich v jednom ZIP súbore. Obrázky bez údajov (napr. zostava, ktorá ešte nie je v zápise) sa preskočia.</p>
+	<p>V karte <strong>Text príspevku</strong> je hotový text na Facebook alebo Instagram – výsledok, strelci s minútami, súťaž, kolo a hashtagy. Text môžete upraviť a tlačidlom <strong>Kopírovať text</strong> ho skopírujete; šípkou ho vygenerujete znova.</p>
+	<?= guide_shot('27-text.webp', 'Karta Text príspevku', 'Vygenerovaný text príspevku s hashtagmi.', 'guide-shot-narrow') ?>
+</section>
+
+<!-- ================================================================== -->
 <section id="ulozenie">
-	<h2><i class="bi bi-cloud-check"></i>Uloženie na server</h2>
+	<h2><i class="bi bi-cloud-check"></i>Uloženie a zdieľanie</h2>
 	<p>Pod tlačidlami v generátore je rámček <strong>Uloženie na server</strong>. Hotový obrázok sa uloží aj na server, takže ho neskôr nájdete v <a href="<?= url('galeria') ?>">Galérii</a> a môžete naň poslať priamy odkaz.</p>
 	<?= guide_shot('05-ulozenie.webp', 'Rámček Uloženie na server', 'Po uložení sa zobrazí názov súboru, jeho veľkosť a tlačidlá Otvoriť, Kopírovať odkaz a Galéria.', 'guide-shot-narrow') ?>
 	<ul class="guide-list">
 		<li>Prepínač <strong>Automaticky ukladať</strong> (predvolene zapnutý) uloží každý vygenerovaný obrázok sám. Ak ho vypnete, ukladáte ručne tlačidlom <strong>Uložiť</strong>. Voľba sa zapamätá.</li>
 		<li>Rovnaký zápas a typ obrázka sa pri opätovnom vygenerovaní <strong>prepíše</strong> najnovšou verziou – v galérii tak nevznikajú duplikáty.</li>
-		<li><strong>Kopírovať odkaz</strong> skopíruje verejnú adresu obrázka, ktorú môžete poslať komukoľvek.</li>
+		<li><strong>Kopírovať odkaz</strong> skopíruje odkaz na <strong>verejnú stránku obrázka</strong>. Keď ho vložíte na Facebook, do Messengera alebo WhatsAppu, zobrazí sa náhľad s obrázkom a názvom zápasu. Na stránke je tlačidlo Stiahnuť a zdieľanie na Facebook a WhatsApp. Rovnaký odkaz skopírujete aj v galérii.</li>
+	</ul>
+	<?= guide_shot('30-zdielanie.webp', 'Verejná stránka obrázka', 'Verejná stránka obrázka – odkaz s náhľadom pre sociálne siete.') ?>
+</section>
+
+<!-- ================================================================== -->
+<section id="znacka-klubu">
+	<h2><i class="bi bi-palette"></i>Značka klubu: logo, sponzori, farby</h2>
+	<p>Na stránke <a href="<?= url('znacka') ?>">Značka</a> (v menu) nastavíte raz, čo sa má objaviť v <strong>každom</strong> obrázku. Vpravo je náhľad na ukážkových dátach (štvorec aj story).</p>
+	<?= guide_shot('28-znacka.webp', 'Stránka Značka klubu', 'Klubové farby, logo klubu a pás sponzorov s náhľadom.') ?>
+	<ul class="guide-list">
+		<li><strong>Farby klubu</strong> – vyberte predvoľbu alebo vlastné tri farby: <em>hlavnú</em> (namiesto červenej), <em>doplnkovú</em> (namiesto žltej) a <em>tmavú</em> (namiesto tmavozeleného trávnika). Tlačidlo <strong>Zistiť farby z loga</strong> ich nastaví podľa nahratého loga. Prefarbia sa predvolené pozadia aj prvky šablón; vlastné nahraté pozadia ostanú bez zmeny.</li>
+		<li><strong>Logo klubu</strong> – nahrajte logo (najlepšie PNG s priehľadným pozadím), vyberte roh, veľkosť a priehľadnosť. V story formáte je logo hore nad obrázkom.</li>
+		<li><strong>Pás sponzorov</strong> – jeden obrázok so všetkými logami sponzorov vedľa seba (napr. 2000 × 200 px). Vloží sa na spodok obrázka (s bielym podkladom alebo bez neho), v story formáte pod obrázok s nadpisom <em>Partneri klubu</em>. Ak pás prekrýva nejaký prvok, posuňte ho v <a href="<?= url('nastavenia') ?>">šablóne</a> vyššie.</li>
+		<li>Všetko sa ukladá iba v tomto prehliadači a prenáša sa so <a href="#zaloha">zálohou nastavení</a>.</li>
 	</ul>
 </section>
 
@@ -507,6 +571,8 @@
 				<tr><td><code>{yellow}</code> / <code>{red}</code></td><td>žlté / červené karty</td><td>2 / 0</td></tr>
 				<tr><td><code>{milestone}</code> / <code>{milestoneLabel}</code></td><td>jubileum</td><td>100 / zápas za FK…</td></tr>
 				<tr><td><code>{matchHome}</code> <code>{matchScore}</code> <code>{matchAway}</code> <code>{matchGoals}</code></td><td>zápas pri obrázku Hráč zápasu</td><td>FK… 3:1 MFK… / 1</td></tr>
+				<tr><td><code>{monthTitle}</code> <code>{monthPeriod}</code> <code>{monthPlayer}</code> <code>{monthValue}</code> <code>{monthUnit}</code></td><td>hráč mesiaca: nadpis, mesiac, hráč, hodnota, jednotka</td><td>STRELEC MESIACA · Október 2026 · … · 3 · góly</td></tr>
+				<tr><td><code>{age}</code> / <code>{birthdayWish}</code></td><td>vek a prianie (narodeniny)</td><td>26 / Prajeme veľa zdravia…</td></tr>
 				<tr><td><code>{roundTitle}</code></td><td>PROGRAM KOLA / VÝSLEDKY KOLA</td><td>VÝSLEDKY KOLA</td></tr>
 				<tr><td><code>{afterRound}</code></td><td>po koľkom kole je tabuľka</td><td>po 13. kole</td></tr>
 				<tr><td><code>{tpos}</code> <code>{tpts}</code> <code>{tp}</code> <code>{tw}</code> <code>{td}</code> <code>{tl}</code> <code>{tgf}</code> <code>{tga}</code></td><td>miesto, body, zápasy, výhry, remízy, prehry, skóre družstva</td><td>1 · 23 · 13 · 7 · 2 · 4 · 25:15</td></tr>

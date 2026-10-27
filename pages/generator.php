@@ -1,8 +1,8 @@
 <?php
 	$GROUPS = [
 		'match'  => ['matchday' => ['bi-calendar-event', 'Match day'], 'lineup' => ['bi-person-lines-fill', 'Zostava'], 'result' => ['bi-trophy', 'Výsledok'], 'goals' => ['bi-list-ol', 'Strelci'], 'report' => ['bi-file-text', 'Súhrn'], 'h2h' => ['bi-bar-chart-steps', 'Vzájomné'], 'form' => ['bi-graph-up-arrow', 'Forma']],
-		'team'   => ['squad' => ['bi-people', 'Súpiska'], 'table' => ['bi-list-ol', 'Tabuľka'], 'round' => ['bi-calendar-week', 'Kolo'], 'stats' => ['bi-bar-chart-line', 'Štatistiky']],
-		'player' => ['player' => ['bi-person-vcard', 'Profil'], 'motm' => ['bi-award', 'Hráč zápasu'], 'milestone' => ['bi-trophy', 'Jubileum']],
+		'team'   => ['squad' => ['bi-people', 'Súpiska'], 'table' => ['bi-list-ol', 'Tabuľka'], 'round' => ['bi-calendar-week', 'Kolo'], 'stats' => ['bi-bar-chart-line', 'Štatistiky'], 'month' => ['bi-star', 'Hráč mesiaca']],
+		'player' => ['player' => ['bi-person-vcard', 'Profil'], 'motm' => ['bi-award', 'Hráč zápasu'], 'milestone' => ['bi-trophy', 'Jubileum'], 'birthday' => ['bi-cake2', 'Narodeniny']],
 		'club'   => ['weekend' => ['bi-calendar2-week', 'Víkend klubu']],
 	];
 	$type = $_GET['type'] ?? 'matchday';
@@ -19,7 +19,7 @@
 		// družstvo / hráč
 		'team' => $g('team'), 'category' => $g('category'), 'season' => $g('season'), 'club' => $g('club'), 'week' => $g('week'),
 		'player' => $g('player'), 'matchRef' => $g('matchRef'), 'roundNo' => $g('roundNo'),
-		'mvalue' => $g('mvalue'), 'mkind' => $g('mkind'),
+		'mvalue' => $g('mvalue'), 'mkind' => $g('mkind'), 'month' => $g('month'), 'age' => $g('age'),
 	];
 	$played = $match['score1'] !== '' && $match['score2'] !== '';
 	[$dateTxt, $timeTxt] = format_match_date($match['startDate']);
@@ -89,13 +89,25 @@
 						<div class="form-text mt-2"><i class="bi bi-info-circle me-1"></i>Výsledok, strelci a súhrn budú dostupné po odohratí zápasu.</div>
 					<?php endif; ?>
 
+					<div class="d-flex align-items-center justify-content-between gap-2 mt-3">
+						<span class="small fw-semibold text-muted-2">Formát</span>
+						<div class="btn-group btn-group-sm" role="group" aria-label="Formát obrázka" id="formatSwitch">
+							<button type="button" class="btn btn-outline-secondary" data-format="square"><i class="bi bi-square me-1"></i>Príspevok 1:1</button>
+							<button type="button" class="btn btn-outline-secondary" data-format="story"><i class="bi bi-phone me-1"></i>Story 9:16</button>
+						</div>
+					</div>
+
 					<div class="d-grid gap-2 mt-4">
 						<button type="button" class="btn btn-primary btn-lg" id="btnDownload" disabled><i class="bi bi-download me-2"></i>Stiahnuť PNG</button>
 						<div class="d-flex gap-2">
 							<button type="button" class="btn btn-outline-secondary flex-fill" id="btnCopy" disabled><i class="bi bi-clipboard me-1"></i>Kopírovať</button>
 							<button type="button" class="btn btn-outline-secondary flex-fill" id="btnShare" hidden><i class="bi bi-share me-1"></i>Zdieľať</button>
+							<button type="button" class="btn btn-outline-secondary flex-fill" id="btnZip" title="Stiahnuť všetky typy obrázkov naraz"><i class="bi bi-file-zip me-1"></i>Všetky (ZIP)</button>
 						</div>
-						<a class="btn btn-outline-secondary" id="btnEdit" href="<?= url('nastavenia') ?>"><i class="bi bi-sliders me-1"></i>Upraviť rozloženie šablóny</a>
+						<div class="d-flex gap-2">
+							<a class="btn btn-outline-secondary flex-fill" id="btnEdit" href="<?= url('nastavenia') ?>"><i class="bi bi-sliders me-1"></i>Upraviť šablónu</a>
+							<a class="btn btn-outline-secondary flex-fill" href="<?= url('znacka') ?>" title="Logo klubu, sponzori a klubové farby"><i class="bi bi-palette me-1"></i>Značka klubu</a>
+						</div>
 					</div>
 
 					<div class="server-save mt-4" id="serverSave">
@@ -117,6 +129,21 @@
 							</div>
 							<button type="button" class="btn btn-sm btn-primary" id="btnSaveServer" disabled><i class="bi bi-cloud-upload me-1"></i>Uložiť</button>
 						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Text príspevku -->
+			<div class="card-app mb-4" id="postCard">
+				<div class="card-body">
+					<div class="d-flex justify-content-between align-items-center mb-2">
+						<h2 class="h6 section-title text-uppercase text-muted-2 mb-0">Text príspevku</h2>
+						<button type="button" class="btn btn-sm btn-link text-muted-2 p-0" id="postRefresh" title="Vygenerovať znova"><i class="bi bi-arrow-clockwise"></i></button>
+					</div>
+					<textarea class="form-control small post-text" id="postText" rows="7" aria-label="Text príspevku"></textarea>
+					<div class="d-flex justify-content-between align-items-center mt-2">
+						<span class="small text-muted-2">Text môžete upraviť.</span>
+						<button type="button" class="btn btn-sm btn-outline-primary" id="postCopy"><i class="bi bi-clipboard me-1"></i>Kopírovať text</button>
 					</div>
 				</div>
 			</div>
@@ -159,6 +186,19 @@
 						<input type="text" class="form-control mb-2" id="msLabel" placeholder="Text, napr. zápas v drese FK…" hidden>
 						<div class="form-text">V tejto sezóne: <span id="msHint"></span>. Pri celkovom počte za kariéru zadajte číslo ručne.</div>
 					</div>
+					<div id="birthdayBox" hidden>
+						<div class="row g-2 mb-2">
+							<div class="col-4">
+								<label class="form-label small fw-semibold" for="bdAge">Vek</label>
+								<input type="number" class="form-control" id="bdAge" min="1" max="99">
+							</div>
+							<div class="col-8">
+								<label class="form-label small fw-semibold" for="bdWish">Prianie</label>
+								<input type="text" class="form-control" id="bdWish" placeholder="Prajeme veľa zdravia, radosti a gólov!" maxlength="90">
+							</div>
+						</div>
+						<div class="form-text" id="bdHint"></div>
+					</div>
 					<div id="playerStats" class="small text-muted-2 mt-2"></div>
 				</div>
 			</div>
@@ -196,6 +236,26 @@
 						<input class="form-check-input" type="checkbox" role="switch" id="roundOwnFirst" checked>
 						<label class="form-check-label small" for="roundOwnFirst">Zápas nášho družstva ako prvý</label>
 					</div>
+				</div>
+			</div>
+			<div class="card-app mb-4" id="monthCard" hidden>
+				<div class="card-body">
+					<h2 class="h6 section-title text-uppercase text-muted-2 mb-3">Hráč mesiaca</h2>
+					<div class="row g-2 mb-3">
+						<div class="col-7">
+							<label class="form-label small fw-semibold" for="monthSel">Mesiac</label>
+							<select class="form-select" id="monthSel"><option>Načítavam…</option></select>
+						</div>
+						<div class="col-5">
+							<label class="form-label small fw-semibold" for="monthKind">Podľa</label>
+							<select class="form-select" id="monthKind">
+								<option value="goals">gólov</option>
+								<option value="minutes">minút</option>
+								<option value="apps">zápasov</option>
+							</select>
+						</div>
+					</div>
+					<div id="monthInfo" class="small"></div>
 				</div>
 			</div>
 			<div class="card-app mb-4" id="teamInfoCard">

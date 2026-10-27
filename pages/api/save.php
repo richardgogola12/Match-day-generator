@@ -36,7 +36,7 @@ if (!$info || $info['mime'] !== 'image/png' || $info[0] > MAX_IMAGE_SIDE || $inf
 
 // metadáta
 $m = [];
-foreach (['d1name', 'd2name', 'startDate', 'competition', 'round', 'score1', 'score2', 'matchID', 'season', 'category', 'teamID', 'variant', 'player', 'playerKey', 'roundNo', 'mvalue', 'week'] as $k) {
+foreach (['d1name', 'd2name', 'startDate', 'competition', 'round', 'score1', 'score2', 'matchID', 'season', 'category', 'teamID', 'variant', 'player', 'playerKey', 'roundNo', 'mvalue', 'week', 'month', 'format'] as $k) {
     $m[$k] = mb_substr(trim((string)($_GET[$k] ?? '')), 0, 200, 'UTF-8');
 }
 
@@ -48,24 +48,28 @@ try {
 
 if (!in_array($m['variant'], ['', 'home', 'away'], true)) $m['variant'] = '';
 if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $m['week'])) $m['week'] = '';
+if (!preg_match('/^\d{4}-\d{2}$/', $m['month'])) $m['month'] = '';
+if ($m['format'] !== 'story') $m['format'] = '';
 if ($type === 'weekend') {
     // víkend klubu: jeden obrázok na klub a týždeň (pri ďalšom uložení sa prepíše)
     $key  = 'weekend|' . ($m['teamID'] ?: $m['d1name']) . '|' . $m['week'];
     try { $date = new DateTime($m['week'] ?: 'now', new DateTimeZone('Europe/Bratislava')); } catch (Throwable $e) { $date = new DateTime('now', new DateTimeZone('Europe/Bratislava')); }
     $name = $date->format('Y-m-d') . '_vikend_' . slugify($m['d1name'], 30);
-} elseif (in_array($type, ['squad', 'table', 'round', 'stats', 'player', 'motm', 'milestone'], true)) {
+} elseif (in_array($type, ['squad', 'table', 'round', 'stats', 'month', 'player', 'motm', 'milestone', 'birthday'], true)) {
     // obrázky družstva / hráča nie sú viazané na jeden zápas – stály názov aj priečinok (podľa začiatku sezóny),
     // aby sa pri ďalšom uložení prepísali (tabuľka je vždy aktuálna, kolo a jubileum podľa čísla …)
-    $extra = ['round' => 'kolo-' . $m['roundNo'], 'player' => $m['playerKey'], 'motm' => $m['playerKey'] . '|' . $m['matchID'], 'milestone' => $m['playerKey'] . '|' . $m['mvalue']][$type] ?? '';
+    $extra = ['round' => 'kolo-' . $m['roundNo'], 'player' => $m['playerKey'], 'motm' => $m['playerKey'] . '|' . $m['matchID'], 'milestone' => $m['playerKey'] . '|' . $m['mvalue'], 'month' => $m['month'], 'birthday' => $m['playerKey'] . '|' . date('Y')][$type] ?? '';
     $key  = $type . '|' . ($m['teamID'] ?: $m['d1name']) . '|' . $m['season'] . '|' . $extra;
     $y = preg_match('/^(\d{4})/', $m['season'], $sy) ? (int)$sy[1] : (int)$date->format('Y');
     $date = new DateTime($y . '-07-01', new DateTimeZone('Europe/Bratislava'));
     $who  = $m['player'] !== '' ? slugify($m['player'], 30) : slugify($m['d1name'], 30) . '-' . slugify($m['category'] ?: 'druzstvo', 20);
-    $name = $type . '_' . $who . ($type === 'round' ? '-' . (int)$m['roundNo'] . '-kolo' : '') . ($type === 'milestone' ? '-' . (int)$m['mvalue'] : '') . '-' . slugify($m['season'] ?: 'sezona', 12);
+    $name = $type . '_' . $who . ($type === 'round' ? '-' . (int)$m['roundNo'] . '-kolo' : '') . ($type === 'milestone' ? '-' . (int)$m['mvalue'] : '') . ($type === 'month' ? '-' . $m['month'] : '') . '-' . slugify($m['season'] ?: 'sezona', 12);
 } else {
     $key  = ($m['matchID'] !== '' ? $m['matchID'] : ($m['d1name'] . '|' . $m['d2name'] . '|' . $m['startDate'])) . ($m['variant'] !== '' ? '|' . $m['variant'] : '');
     $name = $date->format('Y-m-d') . '_' . $type . '_' . slugify($m['d1name'], 30) . '-vs-' . slugify($m['d2name'], 30);
 }
+// story (9:16) je samostatný súbor vedľa štvorcového príspevku
+if ($m['format'] === 'story') { $key .= '|story'; $name .= '-story'; }
 $name .= '_' . substr(sha1($type . '|' . $key . '|' . $client), 0, 8);
 $dir  = STORAGE_DIR . $date->format('Y-m') . '/';
 
@@ -111,6 +115,7 @@ json_response([
     'file'     => $rel,
     'url'      => STORAGE_URL . $rel . '?v=' . filemtime($png),
     'absolute' => ROOT_URL . STORAGE_URL . $rel,
+    'share'    => url('zdielaj') . '?f=' . rawurlencode($rel),
     'replaced' => !empty($old),
     'bytes'    => strlen($raw),
 ]);

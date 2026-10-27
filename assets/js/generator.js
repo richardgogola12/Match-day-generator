@@ -8,11 +8,15 @@
     const SQUAD = () => type === 'squad';
 
     const canvas = document.getElementById('out');
+    const sq = document.createElement('canvas');      // vykreslená šablóna (štvorec) – výsledok sa skladá do #out
+    let brandPromise = null;
+    const loadBrand = () => (brandPromise || (brandPromise = MD.store.loadBrand().catch(() => ({ cfg: MD.store.brand() }))));
     const $loading = $('#loading');
     const proxied = (u) => (u ? 'api-logo?url=' + encodeURIComponent(u) : '');
     const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const qs = new URLSearchParams(location.search);
     const setQs = (k, v) => { const u = new URL(location.href); if (v === '' || v === null || v === undefined) u.searchParams.delete(k); else u.searchParams.set(k, v); history.replaceState(null, '', u); };
+    let format = qs.get('format') === 'story' ? 'story' : (MD.store.pref('format') === 'story' ? 'story' : 'square');
 
     // ktoré družstvo je "naše" (podľa zoznamu zápasov) – predvolená strana zostavy
     let side = ['home', 'away'].includes(qs.get('side')) ? qs.get('side') : (M.myTeam && M.myTeam === M.team2ID ? 'away' : 'home');
@@ -264,6 +268,47 @@
         return list;
     }
 
+    /* ---------------- hráč / strelec mesiaca ---------------- */
+    const MONTHS_SK = ['Január', 'Február', 'Marec', 'Apríl', 'Máj', 'Jún', 'Júl', 'August', 'September', 'Október', 'November', 'December'];
+    const plural = (n, one, few, many) => (n === 1 ? one : n >= 2 && n <= 4 ? few : many);
+    let monthSel = M.month || '';
+    const monthUnit = (kind, n) => (kind === 'goals' ? plural(n, 'gól', 'góly', 'gólov') : kind === 'minutes' ? plural(n, 'minúta', 'minúty', 'minút') : plural(n, 'zápas', 'zápasy', 'zápasov'));
+    function monthsAvailable() {
+        const set = new Set();
+        ((teamInfo && teamInfo.players) || []).forEach((p) => (p.matches || []).forEach((m) => { if (m.date && m.score !== '') set.add(ymdOf(new Date(m.date)).slice(0, 7)); }));
+        return [...set].sort().reverse();
+    }
+    function monthKey() {
+        const list = monthsAvailable();
+        if (!list.includes(monthSel)) monthSel = list[0] || '';
+        return monthSel;
+    }
+    function monthData() {
+        const key = monthKey();
+        const kind = $('#monthKind').val() || M.mkind || 'goals';
+        const list = ((teamInfo && teamInfo.players) || []).map((p) => {
+            const ms = (p.matches || []).filter((m) => m.date && ymdOf(new Date(m.date)).slice(0, 7) === key && m.role !== 'bench');
+            const value = kind === 'goals' ? ms.reduce((a, m) => a + (m.goals || 0), 0) : kind === 'minutes' ? ms.reduce((a, m) => a + (m.min || 0), 0) : ms.length;
+            return { key: p.key, id: p.id, name: p.name, nr: p.nr, photo: p.photo, value, goals: ms.reduce((a, m) => a + (m.goals || 0), 0), apps: ms.length };
+        }).filter((p) => p.value > 0).sort((a, b) => b.value - a.value || b.goals - a.goals || b.apps - a.apps);
+        const top = list[0];
+        const [y, mo] = key ? key.split('-') : ['', ''];
+        const unit = top ? monthUnit(kind, top.value) : '';
+        return {
+            list, top,
+            info: { title: kind === 'goals' ? 'STRELEC MESIACA' : 'HRÁČ MESIACA', period: key ? MONTHS_SK[+mo - 1] + ' ' + y : '', player: top ? top.name : '', value: top ? top.value : '', unit, nr: top ? top.nr : '', kind },
+        };
+    }
+    function renderMonthCard() {
+        $('#monthCard').prop('hidden', type !== 'month');
+        if (type !== 'month' || !teamInfo) return;
+        const list = monthsAvailable();
+        const key = monthKey();
+        $('#monthSel').html(list.length ? list.map((k) => { const [y, m] = k.split('-'); return '<option value="' + k + '"' + (k === key ? ' selected' : '') + '>' + MONTHS_SK[+m - 1] + ' ' + y + '</option>'; }).join('') : '<option value="">Žiadne odohraté zápasy</option>');
+        const mm = monthData();
+        $('#monthInfo').html(mm.list.length ? mm.list.slice(0, 6).map((p, i) => '<div class="d-flex justify-content-between py-1 border-top"><span>' + (i + 1) + '. ' + esc(p.name) + '</span><strong>' + p.value + '</strong></div>').join('') : '<div class="text-muted-2">V tomto mesiaci nikto nemá ' + ({ goals: 'gól', minutes: 'odohrané minúty', apps: 'zápas' }[mm.info.kind]) + '.</div>');
+    }
+
     /** Doplní do `data` všetko, čo potrebuje aktuálny typ obrázka */
     function applyTypeData() {
         const T = ownTeam();
@@ -332,6 +377,13 @@
             data.table = [];
         }
 
+        if (type === 'month') {
+            const mm = monthData();
+            data.month = mm.info;
+            data.players = { month: mm.list, monthRest: mm.list.slice(1) };
+            data.startDate = '';
+        }
+
         if (MODE === 'player') {
             const P = findPlayer();
             data.player = P || { name: '', nr: '' };
@@ -344,6 +396,10 @@
                     data.round = m.round;
                     data.startDate = m.date;
                 } else data.playerMatch = {};
+            }
+            if (type === 'birthday') {
+                const age = parseInt($('#bdAge').val(), 10) || '';
+                data.birthday = { age, wish: $('#bdWish').val() || 'Prajeme veľa zdravia, radosti a gólov!' };
             }
             if (type === 'milestone') {
                 const kind = $('#msKind').val() || M.mkind || 'apps';
@@ -393,7 +449,17 @@
     function photoKey() { return MD.store.photoKey(ownTeam().id || M.team, playerKey); }
     let photoUrl = null;
     let photoImg = null;
-    const remotePhotos = {};
+    const remoteInfo = {};
+    /** údaje hráča zo Sportnetu (fotka, rok narodenia) – načítajú sa raz */
+    const playerInfo = (P) => (P && P.id ? (remoteInfo[P.id] = remoteInfo[P.id] || getJson('api-player?id=' + encodeURIComponent(P.id)).catch(() => ({}))) : Promise.resolve({}));
+    /** fotka ľubovoľného hráča družstva (vlastná nahratá, inak zo Sportnetu) */
+    async function photoFor(P) {
+        if (!P) return null;
+        const b = await MD.store.getPhoto(MD.store.photoKey(ownTeam().id || M.team, P.key));
+        if (b) return MD.loadImage(URL.createObjectURL(b));
+        const src = P.photo ? 'api-logo?raw=1&url=' + encodeURIComponent(P.photo) : (await playerInfo(P)).photo || '';
+        return src ? MD.loadImage(src) : null;
+    }
     async function loadPhoto() {
         if (photoUrl) URL.revokeObjectURL(photoUrl);
         photoUrl = null; photoImg = null;
@@ -405,8 +471,7 @@
             const P = findPlayer();
             let src = P && P.photo ? 'api-logo?raw=1&url=' + encodeURIComponent(P.photo) : '';
             if (!src && P && P.id) {
-                remotePhotos[P.id] = remotePhotos[P.id] || getJson('api-player?id=' + encodeURIComponent(P.id)).then((j) => j.photo || '').catch(() => '');
-                src = await remotePhotos[P.id];
+                src = (await playerInfo(P)).photo || '';
             }
             if (src) { photoImg = await MD.loadImage(src); if (photoImg) $('#genPhotoImg').attr('src', photoImg.src).prop('hidden', false); }
             $('#genPhotoRemove').prop('hidden', true);
@@ -423,7 +488,17 @@
         $('#heroPlayer').text(P ? P.name + ' · ' : '');
         $('#motmBox').prop('hidden', type !== 'motm');
         $('#milestoneBox').prop('hidden', type !== 'milestone');
+        $('#birthdayBox').prop('hidden', type !== 'birthday');
         if (!P) { $('#playerStats').text(''); return; }
+        if (type === 'birthday' && !$('#bdAge').data('touched')) {
+            playerInfo(P).then((j) => {
+                if ($('#bdAge').data('touched') || findPlayer() !== P) return;
+                const age = j.birthyear ? new Date().getFullYear() - j.birthyear : '';
+                $('#bdAge').val(age);
+                $('#bdHint').text(j.birthyear ? 'Rok narodenia zo Sportnetu: ' + j.birthyear + '.' : 'Vek zadajte ručne – Sportnet ho pre tohto hráča neuvádza.');
+                if (age && !data.birthday?.age) render();
+            });
+        }
         $('#playerStats').text(P.apps + ' zápasov' + (P.minutes != null ? ' · ' + P.minutes + ' min.' : '') + ' · ' + P.goals + ' gólov · ' + P.yellow + ' ŽK / ' + P.red + ' ČK');
         // zápasy pre "Hráč zápasu"
         const ms = P.matches.filter((m) => m.score !== '').reverse();
@@ -492,7 +567,8 @@
     /* Vykreslenie                                                         */
     /* ------------------------------------------------------------------ */
     let renderSeq = 0;
-    async function render() {
+    async function render(o) {
+        o = o || {};
         const seq = ++renderSeq;
         $loading.show();
         $('#btnDownload, #btnCopy, #btnSaveServer').prop('disabled', true);
@@ -502,10 +578,12 @@
         try {
             const tpl = MD.store.loadTemplate(type);
             const needMatch = MODE === 'match' && ['goals', 'lineup', 'report'].includes(type);
-            const [, bg, logos] = await Promise.all([
+            const theme = MD.store.brandColors();
+            const [, bg, logos, brand] = await Promise.all([
                 MD.ensureFonts(tpl),
-                MD.store.backgroundUrl(type).then((b) => MD.loadImage(b.url)),
+                MD.store.backgroundUrl(type).then((b) => MD.loadImage(b.url).then((img) => (theme && !b.custom ? MD.recolorImage(img, theme) : img))),
                 loadLogos(),
+                loadBrand(),
                 needMatch ? loadMatch() : Promise.resolve(),
                 MODE === 'match' && ['h2h', 'form'].includes(type) ? loadExtra() : Promise.resolve(),
                 MODE === 'club' ? loadClub() : Promise.resolve(),
@@ -514,6 +592,7 @@
             if (seq !== renderSeq) return;
             renderPlayersCard();
             applyTypeData();
+            renderMonthCard();
             const T = ownTeam();
 
             // logá: družstvo / súper, logá v tabuľke a kole, fotka hráča
@@ -539,13 +618,16 @@
                 const imgs = await Promise.all(urls.map(logo));
                 urls.forEach((u, i) => { if (imgs[i]) assets.teamLogos[u] = imgs[i]; });
                 if (MODE === 'player') assets.photo = await loadPhoto();
+                if (type === 'month') assets.photo = await photoFor(((data.players || {}).month || [])[0]);
             }
             if (seq !== renderSeq) return;
-            MD.render(canvas, tpl, data, assets);
+            MD.render(sq, tpl, data, assets);
+            MD.compose(canvas, sq, { format, brand, theme: theme || MD.BASE_COLORS, teamLogo: assets.logos.team || assets.logos.home, title: storyTitle(), subtitle: storySubtitle() });
+            $('#out').closest('.preview-frame').toggleClass('is-story', format === 'story');
             $('#btnDownload, #btnCopy, #btnSaveServer').prop('disabled', false);
-            const empty = (type === 'lineup' && !data.players.start.length && !data.players.subs.length) || (SQUAD() && !data.players.squad.length)
-                || (MODE === 'player' && !findPlayer()) || (type === 'table' && !(data.table || []).length) || (type === 'round' && !(data.fixtures || []).length) || ((type === 'h2h' || type === 'form' || type === 'weekend') && !(data.fixtures || []).length);
-            if (empty) srvState('idle', 'Uloženie na server', 'Bez údajov sa obrázok automaticky neukladá – doplňte údaje alebo kliknite na Uložiť.');
+            renderPostText();
+            if (o.noSave) { $loading.hide(); return !isEmpty(); }
+            if (isEmpty()) srvState('idle', 'Uloženie na server', 'Bez údajov sa obrázok automaticky neukladá – doplňte údaje alebo kliknite na Uložiť.');
             else if ($('#autoSave').is(':checked')) saveToServer();
             else srvState('idle', 'Uloženie na server', 'Automatické ukladanie je vypnuté – kliknite na Uložiť.');
         } catch (e) {
@@ -567,9 +649,151 @@
         } catch (e) { /* ignore */ }
     }
 
+    /** obrázok bez údajov (neukladá sa automaticky a nejde do ZIP) */
+    function isEmpty() {
+        return (type === 'lineup' && !data.players.start.length && !data.players.subs.length) || (SQUAD() && !data.players.squad.length)
+            || (MODE === 'player' && !findPlayer()) || (type === 'table' && !(data.table || []).length) || (type === 'round' && !(data.fixtures || []).length)
+            || ((type === 'h2h' || type === 'form' || type === 'weekend') && !(data.fixtures || []).length)
+            || (type === 'month' && !((data.players || {}).month || []).length);
+    }
+
+    /* ---------------- story formát: nadpis a podnadpis nad / pod šablónou ---------------- */
+    function storyTitle() {
+        if (MODE === 'match') return [M.category, data.competition].filter(Boolean).join(' · ');
+        return [data.team || M.d1name, M.category].filter(Boolean).join(' · ');
+    }
+    function storySubtitle() {
+        const t = MD.tokens(data);
+        if (MODE === 'match' && M.score1 === '' && t.date) return t.weekday + ' ' + t.date + ' · ' + t.time + (data.report && data.report.venue ? '\n' + data.report.venue : '');
+        if (MODE === 'match') return [t.roundLabel, t.date].filter(Boolean).join(' · ');
+        return [M.season, data.competition].filter(Boolean).join(' · ');
+    }
+
+    /* ---------------- text príspevku na Facebook / Instagram ---------------- */
+    const tag = (s) => '#' + String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/[^a-z0-9]+/i).filter(Boolean).map((w) => w[0].toUpperCase() + w.slice(1).toLowerCase()).join('');
+    function scorersTxt(sideName) {
+        const by = {};
+        (data.goals || []).filter((g) => g.side === sideName).forEach((g) => { const n = g.name + (g.own ? ' (vlastný)' : ''); (by[n] = by[n] || []).push(g.minute + "'"); });
+        return Object.entries(by).map(([n, m]) => n + ' ' + m.join(', ')).join(', ');
+    }
+    function postText() {
+        const t = MD.tokens(data);
+        const L = [];
+        const when = t.date ? t.weekday + ' ' + t.date + ' o ' + t.time : '';
+        const compLine = [data.competition || M.competition, t.roundLabel].filter(Boolean).join(', ');
+        const score = M.d1name + ' ' + M.score1 + ':' + M.score2 + ' ' + M.d2name;
+        const fxLine = (m) => (m.label ? m.label + ': ' : '') + m.home + (m.played ? ' ' + m.hs + ':' + m.as + ' ' : ' – ') + m.away + (m.played ? '' : ' (' + [m.day, m.time].filter(Boolean).join(' ') + ')');
+        const P = data.player || {};
+        switch (type) {
+            case 'matchday':
+                L.push('⚽ MATCH DAY' + (M.category ? ' – ' + M.category : ''), '', M.d1name + ' – ' + M.d2name);
+                if (when) L.push('📅 ' + when);
+                if (compLine) L.push('🏆 ' + compLine);
+                if (data.report && data.report.venue) L.push('📍 ' + data.report.venue);
+                L.push('', 'Príďte nás povzbudiť! 💪');
+                break;
+            case 'result': case 'goals': case 'report': {
+                L.push('🏁 ' + (type === 'goals' ? 'STRELCI' : 'VÝSLEDOK') + (M.category ? ' – ' + M.category : ''), '', score);
+                const h = scorersTxt('home'), a = scorersTxt('away');
+                if (h || a) L.push('', '⚽ ' + (h ? M.d1name + ': ' + h : '') + (h && a ? '\n⚽ ' : '') + (a ? M.d2name + ': ' + a : ''));
+                const r = data.report || {};
+                if (type === 'report') {
+                    if (r.halftime) L.push('⏱️ Polčas: ' + r.halftime);
+                    if (r.spectators) L.push('👥 Diváci: ' + r.spectators);
+                    if (r.referee) L.push('🧑‍⚖️ Rozhodca: ' + r.referee);
+                }
+                if (compLine) L.push('🏆 ' + compLine);
+                break;
+            }
+            case 'lineup': {
+                const pl = data.players || {};
+                L.push('📋 ZOSTAVA – ' + data.team, M.d1name + ' – ' + M.d2name + (when ? ' · ' + when : ''), '');
+                if (pl.start.length) L.push('Základ: ' + pl.start.map((p) => p.name + (p.captain ? ' (C)' : '')).join(', '));
+                if (pl.subs.length) L.push('Náhradníci: ' + pl.subs.map((p) => p.name).join(', '));
+                if (data.coach) L.push('Tréner: ' + data.coach);
+                break;
+            }
+            case 'h2h': {
+                const h = data.h2h || {};
+                const row = (k) => (h.rows || []).find((r) => r.label === k) || { home: 0, away: 0 };
+                L.push('📊 VZÁJOMNÉ ZÁPASY', M.d1name + ' – ' + M.d2name, '', 'Odohraté: ' + (h.played || 0) + ' · výhry ' + row('VÝHRY').home + ' · remízy ' + row('REMÍZY').home + ' · prehry ' + row('PREHRY').home);
+                (data.fixtures || []).forEach((m) => L.push('▫️ ' + fxLine(m)));
+                if (when) L.push('', 'Najbližšie: ' + when);
+                break;
+            }
+            case 'form':
+                L.push('📈 FORMA – ' + data.team, (data.form || []).join(' '), '');
+                (data.fixtures || []).forEach((m) => L.push('▫️ ' + fxLine(m)));
+                L.push('', 'Najbližšie: ' + M.d1name + ' – ' + M.d2name + (when ? ', ' + when : ''));
+                break;
+            case 'squad':
+                L.push('👥 SÚPISKA – ' + data.team + (M.category ? ' · ' + M.category : ''), M.season ? 'Sezóna ' + M.season : '', '', ((data.players || {}).squad || []).map((p) => (p.nr ? p.nr + '. ' : '') + p.name).join('\n'));
+                break;
+            case 'table': {
+                const own = (data.table || []).find((r) => r.own);
+                L.push('📊 TABUĽKA – ' + (data.competition || ''), data.afterRound || '', '');
+                if (own) L.push(data.team + ': ' + own.pos + '. miesto, ' + own.pts + ' bodov (' + own.w + 'V ' + own.d + 'R ' + own.l + 'P, skóre ' + own.gf + ':' + own.ga + ')');
+                (data.table || []).slice(0, 5).forEach((r) => L.push(r.pos + '. ' + r.name + ' – ' + r.pts + ' b.'));
+                break;
+            }
+            case 'round':
+                L.push('📅 ' + ((data.roundInfo || {}).title || 'KOLO') + ' · ' + (data.round ? data.round + '. kolo' : ''), data.competition || '', '');
+                (data.fixtures || []).forEach((m) => L.push((m.own ? '⭐ ' : '▫️ ') + fxLine(m)));
+                break;
+            case 'stats': {
+                const sc = (data.players || {}).scorers || [];
+                L.push('📊 ŠTATISTIKY – ' + data.team, M.season || '', '');
+                if (sc.length) L.push('⚽ Strelci:', ...sc.slice(0, 5).map((p, i) => (i + 1) + '. ' + p.name + ' – ' + p.goals));
+                break;
+            }
+            case 'month': {
+                const mm = data.month || {};
+                L.push('🏅 ' + (mm.title || 'HRÁČ MESIACA') + ' – ' + data.team, mm.period || '', '');
+                ((data.players || {}).month || []).slice(0, 5).forEach((p, i) => L.push((i === 0 ? '🥇 ' : (i + 1) + '. ') + p.name + ' – ' + p.value + ' ' + monthUnit(mm.kind, p.value)));
+                L.push('', 'Gratulujeme! 👏');
+                break;
+            }
+            case 'player':
+                L.push('👤 ' + P.name + (P.nr ? ' #' + P.nr : ''), data.team, '', (P.apps || 0) + ' zápasov · ' + (P.goals || 0) + ' gólov' + (P.minutes ? ' · ' + P.minutes + ' minút' : ''));
+                break;
+            case 'motm': {
+                const m = data.playerMatch || {};
+                L.push('🏅 HRÁČ ZÁPASU: ' + P.name, '', [m.home, m.score, m.away].filter(Boolean).join(' '));
+                if (m.goals) L.push('⚽ ' + m.goals + (m.goals === 1 ? ' gól' : m.goals < 5 ? ' góly' : ' gólov'));
+                L.push('', 'Gratulujeme! 👏');
+                break;
+            }
+            case 'milestone':
+                L.push('🎉 ' + P.name + ' – ' + ((data.milestone || {}).value || '') + '. ' + ((data.milestone || {}).label || ''), '', 'Gratulujeme a ďakujeme! 👏');
+                break;
+            case 'birthday':
+                L.push('🎂 VŠETKO NAJLEPŠIE!', '', P.name + ((data.birthday || {}).age ? ' dnes oslavuje ' + data.birthday.age + '. narodeniny' : ' má dnes narodeniny') + '. Prajeme veľa zdravia a gólov! 🎉');
+                break;
+            case 'weekend': {
+                const w = data.weekend || {};
+                L.push('🗓️ ' + (w.title || 'VÍKEND') + ' – ' + M.d1name, w.range || '', '');
+                (data.fixtures || []).forEach((m) => L.push('▫️ ' + fxLine(m)));
+                break;
+            }
+            default: L.push(M.d1name + (M.d2name ? ' – ' + M.d2name : ''));
+        }
+        const tags = [tag(MODE === 'match' ? (side === 'away' && type === 'lineup' ? M.d2name : M.d1name) : (data.team || M.d1name)), MODE === 'match' ? tag(M.d2name) : '', M.category ? tag(M.category) : '', '#futbal', '#futbalnet'].filter((x) => x && x !== '#');
+        return L.filter((x, i, a) => !(x === '' && a[i - 1] === '')).join('\n').trim() + '\n\n' + [...new Set(tags)].join(' ');
+    }
+    let postFor = '';
+    function renderPostText() {
+        const $t = $('#postText');
+        if (!$t.length) return;
+        const key = type + '|' + side + '|' + playerKey + '|' + matchRef + '|' + roundIdx + '|' + weekStart;
+        if ($t.data('touched') && postFor === key) return;
+        postFor = key;
+        $t.data('touched', false).val(postText());
+    }
+
     const slug = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase();
-    function fileName() {
-        const prefix = { matchday: 'matchday', lineup: 'zostava', result: 'vysledok', goals: 'strelci', report: 'suhrn', squad: 'supiska', table: 'tabulka', round: 'kolo', stats: 'statistiky', player: 'profil', motm: 'hrac-zapasu', milestone: 'jubileum', h2h: 'vzajomne', form: 'forma', weekend: 'vikend' }[type] || type;
+    const fileName = () => baseFileName().replace(/\.png$/, format === 'story' ? '_story.png' : '.png');
+    function baseFileName() {
+        const prefix = { matchday: 'matchday', lineup: 'zostava', result: 'vysledok', goals: 'strelci', report: 'suhrn', squad: 'supiska', table: 'tabulka', round: 'kolo', stats: 'statistiky', player: 'profil', motm: 'hrac-zapasu', milestone: 'jubileum', month: 'hrac-mesiaca', birthday: 'narodeniny', h2h: 'vzajomne', form: 'forma', weekend: 'vikend' }[type] || type;
         if (MODE === 'match') return [prefix, slug(M.d1name), 'vs', slug(M.d2name)].join('_') + ((type === 'lineup' || type === 'form') ? '_' + slug(data.team) : '') + '.png';
         if (MODE === 'player') return [prefix, slug((findPlayer() || {}).name), slug(M.d1name)].filter(Boolean).join('_') + '.png';
         if (MODE === 'club') return [prefix, slug(M.d1name), weekStart || ''].filter(Boolean).join('_') + '.png';
@@ -582,14 +806,14 @@
     /* Uloženie na server                                                  */
     /* ------------------------------------------------------------------ */
     let saveSeq = 0;
-    function srvState(state, title, text, url) {
+    function srvState(state, title, text, url, share) {
         const icons = { idle: 'bi-hdd-network', busy: 'spinner', ok: 'bi-cloud-check-fill', err: 'bi-exclamation-triangle-fill' };
         $('#srvIcon').attr('class', 'server-save-icon is-' + state)
             .html(state === 'busy' ? '<span class="spinner-border spinner-border-sm"></span>' : '<i class="bi ' + icons[state] + '"></i>');
         $('#srvTitle').text(title);
         $('#srvText').text(text).attr('title', text);
         $('#srvActions').prop('hidden', !url);
-        if (url) { $('#srvOpen').attr('href', url); $('#srvCopy').data('url', new URL(url, location.href).href); }
+        if (url) { $('#srvOpen').attr('href', url); $('#srvCopy').data('url', new URL(share || url, location.href).href); }
     }
 
     async function saveToServer() {
@@ -610,6 +834,8 @@
                 roundNo: savedType === 'round' ? String((data.roundInfo || {}).no || '') : '',
                 mvalue: savedType === 'milestone' ? String((data.milestone || {}).value || '') : '',
                 week: savedType === 'weekend' ? (weekStart || '') : '',
+                month: savedType === 'month' ? monthKey() : '',
+                format: format === 'story' ? 'story' : '',
             });
             const r = await fetch('api-save?' + q.toString(), { method: 'POST', headers: MD.clientHeaders({ 'Content-Type': 'image/png', 'X-MD-Mode': $('#autoSave').is(':checked') ? 'auto' : 'manual' }), body: blob });
             const txt = await r.text();
@@ -618,7 +844,7 @@
             if (!r.ok || !j.ok) throw new Error(j.error || ('HTTP ' + r.status));
             if (seq !== saveSeq) return; // medzitým sa prepol typ
             const kb = Math.round(j.bytes / 1024);
-            srvState('ok', j.replaced ? 'Aktualizované na serveri' : 'Uložené na serveri', j.file + ' · ' + (kb > 1024 ? (kb / 1024).toFixed(1) + ' MB' : kb + ' kB'), j.url);
+            srvState('ok', j.replaced ? 'Aktualizované na serveri' : 'Uložené na serveri', j.file + ' · ' + (kb > 1024 ? (kb / 1024).toFixed(1) + ' MB' : kb + ' kB'), j.url, j.share);
         } catch (e) {
             if (seq !== saveSeq) return;
             srvState('err', 'Nepodarilo sa uložiť', e.message);
@@ -640,6 +866,57 @@
     /* ------------------------------------------------------------------ */
     /* Prepínače                                                           */
     /* ------------------------------------------------------------------ */
+    /* formát: štvorec 1:1 alebo story 9:16 */
+    const syncFormat = () => $('#formatSwitch [data-format]').removeClass('active').filter('[data-format="' + format + '"]').addClass('active');
+    syncFormat();
+    $('#formatSwitch').on('click', '[data-format]', function () {
+        if (this.dataset.format === format) return;
+        format = this.dataset.format;
+        MD.store.pref('format', format);
+        setQs('format', format === 'story' ? 'story' : '');
+        syncFormat();
+        render();
+    });
+
+    /* text príspevku */
+    $('#postText').on('input', function () { $(this).data('touched', true); });
+    $('#postCopy').on('click', () => {
+        navigator.clipboard.writeText($('#postText').val()).then(() => MD.toast('Text príspevku skopírovaný'), () => { $('#postText').trigger('select'); MD.toast('Skopírujte text ručne (Ctrl+C)', 'info'); });
+    });
+    $('#postRefresh').on('click', () => { $('#postText').data('touched', false).val(postText()); });
+
+    /* ZIP so všetkými obrázkami skupiny */
+    $('#btnZip').on('click', async function () {
+        const $b = $(this);
+        const types = $('#templateSwitch [data-type]').filter(function () { return !this.disabled; }).map(function () { return this.dataset.type; }).get();
+        const orig = type;
+        $b.prop('disabled', true);
+        const files = [];
+        try {
+            for (let i = 0; i < types.length; i++) {
+                type = types[i];
+                $b.html('<span class="spinner-border spinner-border-sm me-1"></span>' + (i + 1) + ' / ' + types.length);
+                $('#loadingText').text('Pripravujem obrázok ' + (i + 1) + ' z ' + types.length + '…');
+                const ok = await render({ noSave: true });
+                if (!ok) continue;
+                const blob = await toBlob();
+                if (blob) files.push({ name: fileName(), data: new Uint8Array(await blob.arrayBuffer()) });
+            }
+        } finally {
+            type = orig;
+            await render();
+            $b.prop('disabled', false).html('<i class="bi bi-file-zip me-1"></i>Všetky (ZIP)');
+        }
+        if (!files.length) { MD.toast('Žiadny obrázok s údajmi.', 'info'); return; }
+        const zipName = [MODE === 'match' ? slug(M.d1name) + '_vs_' + slug(M.d2name) : slug(M.d1name), slug(M.category), format === 'story' ? 'story' : ''].filter(Boolean).join('_') + '.zip';
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(MD.zip(files));
+        a.download = zipName;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        MD.toast(files.length + ' obrázkov v ZIP');
+    });
+
     $('#templateSwitch').on('click', '[data-type]', function () {
         type = this.dataset.type;
         setQs('type', type);
@@ -678,8 +955,13 @@
         playerKey = this.value;
         setQs('player', playerKey);
         $('#msValue').data('touched', false);
+        $('#bdAge').data('touched', false);
         render();
     });
+    $('#monthSel').on('change', function () { monthSel = this.value; setQs('month', monthSel); render(); });
+    $('#monthKind').on('change', function () { setQs('mkind', this.value); render(); });
+    $('#bdAge').on('input', function () { $(this).data('touched', true); clearTimeout(this._t); this._t = setTimeout(render, 250); });
+    $('#bdWish').on('input', function () { clearTimeout(this._t); this._t = setTimeout(render, 250); });
     $('#selMatch').on('change', function () { matchRef = this.value; setQs('matchRef', matchRef); render(); });
     $('#msValue').on('input', function () { $(this).data('touched', true); clearTimeout(this._t); this._t = setTimeout(render, 250); });
     $('#msKind').on('change', function () {
@@ -807,7 +1089,8 @@
 
     // strelci pre bočný panel aj pri iných typoch (ak je zápas odohratý)
     if (MODE === 'match' && M.matchID && M.score1 !== '' && !['goals', 'lineup', 'report'].includes(type)) loadMatch();
-    if (M.mkind) $('#msKind').val(M.mkind);
+    if (M.mkind) { $('#msKind').val(M.mkind); if (['goals', 'minutes', 'apps'].includes(M.mkind)) $('#monthKind').val(M.mkind); }
+    if (M.age) $('#bdAge').val(M.age).data('touched', true);
     if (M.mvalue) $('#msValue').val(M.mvalue).data('touched', true);
 
     render();

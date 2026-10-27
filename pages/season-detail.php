@@ -70,6 +70,7 @@
 					</select>
 					<span class="hero-eyebrow"><i class="bi bi-people"></i> <?= count($teams) ?> <?= count($teams) === 1 ? 'družstvo' : (count($teams) < 5 ? 'družstvá' : 'družstiev') ?></span>
 					<?php if ($teams): ?><a class="btn btn-sm btn-warning rounded-pill fw-semibold" href="<?= plain(md_gen_link('weekend', ['club' => sn_club_slug($team), 'season' => $s, 'd1name' => $clubName, 'd1url' => $clubLogo])) ?>" title="Obrázok so zápasmi všetkých družstiev klubu v týždni"><i class="bi bi-calendar2-week me-1"></i>Víkend klubu</a><?php endif; ?>
+					<button type="button" class="btn btn-sm btn-outline-light rounded-pill fav-btn" id="favBtn" data-club="<?= plain(sn_club_slug($team)) ?>" data-name="<?= plain($clubName) ?>" data-logo="<?= plain($clubLogo) ?>" data-season="<?= plain($s) ?>" aria-pressed="false" title="Zobraziť najbližšie zápasy klubu hneď na úvodnej stránke"><i class="bi bi-star me-1"></i><span>Môj klub</span></button>
 				</form>
 			</div>
 		</div>
@@ -277,6 +278,28 @@ $(function () {
 		MD.store.pref('recent', list.slice(0, 6));<?php endif; ?>
 	} catch (e) {}
 });
+</script>
+
+<script>
+(function () {
+	const b = document.getElementById('favBtn');
+	if (!b || !window.MD) return;
+	const sync = () => {
+		const f = MD.store.pref('favClub');
+		const on = !!f && f.club === b.dataset.club;
+		b.setAttribute('aria-pressed', on);
+		b.classList.toggle('is-on', on);
+		b.querySelector('i').className = 'bi ' + (on ? 'bi-star-fill' : 'bi-star') + ' me-1';
+		b.querySelector('span').textContent = on ? 'Môj klub' : 'Nastaviť ako môj klub';
+	};
+	b.addEventListener('click', () => {
+		const f = MD.store.pref('favClub');
+		if (f && f.club === b.dataset.club) { MD.store.pref('favClub', null); MD.toast('Klub odobratý z úvodnej stránky', 'info'); }
+		else { MD.store.pref('favClub', { club: b.dataset.club, name: b.dataset.name, logo: b.dataset.logo, season: b.dataset.season }); MD.toast('Najbližšie zápasy klubu uvidíte na úvodnej stránke'); }
+		sync();
+	});
+	sync();
+})();
 </script>
 
 <?php add_layout("footer"); ?>

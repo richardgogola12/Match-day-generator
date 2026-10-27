@@ -259,6 +259,40 @@
                 { id: 'season', type: 'text', label: 'Sezóna', text: '{category} · {season}', x: 500, y: 905, size: 18, align: 'center', opacity: 0.7 },
             ],
         },
+        month: {
+            name: 'Hráč mesiaca',
+            icon: 'bi-star',
+            width: 1000, height: 1000,
+            defaultBackground: 'img/team-bg.jpg',
+            elements: [
+                { id: 'logoTeam', type: 'logo', label: 'Logo družstva', team: 'team', x: 150, y: 118, size: 100 },
+                Object.assign({ id: 'title', type: 'text', label: 'Nadpis', text: '{monthTitle}', x: 520, y: 200, size: 70, maxWidth: 560 }, TITLE),
+                Object.assign({ id: 'period', type: 'text', label: 'Obdobie', text: '{monthPeriod}', x: 640, y: 262, size: 30, uppercase: true }, PILL),
+                { id: 'photo', type: 'photo', label: 'Fotka hráča', x: 385, y: 285, w: 230, h: 230, shape: 'circle', borderWidth: 6, borderColor: '#ffd166', shadow: true, fallbackText: '{monthNr}' },
+                { id: 'name', type: 'text', label: 'Meno', text: '{monthPlayer}', x: 500, y: 600, size: 58, align: 'center', uppercase: true, maxWidth: 700, shadow: true },
+                Object.assign({ id: 'value', type: 'text', label: 'Hodnota', text: '{monthValue}', x: 500, y: 720, size: 110 }, TITLE, { color: yellow }),
+                { id: 'unit', type: 'text', label: 'Jednotka', text: '{monthUnit}', x: 500, y: 765, size: 26, align: 'center', uppercase: true, letterSpacing: 3, opacity: 0.9 },
+                { id: 'restLabel', type: 'text', label: 'Nadpis ďalších', text: 'ĎALŠÍ V PORADÍ', x: 500, y: 828, size: 18, align: 'center', color: yellow, letterSpacing: 2 },
+                { id: 'rest', type: 'players', label: 'Ďalší hráči', source: 'monthRest', x: 250, y: 880, size: 21, columns: 2, maxWidth: 240, colGap: 30, gap: 30, maxY: 915, limit: 4, format: '{value}  {name}', numColor: '', capMark: '', gkMark: '' },
+                { id: 'team', type: 'text', label: 'Družstvo', text: '{team} · {category}', x: 500, y: 950, size: 18, align: 'center', opacity: 0.7 },
+            ],
+        },
+        birthday: {
+            name: 'Narodeniny',
+            icon: 'bi-cake2',
+            width: 1000, height: 1000,
+            defaultBackground: 'img/team-bg.jpg',
+            elements: [
+                { id: 'logoTeam', type: 'logo', label: 'Logo družstva', team: 'team', x: 150, y: 118, size: 100 },
+                Object.assign({ id: 'title', type: 'text', label: 'Nadpis', text: 'VŠETKO NAJLEPŠIE', x: 520, y: 200, size: 70, maxWidth: 560 }, TITLE),
+                { id: 'photo', type: 'photo', label: 'Fotka hráča', x: 360, y: 240, w: 280, h: 280, shape: 'circle', borderWidth: 6, borderColor: '#ffd166', shadow: true },
+                Object.assign({ id: 'age', type: 'text', label: 'Vek', text: '{age}.', x: 650, y: 525, size: 120, rotate: -6 }, TITLE, { color: yellow }),
+                Object.assign({ id: 'label', type: 'text', label: 'Text', text: 'NARODENINY', x: 500, y: 600, size: 34 }, PILL, { rotate: -3 }),
+                { id: 'name', type: 'text', label: 'Meno', text: '{player}', x: 500, y: 700, size: 64, align: 'center', uppercase: true, maxWidth: 720, shadow: true },
+                { id: 'wish', type: 'text', label: 'Prianie', text: '{birthdayWish}', x: 500, y: 770, size: 28, align: 'center', maxWidth: 720, lineHeight: 1.3, opacity: 0.95 },
+                { id: 'team', type: 'text', label: 'Družstvo', text: '{team} · {category}', x: 500, y: 905, size: 18, align: 'center', opacity: 0.7 },
+            ],
+        },
         result: {
             name: 'Výsledok',
             icon: 'bi-trophy',
@@ -303,9 +337,9 @@
     };
     MD.TYPE_DEFAULTS = TYPE_DEFAULTS;
 
-    MD.TEMPLATE_IDS = ['matchday', 'lineup', 'result', 'goals', 'report', 'h2h', 'form', 'squad', 'table', 'round', 'stats', 'player', 'motm', 'milestone', 'weekend'];
+    MD.TEMPLATE_IDS = ['matchday', 'lineup', 'result', 'goals', 'report', 'h2h', 'form', 'squad', 'table', 'round', 'stats', 'month', 'player', 'motm', 'milestone', 'birthday', 'weekend'];
     /** Typy viazané na zápas / družstvo / hráča */
-    MD.TYPE_GROUPS = { match: ['matchday', 'lineup', 'result', 'goals', 'report', 'h2h', 'form'], team: ['squad', 'table', 'round', 'stats'], player: ['player', 'motm', 'milestone'], club: ['weekend'] };
+    MD.TYPE_GROUPS = { match: ['matchday', 'lineup', 'result', 'goals', 'report', 'h2h', 'form'], team: ['squad', 'table', 'round', 'stats', 'month'], player: ['player', 'motm', 'milestone', 'birthday'], club: ['weekend'] };
 
     const clone = (o) => JSON.parse(JSON.stringify(o));
 
@@ -491,6 +525,37 @@
         }));
     };
     store.clearPhotos = async function () { for (const p of await store.listPhotos()) await store.removePhoto(p.key); };
+
+    /* ------------------------------------------------------------------ */
+    /* Značka klubu – logo, pás sponzorov a farby (IndexedDB "brand:*")    */
+    /* ------------------------------------------------------------------ */
+    const LS_BRAND = 'matchday.brand.v1';
+    store.BRAND_DEFAULTS = {
+        colors: { on: false, primary: '#e63946', accent: '#ffd166', base: '#0b2a1a' },
+        logo: { on: true, pos: 'tr', size: 110, opacity: 1 },
+        sponsors: { on: true, height: 92, strip: true },
+        story: { top: 'logo' },
+    };
+    store.brand = function (value) {
+        if (value !== undefined) { writeLS(LS_BRAND, value); return value; }
+        const b = readLS(LS_BRAND, {}) || {};
+        const D = store.BRAND_DEFAULTS;
+        return { colors: Object.assign({}, D.colors, b.colors), logo: Object.assign({}, D.logo, b.logo), sponsors: Object.assign({}, D.sponsors, b.sponsors), story: Object.assign({}, D.story, b.story) };
+    };
+    store.getBrandImage = (k) => idb('readonly', (s) => s.get('brand:' + k)).then((b) => b || null).catch(() => null);
+    store.setBrandImage = (k, blob) => idb('readwrite', (s) => s.put(blob, 'brand:' + k)).catch(() => {
+        throw new Error('Prehliadač nepodporuje ukladanie obrázkov (IndexedDB).');
+    });
+    store.removeBrandImage = (k) => idb('readwrite', (s) => s.delete('brand:' + k)).catch(() => null);
+    /** { logo: Image|null, sponsors: Image|null, cfg } – na vloženie do každého obrázka */
+    store.loadBrand = async function () {
+        const cfg = store.brand();
+        const load = async (k) => { const b = await store.getBrandImage(k); return b ? MD.loadImage(URL.createObjectURL(b)) : null; };
+        const [logo, sponsors] = await Promise.all([load('logo'), load('sponsors')]);
+        return { logo, sponsors, cfg };
+    };
+    /** farby klubu, ak sú zapnuté (inak null) */
+    store.brandColors = function () { const c = store.brand().colors; return c.on ? c : null; };
     /** Zmenší fotku (max. 1200 px, JPEG), aby úložisko prehliadača nezaplnili veľké súbory z mobilu */
     store.shrinkImage = function (file, max) {
         max = max || 1200;
@@ -526,6 +591,8 @@
         out.photos = {};
         for (const f of await store.listPhotos()) out.photos[f.key] = await blobToDataURL(f.blob);
         out.players = readLS('matchday.players.v1', {});
+        out.brand = { cfg: readLS(LS_BRAND, null), images: {} };
+        for (const k of ['logo', 'sponsors']) { const b = await store.getBrandImage(k); if (b) out.brand.images[k] = await blobToDataURL(b); }
         return out;
     };
 
@@ -547,6 +614,10 @@
         }
         for (const [key, data] of Object.entries(json.photos || {})) {
             if (key.startsWith('photo:')) await store.setPhoto(key, await dataURLToBlob(data)).catch(() => null);
+        }
+        if (json.brand && typeof json.brand === 'object') {
+            if (json.brand.cfg) writeLS(LS_BRAND, json.brand.cfg);
+            for (const [k, d] of Object.entries(json.brand.images || {})) if (k === 'logo' || k === 'sponsors') await store.setBrandImage(k, await dataURLToBlob(d)).catch(() => null);
         }
         if (json.players && typeof json.players === 'object') writeLS('matchday.players.v1', Object.assign(readLS('matchday.players.v1', {}) || {}, json.players));
     };

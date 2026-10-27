@@ -30,7 +30,7 @@
 			<div class="modal-body pt-0">
 				<p class="small text-muted-2">Vymaže všetko, čo si aplikácia uložila v tomto prehliadači, a vráti ju do pôvodného stavu. Na serveri sa nič nezmaže.</p>
 				<div class="d-grid gap-2 small" id="resetParts">
-					<label class="form-check"><input class="form-check-input" type="checkbox" value="templates" checked> <span class="form-check-label">Šablóny, vlastné pozadia a písma</span></label>
+					<label class="form-check"><input class="form-check-input" type="checkbox" value="templates" checked> <span class="form-check-label">Šablóny, vlastné pozadia, písma a značka klubu</span></label>
 					<label class="form-check"><input class="form-check-input" type="checkbox" value="photos" checked> <span class="form-check-label">Fotky hráčov a ručne upravení hráči</span></label>
 					<label class="form-check"><input class="form-check-input" type="checkbox" value="prefs" checked> <span class="form-check-label">Vaše kluby, prezerané družstvá, téma a ďalšie predvoľby</span></label>
 					<label class="form-check"><input class="form-check-input" type="checkbox" value="cache" checked> <span class="form-check-label">Offline cache aplikácie</span></label>

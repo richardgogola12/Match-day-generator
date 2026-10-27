@@ -18,6 +18,19 @@
 	<meta name="keywords" content="match-day, generátor, futbal, šport">
 	<meta name="author" content="RGA">
 	<meta name="theme-color" content="#0b2a1a">
+	<?php if (!empty($_og)): ?>
+	<meta property="og:type" content="website">
+	<meta property="og:site_name" content="<?= plain(APP_NAME) ?>">
+	<meta property="og:title" content="<?= plain($_og['title'] ?? '') ?>">
+	<?php if (!empty($_og['description'])): ?><meta property="og:description" content="<?= plain($_og['description']) ?>"><?php endif; ?>
+	<?php if (!empty($_og['url'])): ?><meta property="og:url" content="<?= plain($_og['url']) ?>"><?php endif; ?>
+	<?php if (!empty($_og['image'])): ?>
+	<meta property="og:image" content="<?= plain($_og['image']) ?>">
+	<?php if (!empty($_og['width'])): ?><meta property="og:image:width" content="<?= (int)$_og['width'] ?>"><meta property="og:image:height" content="<?= (int)$_og['height'] ?>"><?php endif; ?>
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:image" content="<?= plain($_og['image']) ?>">
+	<?php endif; ?>
+	<?php endif; ?>
 	<?php if (!empty($noindex)): ?><meta name="robots" content="noindex, nofollow, noarchive"><meta name="referrer" content="no-referrer"><?php endif; ?>
 
 	<!-- Favicon + PWA -->
@@ -107,6 +120,11 @@
 				<li class="nav-item">
 					<a class="nav-link<?= $nav('nastavenia') ?>" href="<?= url("nastavenia") ?>">
 						<i class="bi bi-sliders"></i><span>Šablóny</span>
+					</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link<?= $nav('znacka') ?>" href="<?= url("znacka") ?>">
+						<i class="bi bi-palette"></i><span>Značka</span>
 					</a>
 				</li>
 				<li class="nav-item">

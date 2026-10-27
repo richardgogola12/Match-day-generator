@@ -187,6 +187,8 @@ add_layout("header", array("title" => $name . " – profil | Match Day", "script
 					<?php if ($P['goals'] > 0): ?>
 						<a class="btn btn-outline-primary" href="<?= plain(md_gen_link('milestone', $pp + ['mvalue' => $P['goals'], 'mkind' => 'goals'])) ?>"><i class="bi bi-bullseye me-1"></i>Jubileum – <?= (int)$P['goals'] ?>. gól</a>
 					<?php endif; ?>
+					<?php $bdAge = !empty($U['birthyear']) ? (int)date('Y') - (int)$U['birthyear'] : 0; ?>
+					<a class="btn btn-outline-primary" href="<?= plain(md_gen_link('birthday', $pp + ($bdAge ? ['age' => $bdAge] : []))) ?>"><i class="bi bi-cake2 me-1"></i>Narodeniny<?= $bdAge ? ' – ' . $bdAge . '.' : '' ?></a>
 					<?php endif; ?>
 				</div>
 				<?php if (!empty($next)): ?><div class="form-text mt-2">Najbližšie okrúhle jubileum v tejto sezóne: <?= (int)$next ?>. zápas.</div><?php endif; ?>

@@ -98,6 +98,8 @@ $routes = array(
     "offline"                 => "offline",
     "log"                     => "log-viewer",
     "kontrola"                => "sportnet-check",
+    "zdielaj"                 => "share",
+    "znacka"                  => "brand",
 
     // JSON / obrázkové API pre prehliadač
     "api-logo"                => "api/logo",

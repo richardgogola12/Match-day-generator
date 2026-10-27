@@ -110,7 +110,7 @@
         const keys = [];
         try { for (let i = 0; ls && i < ls.length; i++) keys.push(ls.key(i)); } catch (e) { /* nič */ }
         const drop = (test) => keys.filter((k) => k && k.startsWith('matchday.') && test(k)).forEach((k) => { try { ls.removeItem(k); } catch (e) { /* nič */ } });
-        if (parts.has('templates')) drop((k) => k.startsWith('matchday.templates') || k.startsWith('matchday.bg.') || k.startsWith('matchday.fonts'));
+        if (parts.has('templates')) drop((k) => k.startsWith('matchday.templates') || k.startsWith('matchday.bg.') || k.startsWith('matchday.fonts') || k.startsWith('matchday.brand'));
         if (parts.has('photos')) drop((k) => k.startsWith('matchday.players'));
         if (parts.has('prefs')) drop((k) => k.startsWith('matchday.prefs'));
         if (parts.has('client')) drop((k) => k === 'matchday.clientId');
@@ -121,6 +121,7 @@
         } else {
             try {
                 if (parts.has('templates') && MD.store && MD.store.resetAll) await MD.store.resetAll();
+                if (parts.has('templates') && MD.store && MD.store.removeBrandImage) for (const k of ['logo', 'sponsors']) await MD.store.removeBrandImage(k);
                 if (parts.has('templates') && MD.store && MD.store.listFonts) for (const f of await MD.store.listFonts()) await MD.store.removeFont(f.name).catch(() => null);
                 if (parts.has('photos') && MD.store && MD.store.clearPhotos) await MD.store.clearPhotos();
             } catch (e) { /* nič */ }

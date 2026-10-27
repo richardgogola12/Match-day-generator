@@ -22,7 +22,6 @@
     const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const bytes = (b) => b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round((b || 0) / 1024)) + ' kB';
     const fold = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-    const absUrl = (it) => (CFG.root || location.origin) + it.url.split('?')[0];
     const MATCH_TYPES = ['matchday', 'lineup', 'result', 'goals', 'report', 'h2h', 'form'];
     const isMatch = (it) => MATCH_TYPES.includes(it.type);
     const title = (it) => (isMatch(it) ? it.d1name + ' vs ' + it.d2name : (it.player ? it.player + ' – ' : '') + it.d1name + (it.category && !it.player ? ' – ' + it.category : ''));
@@ -177,7 +176,7 @@
     const itemOf = (el) => view[+$(el).closest('.g-item').data('i')];
 
     function copyLink(it) {
-        navigator.clipboard.writeText(absUrl(it)).then(() => MD.toast('Odkaz skopírovaný'), () => MD.toast('Odkaz sa nepodarilo skopírovať', 'danger'));
+        navigator.clipboard.writeText(new URL('zdielaj?f=' + encodeURIComponent(it.file), location.href).href).then(() => MD.toast('Odkaz na zdieľanie skopírovaný (s náhľadom)'), () => MD.toast('Odkaz sa nepodarilo skopírovať', 'danger'));
     }
 
     $('#gGrid')
