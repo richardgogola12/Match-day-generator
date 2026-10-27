@@ -143,6 +143,21 @@
                 { id: 'next', type: 'text', label: 'Zápas', text: '{d1name} – {d2name} · {date} {time}', x: 500, y: 925, size: 18, align: 'center', opacity: 0.75, maxWidth: 860 },
             ],
         },
+        weekend: {
+            name: 'Víkend klubu',
+            icon: 'bi-calendar2-week',
+            width: 1000, height: 1000,
+            defaultBackground: 'img/team-bg.jpg',
+            elements: [
+                { id: 'logoTeam', type: 'logo', label: 'Logo klubu vľavo', team: 'team', x: 150, y: 118, size: 100 },
+                { id: 'logoTeam2', type: 'logo', label: 'Logo klubu vpravo', team: 'team', x: 750, y: 118, size: 100 },
+                Object.assign({ id: 'title', type: 'text', label: 'Nadpis', text: '{weekendTitle}', x: 500, y: 200, size: 66 }, TITLE),
+                Object.assign({ id: 'club', type: 'text', label: 'Klub', text: '{team}', x: 500, y: 262, size: 30, maxWidth: 560 }, PILL, { rotate: -3 }),
+                { id: 'range', type: 'text', label: 'Dátumy', text: '{weekendRange}', x: 500, y: 322, size: 24, align: 'center', opacity: 0.9, bold: true },
+                { id: 'fixtures', type: 'fixtures', label: 'Zápasy družstiev', x: 140, y: 352, w: 720, rowH: 76, size: 22, maxRows: 10, maxY: 902, showDate: true, showLabel: true, highlight: '' },
+                { id: 'season', type: 'text', label: 'Sezóna', text: 'Sezóna {season}', x: 500, y: 925, size: 17, align: 'center', opacity: 0.7 },
+            ],
+        },
         table: {
             name: 'Tabuľka',
             icon: 'bi-list-ol',
@@ -281,16 +296,16 @@
         shape: { w: 300, h: 60, color: '#000000', opacity: 0.5, radius: 12 },
         photo: { w: 300, h: 300, shape: 'circle', fit: 'cover', borderWidth: 6, borderColor: '#ffffff', bgColor: '#0b2a1a', fallbackText: '{playerNr}', fallbackColor: '#e63946', fallbackColor2: '#8d0f1a', font: 'Barlow Condensed', color: '#ffffff', shadow: true, opacity: 1, radius: 24 },
         table: { w: 680, rowH: 42, size: 22, font: 'Barlow Condensed', color: '#ffffff', headColor: '#ffd166', ownColor: '#ffffff', ptsColor: '#ffd166', highlight: 'rgba(230,57,70,0.85)', stripe: 'rgba(255,255,255,0.05)', header: true, showLogos: true, columns: 'p,w,d,l,score,pts', maxRows: 20, maxY: 915, autoFit: true, ownBold: true, uppercase: false, headName: 'Družstvo', opacity: 1 },
-        fixtures: { w: 720, rowH: 72, size: 22, font: 'Barlow Condensed', color: '#ffffff', pillColor: '#e63946', pillColor2: 'rgba(255,255,255,0.14)', pillText: '#ffffff', highlight: 'rgba(255,209,102,0.16)', showLogos: true, showDate: false, maxRows: 12, maxY: 915, autoFit: true, uppercase: false, opacity: 1 },
+        fixtures: { showLabel: false, labelColor: '#ffd166', w: 720, rowH: 72, size: 22, font: 'Barlow Condensed', color: '#ffffff', pillColor: '#e63946', pillColor2: 'rgba(255,255,255,0.14)', pillText: '#ffffff', highlight: 'rgba(255,209,102,0.16)', showLogos: true, showDate: false, maxRows: 12, maxY: 915, autoFit: true, uppercase: false, opacity: 1 },
         compare: { w: 700, rowH: 56, size: 22, font: 'Barlow Condensed', color: '#ffffff', labelColor: '#ffffff', barHome: '#e63946', barAway: '#ffd166', barBg: 'rgba(255,255,255,0.15)', barH: 8, uppercase: true, opacity: 1 },
         formbadges: { size: 64, gap: 18, font: 'Barlow Condensed', color: '#ffffff', winColor: '#22a06b', drawColor: '#f2a516', lossColor: '#d93a3a', max: 5, opacity: 1 },
         players: { limit: 0, source: 'start', size: 26, font: 'Barlow Condensed', color: '#ffffff', numColor: '#ffd166', align: 'left', letterSpacing: 0, italic: false, columns: 2, maxWidth: 330, colGap: 20, gap: 44, lineHeight: 1.2, maxY: 900, autoFit: true, minScale: 0.6, format: '{nr}  {name}', capMark: ' (C)', gkMark: ' (B)', emptyText: '', uppercase: false, bold: false, shadow: false, strokeWidth: 0, strokeColor: '#000000', opacity: 1 },
     };
     MD.TYPE_DEFAULTS = TYPE_DEFAULTS;
 
-    MD.TEMPLATE_IDS = ['matchday', 'lineup', 'result', 'goals', 'report', 'h2h', 'form', 'squad', 'table', 'round', 'stats', 'player', 'motm', 'milestone'];
+    MD.TEMPLATE_IDS = ['matchday', 'lineup', 'result', 'goals', 'report', 'h2h', 'form', 'squad', 'table', 'round', 'stats', 'player', 'motm', 'milestone', 'weekend'];
     /** Typy viazané na zápas / družstvo / hráča */
-    MD.TYPE_GROUPS = { match: ['matchday', 'lineup', 'result', 'goals', 'report', 'h2h', 'form'], team: ['squad', 'table', 'round', 'stats'], player: ['player', 'motm', 'milestone'] };
+    MD.TYPE_GROUPS = { match: ['matchday', 'lineup', 'result', 'goals', 'report', 'h2h', 'form'], team: ['squad', 'table', 'round', 'stats'], player: ['player', 'motm', 'milestone'], club: ['weekend'] };
 
     const clone = (o) => JSON.parse(JSON.stringify(o));
 

@@ -36,7 +36,7 @@ if (!$info || $info['mime'] !== 'image/png' || $info[0] > MAX_IMAGE_SIDE || $inf
 
 // metadáta
 $m = [];
-foreach (['d1name', 'd2name', 'startDate', 'competition', 'round', 'score1', 'score2', 'matchID', 'season', 'category', 'teamID', 'variant', 'player', 'playerKey', 'roundNo', 'mvalue'] as $k) {
+foreach (['d1name', 'd2name', 'startDate', 'competition', 'round', 'score1', 'score2', 'matchID', 'season', 'category', 'teamID', 'variant', 'player', 'playerKey', 'roundNo', 'mvalue', 'week'] as $k) {
     $m[$k] = mb_substr(trim((string)($_GET[$k] ?? '')), 0, 200, 'UTF-8');
 }
 
@@ -47,7 +47,13 @@ try {
 }
 
 if (!in_array($m['variant'], ['', 'home', 'away'], true)) $m['variant'] = '';
-if (in_array($type, ['squad', 'table', 'round', 'stats', 'player', 'motm', 'milestone'], true)) {
+if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $m['week'])) $m['week'] = '';
+if ($type === 'weekend') {
+    // víkend klubu: jeden obrázok na klub a týždeň (pri ďalšom uložení sa prepíše)
+    $key  = 'weekend|' . ($m['teamID'] ?: $m['d1name']) . '|' . $m['week'];
+    try { $date = new DateTime($m['week'] ?: 'now', new DateTimeZone('Europe/Bratislava')); } catch (Throwable $e) { $date = new DateTime('now', new DateTimeZone('Europe/Bratislava')); }
+    $name = $date->format('Y-m-d') . '_vikend_' . slugify($m['d1name'], 30);
+} elseif (in_array($type, ['squad', 'table', 'round', 'stats', 'player', 'motm', 'milestone'], true)) {
     // obrázky družstva / hráča nie sú viazané na jeden zápas – stály názov aj priečinok (podľa začiatku sezóny),
     // aby sa pri ďalšom uložení prepísali (tabuľka je vždy aktuálna, kolo a jubileum podľa čísla …)
     $extra = ['round' => 'kolo-' . $m['roundNo'], 'player' => $m['playerKey'], 'motm' => $m['playerKey'] . '|' . $m['matchID'], 'milestone' => $m['playerKey'] . '|' . $m['mvalue']][$type] ?? '';

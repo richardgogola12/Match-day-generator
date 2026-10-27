@@ -69,6 +69,7 @@
 						<?php foreach ($seasonsAll as $sn): ?><option value="<?= plain($sn) ?>" <?= $sn === $s ? 'selected' : '' ?>><?= plain($sn) ?></option><?php endforeach; ?>
 					</select>
 					<span class="hero-eyebrow"><i class="bi bi-people"></i> <?= count($teams) ?> <?= count($teams) === 1 ? 'družstvo' : (count($teams) < 5 ? 'družstvá' : 'družstiev') ?></span>
+					<?php if ($teams): ?><a class="btn btn-sm btn-warning rounded-pill fw-semibold" href="<?= plain(md_gen_link('weekend', ['club' => sn_club_slug($team), 'season' => $s, 'd1name' => $clubName, 'd1url' => $clubLogo])) ?>" title="Obrázok so zápasmi všetkých družstiev klubu v týždni"><i class="bi bi-calendar2-week me-1"></i>Víkend klubu</a><?php endif; ?>
 				</form>
 			</div>
 		</div>

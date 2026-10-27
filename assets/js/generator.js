@@ -4,7 +4,7 @@
     const MD = window.MD;
     const M = window.MD_MATCH || {};
     let type = window.MD_TYPE || 'matchday';
-    const MODE = window.MD_MODE || 'match';         // match | team | player
+    const MODE = window.MD_MODE || 'match';         // match | team | player | club
     const SQUAD = () => type === 'squad';
 
     const canvas = document.getElementById('out');
@@ -80,6 +80,74 @@
                 });
         }
         return matchPromise;
+    }
+
+    /* ---------------- Víkend klubu: všetky zápasy všetkých družstiev ---------------- */
+    let clubPromise = null, clubInfo = null, weekStart = null;
+    const TZ = 'Europe/Bratislava';
+    const localParts = (d) => { const p = {}; new Intl.DateTimeFormat('en-GB', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(d).forEach((x) => { p[x.type] = x.value; }); return p; };
+    /** "YYYY-MM-DD" pondelka týždňa, v ktorom je dátum (miestny čas) */
+    const mondayOf = (d) => {
+        const p = localParts(d);
+        const wd = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].indexOf(p.weekday);
+        const u = new Date(Date.UTC(+p.year, +p.month - 1, +p.day - wd));
+        return u.toISOString().slice(0, 10);
+    };
+    const addDays = (ymd, n) => { const u = new Date(ymd + 'T00:00:00Z'); u.setUTCDate(u.getUTCDate() + n); return u.toISOString().slice(0, 10); };
+    const ymdOf = (d) => { const p = localParts(d); return p.year + '-' + p.month + '-' + p.day; };
+    const weekMatches = (ws) => ((clubInfo || {}).matches || []).filter((m) => { const y = ymdOf(new Date(m.date)); return y >= ws && y <= addDays(ws, 6); });
+    function loadClub() {
+        if (MODE !== 'club' || !M.club) return Promise.resolve(null);
+        if (!clubPromise) {
+            $('#loadingText').text('Načítavam zápasy všetkých družstiev klubu…');
+            clubPromise = getJson('api-club?club=' + encodeURIComponent(M.club) + '&s=' + encodeURIComponent(M.season || ''))
+                .then((j) => {
+                    clubInfo = j;
+                    if (!weekStart) {
+                        weekStart = /^\d{4}-\d{2}-\d{2}$/.test(M.week || '') ? mondayOf(new Date(M.week + 'T12:00:00Z')) : mondayOf(new Date());
+                        // bez zápasov v tomto týždni -> najbližší týždeň so zápasmi (dopredu, potom dozadu)
+                        if (!M.week && !weekMatches(weekStart).length) {
+                            const next = (j.matches || []).find((m) => ymdOf(new Date(m.date)) >= weekStart);
+                            const prev = [...(j.matches || [])].reverse().find((m) => ymdOf(new Date(m.date)) < weekStart);
+                            const pick = next || prev;
+                            if (pick) weekStart = mondayOf(new Date(pick.date));
+                        }
+                    }
+                    return j;
+                })
+                .catch((e) => { MD.toast('Zápasy klubu sa nepodarilo načítať: ' + e.message, 'danger'); clubInfo = { matches: [], failed: true }; weekStart = weekStart || mondayOf(new Date()); return clubInfo; });
+        }
+        return clubPromise;
+    }
+    const fmtDay = (ymd, withYear) => { const [y, m, d] = ymd.split('-'); return (+d) + '. ' + (+m) + '.' + (withYear ? ' ' + y : ''); };
+    function weekendData() {
+        const list = weekMatches(weekStart);
+        const days = ['Ne', 'Po', 'Ut', 'St', 'Št', 'Pi', 'So'];
+        let rows = list.map((m) => {
+            const d = new Date(m.date);
+            const p = localParts(d);
+            const wd = days[['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(p.weekday)] || '';
+            return { home: m.home.name, away: m.away.name, hs: m.home.score, as: m.away.score, played: !!m.played, time: (p.hour === '24' ? '00' : p.hour) + ':' + p.minute, day: wd,
+                own: false, homeLogo: m.home.logo, awayLogo: m.away.logo, date: m.date, label: m.cat, result: m.result, cat: m.cat };
+        });
+        if ($('#weekByCat').is(':checked')) {
+            const order = ((clubInfo || {}).teams || []).map((t) => t.cat);
+            rows = rows.sort((a, b) => (order.indexOf(a.cat) - order.indexOf(b.cat)) || String(a.date).localeCompare(String(b.date)));
+        }
+        const nPlayed = rows.filter((r) => r.played).length;
+        const ys = list.map((m) => ymdOf(new Date(m.date)));
+        const from = ys.length ? ys[0] : weekStart, to = ys.length ? ys[ys.length - 1] : addDays(weekStart, 6);
+        const range = from === to ? fmtDay(from, true) : fmtDay(from, from.slice(0, 4) !== to.slice(0, 4)) + ' – ' + fmtDay(to, true);
+        return { rows, title: !rows.length ? 'VÍKEND KLUBU' : nPlayed === rows.length ? 'VÝSLEDKY VÍKENDU' : nPlayed === 0 ? 'PROGRAM VÍKENDU' : 'VÍKEND KLUBU', range };
+    }
+    function renderWeekCard() {
+        if (MODE !== 'club') return;
+        $('#weekLabel').text(weekStart ? fmtDay(weekStart, false) + ' – ' + fmtDay(addDays(weekStart, 6), true) : '…');
+        const list = weekStart ? weekMatches(weekStart) : [];
+        const res = { V: 'success', R: 'warning', P: 'danger' };
+        $('#weekInfo').html(!clubInfo ? '<span class="text-muted-2">Načítavam…</span>' : !list.length ? '<div class="alert alert-info py-2 mb-0">V tomto týždni klub nehrá. Prepnite týždeň šípkami.</div>'
+            : list.map((m) => '<div class="d-flex justify-content-between gap-2 py-1 border-top"><span class="text-truncate"><span class="text-muted-2">' + esc(m.cat) + ':</span> ' + esc(m.home.name) + ' – ' + esc(m.away.name) + '</span><span class="text-nowrap">'
+                + (m.played ? '<strong>' + m.home.score + ':' + m.away.score + '</strong> <span class="badge text-bg-' + (res[m.result] || 'secondary') + '">' + esc(m.result) + '</span>' : esc(new Date(m.date).toLocaleString('sk-SK', { weekday: 'short', hour: '2-digit', minute: '2-digit', timeZone: TZ }))) + '</span></div>').join(''));
     }
 
     /** Vzájomné zápasy a forma oboch družstiev – načíta sa raz */
@@ -255,6 +323,15 @@
             data.form = list.map((m) => m.result).reverse();
         }
 
+        if (type === 'weekend') {
+            const w = weekendData();
+            data.fixtures = w.rows;
+            data.weekend = { title: w.title, range: w.range };
+            data.team = M.d1name;
+            data.startDate = w.rows[0] ? w.rows[0].date : '';
+            data.table = [];
+        }
+
         if (MODE === 'player') {
             const P = findPlayer();
             data.player = P || { name: '', nr: '' };
@@ -381,6 +458,7 @@
         $('#playersCard').prop('hidden', !show);
         $('#roundCard').prop('hidden', type !== 'round');
         renderExtraCard();
+        renderWeekCard();
         if (MODE === 'player') syncPlayerCard();
         if (!show) return;
         const eff = applyTypeData();
@@ -430,6 +508,7 @@
                 loadLogos(),
                 needMatch ? loadMatch() : Promise.resolve(),
                 MODE === 'match' && ['h2h', 'form'].includes(type) ? loadExtra() : Promise.resolve(),
+                MODE === 'club' ? loadClub() : Promise.resolve(),
                 MODE !== 'match' ? loadTeam() : Promise.resolve(),
             ]);
             if (seq !== renderSeq) return;
@@ -456,7 +535,7 @@
                     if (mm) oppUrl = mm.home.id === T.id ? mm.away.logo : mm.home.logo;
                 }
                 assets.logos.opponent = oppUrl ? await logo(oppUrl) : null;
-                const urls = [...new Set([...(type === 'table' || type === 'stats' ? (data.table || []).map((r) => r.logo) : []), ...(type === 'round' ? (data.fixtures || []).flatMap((m) => [m.homeLogo, m.awayLogo]) : [])].filter(Boolean))];
+                const urls = [...new Set([...(type === 'table' || type === 'stats' ? (data.table || []).map((r) => r.logo) : []), ...(type === 'round' || type === 'weekend' ? (data.fixtures || []).flatMap((m) => [m.homeLogo, m.awayLogo]) : [])].filter(Boolean))];
                 const imgs = await Promise.all(urls.map(logo));
                 urls.forEach((u, i) => { if (imgs[i]) assets.teamLogos[u] = imgs[i]; });
                 if (MODE === 'player') assets.photo = await loadPhoto();
@@ -465,7 +544,7 @@
             MD.render(canvas, tpl, data, assets);
             $('#btnDownload, #btnCopy, #btnSaveServer').prop('disabled', false);
             const empty = (type === 'lineup' && !data.players.start.length && !data.players.subs.length) || (SQUAD() && !data.players.squad.length)
-                || (MODE === 'player' && !findPlayer()) || (type === 'table' && !(data.table || []).length) || (type === 'round' && !(data.fixtures || []).length) || ((type === 'h2h' || type === 'form') && !(data.fixtures || []).length);
+                || (MODE === 'player' && !findPlayer()) || (type === 'table' && !(data.table || []).length) || (type === 'round' && !(data.fixtures || []).length) || ((type === 'h2h' || type === 'form' || type === 'weekend') && !(data.fixtures || []).length);
             if (empty) srvState('idle', 'Uloženie na server', 'Bez údajov sa obrázok automaticky neukladá – doplňte údaje alebo kliknite na Uložiť.');
             else if ($('#autoSave').is(':checked')) saveToServer();
             else srvState('idle', 'Uloženie na server', 'Automatické ukladanie je vypnuté – kliknite na Uložiť.');
@@ -490,9 +569,10 @@
 
     const slug = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase();
     function fileName() {
-        const prefix = { matchday: 'matchday', lineup: 'zostava', result: 'vysledok', goals: 'strelci', report: 'suhrn', squad: 'supiska', table: 'tabulka', round: 'kolo', stats: 'statistiky', player: 'profil', motm: 'hrac-zapasu', milestone: 'jubileum', h2h: 'vzajomne', form: 'forma' }[type] || type;
+        const prefix = { matchday: 'matchday', lineup: 'zostava', result: 'vysledok', goals: 'strelci', report: 'suhrn', squad: 'supiska', table: 'tabulka', round: 'kolo', stats: 'statistiky', player: 'profil', motm: 'hrac-zapasu', milestone: 'jubileum', h2h: 'vzajomne', form: 'forma', weekend: 'vikend' }[type] || type;
         if (MODE === 'match') return [prefix, slug(M.d1name), 'vs', slug(M.d2name)].join('_') + ((type === 'lineup' || type === 'form') ? '_' + slug(data.team) : '') + '.png';
         if (MODE === 'player') return [prefix, slug((findPlayer() || {}).name), slug(M.d1name)].filter(Boolean).join('_') + '.png';
+        if (MODE === 'club') return [prefix, slug(M.d1name), weekStart || ''].filter(Boolean).join('_') + '.png';
         return [prefix, slug(M.d1name), slug(M.category), type === 'round' ? (data.round || '') + '-kolo' : '', slug(M.season)].filter(Boolean).join('_') + '.png';
     }
 
@@ -525,10 +605,11 @@
                 startDate: isMatch ? (M.startDate || '') : (savedType === 'motm' || savedType === 'round' ? data.startDate || '' : ''),
                 competition: data.competition || M.competition || '', round: isMatch || savedType === 'round' || savedType === 'motm' ? String(data.round || M.round || '') : '',
                 score1: isMatch ? (M.score1 || '') : '', score2: isMatch ? (M.score2 || '') : '', matchID: isMatch ? (M.matchID || '') : (savedType === 'motm' ? matchRef : ''),
-                season: M.season || '', category: M.category || '', teamID: M.team || '', variant: (savedType === 'lineup' || savedType === 'form') ? side : '',
+                season: M.season || '', category: M.category || '', teamID: M.team || M.club || '', variant: (savedType === 'lineup' || savedType === 'form') ? side : '',
                 player: MODE === 'player' && P ? P.name : '', playerKey: MODE === 'player' && P ? P.key : '',
                 roundNo: savedType === 'round' ? String((data.roundInfo || {}).no || '') : '',
                 mvalue: savedType === 'milestone' ? String((data.milestone || {}).value || '') : '',
+                week: savedType === 'weekend' ? (weekStart || '') : '',
             });
             const r = await fetch('api-save?' + q.toString(), { method: 'POST', headers: MD.clientHeaders({ 'Content-Type': 'image/png', 'X-MD-Mode': $('#autoSave').is(':checked') ? 'auto' : 'manual' }), body: blob });
             const txt = await r.text();
@@ -564,6 +645,12 @@
         setQs('type', type);
         render();
     });
+
+    const setWeek = (ws) => { weekStart = ws; setQs('week', ws); render(); };
+    $('#weekPrev').on('click', () => weekStart && setWeek(addDays(weekStart, -7)));
+    $('#weekNext').on('click', () => weekStart && setWeek(addDays(weekStart, 7)));
+    $('#weekNow').on('click', () => setWeek(mondayOf(new Date())));
+    $('#weekByCat').on('change', render);
 
     $('#formSide').on('click', '[data-side]', function () {
         if (this.dataset.side === side) return;

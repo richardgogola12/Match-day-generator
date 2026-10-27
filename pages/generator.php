@@ -3,6 +3,7 @@
 		'match'  => ['matchday' => ['bi-calendar-event', 'Match day'], 'lineup' => ['bi-person-lines-fill', 'Zostava'], 'result' => ['bi-trophy', 'Výsledok'], 'goals' => ['bi-list-ol', 'Strelci'], 'report' => ['bi-file-text', 'Súhrn'], 'h2h' => ['bi-bar-chart-steps', 'Vzájomné'], 'form' => ['bi-graph-up-arrow', 'Forma']],
 		'team'   => ['squad' => ['bi-people', 'Súpiska'], 'table' => ['bi-list-ol', 'Tabuľka'], 'round' => ['bi-calendar-week', 'Kolo'], 'stats' => ['bi-bar-chart-line', 'Štatistiky']],
 		'player' => ['player' => ['bi-person-vcard', 'Profil'], 'motm' => ['bi-award', 'Hráč zápasu'], 'milestone' => ['bi-trophy', 'Jubileum']],
+		'club'   => ['weekend' => ['bi-calendar2-week', 'Víkend klubu']],
 	];
 	$type = $_GET['type'] ?? 'matchday';
 	$mode = 'match';
@@ -16,7 +17,7 @@
 		'score1' => $g('score1'), 'score2' => $g('score2'), 'matchID' => $g('matchID'),
 		'team1ID' => $g('team1ID'), 'team2ID' => $g('team2ID'), 'myTeam' => $g('myTeam'),
 		// družstvo / hráč
-		'team' => $g('team'), 'category' => $g('category'), 'season' => $g('season'),
+		'team' => $g('team'), 'category' => $g('category'), 'season' => $g('season'), 'club' => $g('club'), 'week' => $g('week'),
 		'player' => $g('player'), 'matchRef' => $g('matchRef'), 'roundNo' => $g('roundNo'),
 		'mvalue' => $g('mvalue'), 'mkind' => $g('mkind'),
 	];
@@ -46,7 +47,7 @@
 				<?php if ($match['competition']): ?><span class="hero-eyebrow"><i class="bi bi-trophy"></i> <?= plain($match['competition']) ?></span><?php endif; ?>
 			</div>
 		<?php else: ?>
-			<h1 class="mb-2"><span id="heroPlayer"><?= $mode === 'player' ? '' : 'Družstvo ' ?></span><span class="accent"><?= plain($match['d1name']) ?></span></h1>
+			<h1 class="mb-2"><span id="heroPlayer"><?= $mode === 'player' ? '' : ($mode === 'club' ? 'Klub ' : 'Družstvo ') ?></span><span class="accent"><?= plain($match['d1name']) ?></span></h1>
 			<div class="d-flex flex-wrap gap-2">
 				<?php if ($match['category']): ?><span class="hero-eyebrow"><i class="bi bi-people"></i> <?= plain($match['category']) ?></span><?php endif; ?>
 				<?php if ($match['season']): ?><span class="hero-eyebrow"><i class="bi bi-calendar3"></i> <?= plain($match['season']) ?></span><?php endif; ?>
@@ -159,6 +160,28 @@
 						<div class="form-text">V tejto sezóne: <span id="msHint"></span>. Pri celkovom počte za kariéru zadajte číslo ručne.</div>
 					</div>
 					<div id="playerStats" class="small text-muted-2 mt-2"></div>
+				</div>
+			</div>
+			<?php endif; ?>
+
+			<?php if ($mode === 'club'): ?>
+			<!-- Týždeň (víkend klubu) -->
+			<div class="card-app mb-4" id="weekCard">
+				<div class="card-body">
+					<h2 class="h6 section-title text-uppercase text-muted-2 mb-3">Týždeň</h2>
+					<div class="input-group mb-3">
+						<button class="btn btn-outline-secondary" type="button" id="weekPrev" title="Predchádzajúci týždeň" aria-label="Predchádzajúci týždeň"><i class="bi bi-chevron-left"></i></button>
+						<span class="form-control text-center fw-semibold" id="weekLabel">…</span>
+						<button class="btn btn-outline-secondary" type="button" id="weekNext" title="Nasledujúci týždeň" aria-label="Nasledujúci týždeň"><i class="bi bi-chevron-right"></i></button>
+					</div>
+					<div class="d-flex gap-2 mb-3">
+						<button class="btn btn-sm btn-outline-primary flex-fill" type="button" id="weekNow">Tento týždeň</button>
+					</div>
+					<div class="form-check form-switch mb-2">
+						<input class="form-check-input" type="checkbox" role="switch" id="weekByCat">
+						<label class="form-check-label small" for="weekByCat">Zoradiť podľa družstva (inak podľa času)</label>
+					</div>
+					<div id="weekInfo" class="small"></div>
 				</div>
 			</div>
 			<?php endif; ?>

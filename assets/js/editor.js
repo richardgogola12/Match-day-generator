@@ -57,7 +57,7 @@
             const hasPlayers = lastMatch.players && ['start', 'subs', 'squad', 'scorers'].some((k) => (lastMatch.players[k] || []).length);
             // chýbajúce časti (tabuľka, kolo, hráč …) doplní ukážka
             const fill = {};
-            ['table', 'fixtures', 'player', 'playerMatch', 'milestone', 'cards', 'report', 'roundInfo', 'afterRound', 'h2h', 'form'].forEach((k) => {
+            ['table', 'fixtures', 'player', 'playerMatch', 'milestone', 'cards', 'report', 'roundInfo', 'afterRound', 'h2h', 'form', 'weekend'].forEach((k) => {
                 const v = lastMatch[k];
                 if (v === undefined || v === null || (Array.isArray(v) && !v.length)) fill[k] = sample[k];
             });
@@ -523,6 +523,8 @@
             { prop: 'maxRows', label: 'Max. zápasov', type: 'number', min: 1, max: 40, col: 4 },
             { prop: 'showLogos', label: 'Logá', type: 'switch', col: 4 },
             { prop: 'showDate', label: 'Deň pri čase', type: 'switch', col: 4 },
+            { prop: 'showLabel', label: 'Družstvo nad zápasom', type: 'switch', col: 6 },
+            { prop: 'labelColor', label: 'Farba družstva', type: 'color', col: 6 },
             { prop: 'uppercase', label: 'VEĽKÉ', type: 'switch', col: 4 },
             { prop: 'maxY', label: 'Spodná hranica (Y)', type: 'number', min: 0, max: 8000, col: 6 },
             { prop: 'autoFit', label: 'Zmenšiť, keď sa nezmestí', type: 'switch', col: 6 },
@@ -973,7 +975,7 @@
     function renderTabs() {
         const all = MD.store.loadTemplates();
         const G = MD.TYPE_GROUPS || { all: MD.TEMPLATE_IDS };
-        const names = { match: 'Zápas', team: 'Družstvo', player: 'Hráč' };
+        const names = { match: 'Zápas', team: 'Družstvo', player: 'Hráč', club: 'Klub' };
         $('#tplTabs').html(Object.keys(G).map((g) =>
             '<li class="nav-group-label">' + (names[g] || '') + '</li>' +
             G[g].map((id) => '<li class="nav-item"><button type="button" class="nav-link' + (id === S.tplId ? ' active' : '') + '" data-tpl="' + id + '"><i class="bi ' + all[id].icon + ' me-1"></i>' + all[id].name + '</button></li>').join('')

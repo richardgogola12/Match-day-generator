@@ -91,7 +91,7 @@
         ['{milestone}', 'jubileum (číslo)'], ['{milestoneLabel}', 'jubileum (text)'],
         ['{matchHome}', 'zápas – domáci'], ['{matchAway}', 'zápas – hostia'], ['{matchScore}', 'zápas – skóre'], ['{matchGoals}', 'góly hráča v zápase'],
         ['{roundTitle}', 'PROGRAM / VÝSLEDKY'], ['{afterRound}', 'po 13. kole'],
-        ['{h2hPlayed}', 'počet vzájomných zápasov'],
+        ['{h2hPlayed}', 'počet vzájomných zápasov'], ['{weekendTitle}', 'PROGRAM / VÝSLEDKY VÍKENDU'], ['{weekendRange}', 'dátumy víkendu'],
         ['{tpos}', 'miesto v tabuľke'], ['{tpts}', 'body'], ['{tp}', 'zápasy'], ['{tw}', 'výhry'], ['{td}', 'remízy'], ['{tl}', 'prehry'], ['{tgf}', 'strelené'], ['{tga}', 'inkasované'],
     ];
 
@@ -211,6 +211,7 @@
             halftime: (data.report || {}).halftime || '', spectators: (data.report || {}).spectators || '',
             referee: (data.report || {}).referee || '', venue: (data.report || {}).venue || '',
             h2hPlayed: String((data.h2h || {}).played ?? ''),
+            weekendTitle: (data.weekend || {}).title || '', weekendRange: (data.weekend || {}).range || '',
         }, playerTokens(data), teamTokens(data), dateParts(data.startDate));
     };
 
@@ -708,6 +709,14 @@
             ctx.textAlign = 'center';
             ctx.font = (m.played ? 'bold ' : '') + Math.round(size * (m.played ? 1 : 0.8)) + 'px "' + (el.font || MD.FONT) + '", sans-serif';
             ctx.fillText(m.played ? m.hs + ':' + m.as : (el.showDate && m.day ? m.day + ' ' : '') + (m.time || '–'), cx, mid + 1);
+            // družstvo (kategória) nad výsledkom – obrázok Víkend klubu
+            if (el.showLabel && m.label) {
+                ctx.font = 'bold ' + Math.round(size * 0.58) + 'px "' + (el.font || MD.FONT) + '", sans-serif';
+                ctx.fillStyle = el.labelColor || '#ffd166';
+                ctx.textBaseline = 'alphabetic';
+                ctx.fillText((el.uppercase === false ? m.label : String(m.label).toLocaleUpperCase('sk')), cx, mid - pillH / 2 - 4);
+                ctx.textBaseline = 'middle';
+            }
         });
         ctx.restore();
         return { x: el.x - 8, y: el.y, w: W + 16, h: Math.max(rowH, list.length * rowH), maxY: el.maxY };
@@ -871,6 +880,7 @@
             afterRound: 'po 12. kole',
             h2h: { played: 8, rows: [['VÝHRY', 4, 3], ['REMÍZY', 1, 1], ['PREHRY', 3, 4], ['GÓLY', 14, 11], ['ŽLTÉ KARTY', 12, 15], ['ČERVENÉ KARTY', 1, 0]].map(([label, home, away]) => ({ label, home, away })) },
             form: ['V', 'V', 'R', 'P', 'V'],
+            weekend: { title: 'PROGRAM VÍKENDU', range: '31. 10. – 2. 11. 2026' },
             roundInfo: { title: 'VÝSLEDKY KOLA', no: 12 },
             table: [
                 ['FK Slovan Horná Ves', 12, 8, 2, 2, 27, 12], ['TJ Sokol Podhradie', 12, 7, 3, 2, 21, 13], ['MFK Považan', 12, 7, 1, 4, 19, 15],
@@ -881,7 +891,7 @@
             fixtures: [
                 ['FK Slovan Horná Ves', 'TJ Družstevník Veľké Ludince', 3, 2], ['TJ Sokol Podhradie', 'MFK Považan', 1, 1], ['ŠK Kamenec', 'OFK Lipové 1921', 2, 0],
                 ['FC Hrabové', 'TJ Javorina Horná Ves', 0, 1], ['FK Dolná Lúka', 'TJ Slovan Brezina', 2, 2], ['ŠK Vŕbové', 'FK Lehota', null, null],
-            ].map(([home, away, hs, as], i) => ({ home, away, hs, as, played: hs !== null, time: '14:30', day: 'Ne', own: i === 0, homeLogo: '', awayLogo: '' })),
+            ].map(([home, away, hs, as], i) => ({ home, away, hs, as, played: hs !== null, time: '14:30', day: 'Ne', own: i === 0, homeLogo: '', awayLogo: '', label: ['Muži A', 'Dorast U19', 'Žiaci U15', 'Muži B', 'Ženy', 'Žiaci U13'][i] })),
         },
         logos: { home: sampleLogo('H', '#e63946', '#8d0f1a'), away: sampleLogo('L', '#1d7bf2', '#0b3a8a') },
     };

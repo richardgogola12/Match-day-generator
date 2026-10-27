@@ -27,7 +27,7 @@
     const isMatch = (it) => MATCH_TYPES.includes(it.type);
     const title = (it) => (isMatch(it) ? it.d1name + ' vs ' + it.d2name : (it.player ? it.player + ' – ' : '') + it.d1name + (it.category && !it.player ? ' – ' + it.category : ''));
     // dátum zápasu, pri obrázkoch družstva / hráča sezóna (a kolo)
-    const when = (it) => (isMatch(it) ? fmtDate(it.startDate) : [it.type === 'round' && it.roundNo ? it.roundNo + '. kolo' : '', it.type === 'milestone' && it.mvalue ? it.mvalue + '. ' : '', it.season ? 'Sezóna ' + it.season : ''].filter(Boolean).join(' · '));
+    const when = (it) => (isMatch(it) ? fmtDate(it.startDate) : [it.type === 'round' && it.roundNo ? it.roundNo + '. kolo' : '', it.type === 'milestone' && it.mvalue ? it.mvalue + '. ' : '', it.type === 'weekend' && it.week ? 'Týždeň od ' + fmtDate(it.week) : '', it.season ? 'Sezóna ' + it.season : ''].filter(Boolean).join(' · '));
     // pri zostave aj družstvo, ktorého zostava to je
     const variantTxt = (it) => ((it.type === 'lineup' || it.type === 'form') && it.variant ? (it.variant === 'away' ? it.d2name : it.d1name) : '');
     const typeName = (it) => it.typeName || TYPES[it.type] || it.type;

@@ -29,6 +29,7 @@
 		'zapis'      => ['bi-file-text', 'Detail zápasu'],
 		'druzstvo'   => ['bi-bar-chart-line', 'Prehľad družstva'],
 		'obr-druzstvo' => ['bi-table', 'Tabuľka, kolo, štatistiky'],
+		'vikend'       => ['bi-calendar2-week', 'Víkend klubu'],
 		'profil'     => ['bi-person-vcard', 'Profil hráča'],
 		'obr-hrac'   => ['bi-award', 'Hráč zápasu a jubileum'],
 		'ulozenie'   => ['bi-cloud-check', 'Uloženie na server'],
@@ -91,7 +92,7 @@
 <section id="uvod">
 	<h2><i class="bi bi-info-circle"></i>Čo aplikácia robí</h2>
 	<p><strong>Match Day Generator</strong> vytvára hotové grafiky k futbalovým zápasom z oficiálnych údajov <strong>Futbalnet / Sportnet SFZ</strong>. Nemusíte nič prepisovať – názvy tímov, logá, dátum, čas, výsledok, strelcov, zostavy, tabuľku aj štatistiky hráčov si aplikácia načíta sama. Vy si iba vyberiete zápas a stiahnete obrázok.</p>
-	<p>K dispozícii je štrnásť typov obrázkov v troch skupinách – k <strong>zápasu</strong> (Match day, Zostava, Výsledok, Strelci, Súhrn, Vzájomné zápasy, Forma), k <strong>družstvu</strong> (Súpiska, Tabuľka, Kolo, Štatistiky) a k <strong>hráčovi</strong> (Profil, Hráč zápasu, Jubileum). Niekoľko ukážok:</p>
+	<p>K dispozícii je pätnásť typov obrázkov – k <strong>klubu</strong> (Víkend klubu) a v troch skupinách – k <strong>zápasu</strong> (Match day, Zostava, Výsledok, Strelci, Súhrn, Vzájomné zápasy, Forma), k <strong>družstvu</strong> (Súpiska, Tabuľka, Kolo, Štatistiky) a k <strong>hráčovi</strong> (Profil, Hráč zápasu, Jubileum). Niekoľko ukážok:</p>
 	<div class="row g-3 my-3">
 		<div class="col-6 col-md-4">
 			<?= guide_shot('ukazka-matchday.webp', 'Ukážka obrázka Match day', '<strong>Match day</strong> – pozvánka na zápas: logá, dátum, čas výkopu, súťaž a kolo.', 'guide-shot-tile') ?>
@@ -116,6 +117,9 @@
 		</div>
 		<div class="col-6 col-md-4">
 			<?= guide_shot('ukazka-forma.webp', 'Ukážka obrázka Forma', '<strong>Forma</strong> – posledných 5 zápasov družstva s výsledkami V / R / P.', 'guide-shot-tile') ?>
+		</div>
+		<div class="col-6 col-md-4">
+			<?= guide_shot('ukazka-vikend.webp', 'Ukážka obrázka Víkend klubu', '<strong>Víkend klubu</strong> – zápasy všetkých družstiev klubu v týždni.', 'guide-shot-tile') ?>
 		</div>
 		<div class="col-6 col-md-4">
 			<?= guide_shot('ukazka-tabulka.webp', 'Ukážka obrázka Tabuľka', '<strong>Tabuľka</strong> – poradie súťaže so zvýrazneným vaším družstvom.', 'guide-shot-tile') ?>
@@ -319,6 +323,18 @@
 		<i class="bi bi-info-circle-fill"></i>
 		<div><strong>Minúty, zápasy a štarty</strong> sú oficiálne štatistiky Sportnetu (rovnaké ako na futbalnet.sk) – nevyužitý náhradník sa do zápasov nezapočíta. Góly a karty sa berú zo zápisov o stretnutí. <strong>Tabuľka</strong> je oficiálna tabuľka súťaže zo Sportnetu vrátane kontumácií a odpočtov bodov (dôvod odpočtu sa zobrazí pod tabuľkou); ak ju Sportnet nemá, vypočíta sa z výsledkov a stránka to oznámi. Prvé načítanie môže trvať niekoľko sekúnd, potom sa údaje hodinu uchovávajú.</div>
 	</div>
+</section>
+
+<!-- ================================================================== -->
+<section id="vikend">
+	<h2><i class="bi bi-calendar2-week"></i>Víkend klubu</h2>
+	<p>Na stránke klubu kliknite pod názvom klubu na žlté tlačidlo <strong>Víkend klubu</strong>. Vznikne jeden obrázok so zápasmi <strong>všetkých družstiev klubu</strong> (muži, dorast, žiaci…) v jednom týždni – nad každým zápasom je názov družstva.</p>
+	<ul class="guide-list">
+		<li>Predvolene sa zobrazí <strong>tento týždeň</strong>; ak v ňom klub nehrá, najbližší týždeň so zápasmi. Šípkami v karte <strong>Týždeň</strong> prepnete na predchádzajúci alebo nasledujúci týždeň.</li>
+		<li>Nadpis sa nastaví sám: <em>PROGRAM VÍKENDU</em> (zápasy sa ešte nehrali – pri zápase je deň a čas), <em>VÝSLEDKY VÍKENDU</em> (všetko odohrané – pri zápase je skóre) alebo <em>VÍKEND KLUBU</em> (čiastočne).</li>
+		<li>Prepínačom <em>Zoradiť podľa družstva</em> zoradíte zápasy od mužov po žiakov, inak sú podľa času.</li>
+		<li>V galérii sa ukladá jeden obrázok na klub a týždeň – po ďalšom vygenerovaní sa prepíše.</li>
+	</ul>
 </section>
 
 <!-- ================================================================== -->
@@ -644,6 +660,7 @@
 		<li>Otvorte <strong>/spravca</strong>, zadajte heslo a kliknite na <strong>Prihlásiť</strong>. V menu pribudne položka <strong>Správca</strong>.</li>
 		<li><strong>Galéria všetkých</strong> zobrazí obrázky zo všetkých prehliadačov vrátane tých, ktoré si používatelia skryli. Ikonou <i class="bi bi-trash"></i> obrázok <strong>natrvalo zmažete</strong> zo servera.</li>
 		<li><strong>Log generovania</strong> zobrazí po mesiacoch, kedy a aký obrázok vznikol. Dá sa prehľadávať a stiahnuť ako TXT.</li>
+		<li><strong>Kontrola Sportnetu</strong> (menu Správca) postupne overí všetkých 13 zdrojov dát na zadanom klube – sezóny, hľadanie, družstvá, zápasy, zápis, tabuľku, minúty, hráča, vzájomné zápasy – s časom odozvy. Zelená = v poriadku, žltá = zdroj odpovedá, ale klub nemá dáta (skúste iný), červená = Sportnet neodpovedá alebo zmenil formát. Tlačidlom <strong>Vymazať cache</strong> sa zahodia uložené odpovede Sportnetu a logá, takže sa načítajú nanovo.</li>
 		<li><strong>Kontrola údajov zostavy</strong> – ak by Sportnet zmenil formát zápisu a zostavy by sa prestali načítavať, prihlásený správca vidí surové údaje zápisu na adrese <code>api-match?id=ID_ZÁPASU&amp;debug=1</code> (ID zápasu je v adrese generátora za <code>matchID=</code>).</li>
 		<li>Po skončení sa odhláste (menu Správca → <strong>Odhlásiť</strong>).</li>
 	</ol>

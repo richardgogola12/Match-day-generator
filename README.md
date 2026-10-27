@@ -2,7 +2,8 @@
 
 PHP + Bootstrap 5 aplikácia na generovanie zápasových grafík pre futbalové kluby (dáta zo Sportnet / Futbalnet SFZ).
 
-Štrnásť typov obrázkov:
+Pätnásť typov obrázkov:
+- ku klubu: **Víkend klubu** (program / výsledky všetkých družstiev v týždni)
 - k zápasu: **Match day**, **Zostava**, **Výsledok**, **Strelci**, **Súhrn zápasu**, **Vzájomné zápasy**, **Forma**
 - k družstvu: **Súpiska**, **Tabuľka**, **Kolo** (program / výsledky), **Štatistiky**
 - k hráčovi: **Profil hráča**, **Hráč zápasu**, **Jubileum** (s fotkou hráča uloženou v prehliadači)
@@ -20,7 +21,7 @@ PHP + Bootstrap 5 aplikácia na generovanie zápasových grafík pre futbalové 
 - Moderné predvolené pozadia (Match day, Výsledok, Strelci a panel pre ostatné obrázky)
 - Všetky nastavenia sa ukladajú **v prehliadači** (localStorage + IndexedDB), záloha cez export/import JSON
 - Ukladanie vygenerovaných obrázkov na server + galéria (obrázky z daného prehliadača): náhľady, filter, hľadanie, zoradenie, prezeranie na celú obrazovku s listovaním, stiahnutie, zdieľanie
-- Správca (predvolené heslo `asd123`, zmena v `config.local.php`): galéria všetkých prehliadačov, mazanie obrázkov, log generovania
+- Správca (predvolené heslo `asd123`, zmena v `config.local.php`): galéria všetkých prehliadačov, mazanie obrázkov, log generovania, **kontrola Sportnetu** (`/kontrola` – overenie všetkých zdrojov dát a vymazanie cache)
 - Log generovania **bez osobných údajov** – žiadne IP adresy, User-Agent ani údaje o zariadení; iba čo a kedy sa vygenerovalo, rodina prehliadača/systému a anonymné ID
 - Podrobný návod priamo v aplikácii (`/navod`, odkaz v menu) so snímkami obrazovky
 - PWA – inštalácia do zariadenia, offline stránka, svetlý / tmavý režim

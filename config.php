@@ -97,6 +97,7 @@ $routes = array(
     "sw.js"                   => "pwa/sw",
     "offline"                 => "offline",
     "log"                     => "log-viewer",
+    "kontrola"                => "sportnet-check",
 
     // JSON / obrázkové API pre prehliadač
     "api-logo"                => "api/logo",
@@ -108,6 +109,7 @@ $routes = array(
     "api-search"              => "api/search",
     "api-h2h"                 => "api/h2h",
     "api-player"              => "api/player",
+    "api-club"                => "api/club",
 
     // pôvodné serverové generátory (GD) – ponechané ako záloha
     "generate-match-result"   => "generate/generate-result",
