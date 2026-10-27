@@ -391,6 +391,16 @@
         { prop: 'strokeColor', label: 'Farba obrysu', type: 'color', col: 4 },
         { prop: 'opacity', label: 'Krytie', type: 'range', min: 0, max: 1, step: 0.05, col: 12 },
     ];
+    // iba pre text: farebný tieň, natočenie, štítok
+    const textExtra = [
+        { section: 'Tieň, natočenie a štítok' },
+        { prop: 'shadowColor', label: 'Farba tieňa (prázdne = mäkký čierny)', type: 'colorOpt', col: 12 },
+        { prop: 'shadowY', label: 'Posun tieňa (px)', type: 'number', min: -60, max: 60, col: 6 },
+        { prop: 'rotate', label: 'Natočenie (°)', type: 'number', min: -45, max: 45, col: 6 },
+        { prop: 'boxColor', label: 'Štítok za textom (prázdne = bez)', type: 'colorOpt', col: 12 },
+        { prop: 'boxGlow', label: 'Žiara štítku', type: 'switch', col: 6 },
+        { prop: 'boxBorder', label: 'Rámik štítku (px)', type: 'number', min: 0, max: 20, col: 6 },
+    ];
     const position = [
         { prop: 'x', label: 'X', type: 'number', col: 6 },
         { prop: 'y', label: 'Y', type: 'number', col: 6 },
@@ -407,6 +417,7 @@
             { prop: 'maxWidth', label: 'Max. šírka (0 = bez zalomenia)', type: 'number', min: 0, max: 4000, col: 12 },
             { prop: 'showIf', label: 'Zobraziť', type: 'select', options: () => [['', 'vždy'], ['photo', 'iba keď je nahratá fotka hráča'], ['noPhoto', 'iba keď fotka chýba']], col: 12 },
             ...style,
+            ...textExtra,
         ],
         logo: [
             { prop: 'label', label: 'Názov prvku', type: 'text', col: 12 },
@@ -811,8 +822,8 @@
     const SHOWCASE_TEXT = 'MATCH DAY 3:1 · Ľuboš Šťastný';
 
     function renderFontsTab() {
-        $('#fontAll').html(fontOptionsHtml($('#fontAll').val() || 'Biome'));
-        $('#fontAll').css('font-family', '"' + ($('#fontAll').val() || 'Biome') + '", sans-serif');
+        $('#fontAll').html(fontOptionsHtml($('#fontAll').val() || MD.FONT));
+        $('#fontAll').css('font-family', '"' + ($('#fontAll').val() || MD.FONT) + '", sans-serif');
 
         const groups = MD.fontGroups();
         $('#fontShowcase').html(Object.keys(groups).map((g) =>
@@ -833,7 +844,7 @@
 
     // ukážky sa načítajú, až keď je záložka otvorená (šetrí dáta)
     $('button[data-bs-target="#tabFonts"]').on('shown.bs.tab', () => {
-        MD.fontGroups && Object.values(MD.fontGroups()).flat().forEach((f) => MD.loadFamily(f.value));
+        MD.fontGroups && Object.values(MD.fontGroups()).flat().filter((f) => f.value !== 'Biome').forEach((f) => MD.loadFamily(f.value));
     });
 
     $('#fontAll').on('change', function () { this.style.fontFamily = '"' + this.value + '", sans-serif'; MD.loadFamily(this.value); });

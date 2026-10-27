@@ -16,7 +16,8 @@ PHP + Bootstrap 5 aplikácia na generovanie zápasových grafík pre futbalové 
 - Generovanie obrázka priamo v prehliadači (HTML canvas) – stiahnutie PNG, kopírovanie, zdieľanie
 - **Drag & drop editor šablón** – pozície prvkov, písmo, farby, obrys, tieň, vlastné texty a podklady
 - Nastavenie zoznamu strelcov (osadenie, rozostupy, šírka stĺpca, automatické zmenšenie)
-- Vlastné pozadie a rozmer obrázka, 26 Google Fonts + nahranie vlastného písma
+- Jednotné písmo **Barlow Condensed** (OFL, v `assets/fonts`) pre obrázky aj stránku; ďalších 25 Google Fonts + nahranie vlastného písma
+- Moderné predvolené pozadia (Match day, Výsledok, Strelci a panel pre ostatné obrázky)
 - Všetky nastavenia sa ukladajú **v prehliadači** (localStorage + IndexedDB), záloha cez export/import JSON
 - Ukladanie vygenerovaných obrázkov na server + galéria (obrázky z daného prehliadača): náhľady, filter, hľadanie, zoradenie, prezeranie na celú obrazovku s listovaním, stiahnutie, zdieľanie
 - Správca (predvolené heslo `asd123`, zmena v `config.local.php`): galéria všetkých prehliadačov, mazanie obrázkov, log generovania

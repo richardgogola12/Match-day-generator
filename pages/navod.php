@@ -518,6 +518,7 @@
 <section id="pisma">
 	<h2><i class="bi bi-type"></i>Písma</h2>
 	<?= guide_shot('08-pisma.webp', 'Karta Písma v editore', 'Ukážky písiem – kliknutím vyberiete písmo pre označený prvok.', 'guide-shot-narrow') ?>
+	<p>Všetky obrázky aj nadpisy stránky používajú jedno písmo – <strong>Barlow Condensed</strong> (je priamo v aplikácii, nezávisí od internetu). Nadpisy sú tučnou kurzívou s červeným tieňom, podnadpisy v žltom štítku – rovnako ako na pozadiach Match day, Výsledok a Strelci. V editore pri texte nastavíte aj <em>farbu a posun tieňa, natočenie a štítok za textom</em>.</p>
 	<ul class="guide-list">
 		<li><strong>Písmo pre celú šablónu</strong> – vyberte písmo a kliknite na <strong>Použiť</strong>. Zmení sa všetkým textom a zoznamom strelcov. So zapnutým <em>Použiť vo všetkých šablónach</em> sa zmení aj v ostatných šablónach.</li>
 		<li><strong>Ukážky písiem</strong> – desiatky voľne dostupných písiem (Google Fonts). Ak máte označený prvok, kliknutím na ukážku mu písmo hneď zmeníte.</li>

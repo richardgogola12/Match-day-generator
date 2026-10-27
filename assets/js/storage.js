@@ -30,8 +30,12 @@
     const competition = () => ({ id: 'competition', type: 'text', label: 'Súťaž | kolo', text: '{competition} | {roundLabel}', x: 60, y: 940, size: 20, align: 'left', maxWidth: 0 });
 
     // spoločné prvky šablón Zostava a Súpiska (panel pozadia team-bg.jpg: x 116–884, y 96–932)
-    const bigTitle = (text) => ({ id: 'title', type: 'text', label: 'Nadpis', text, x: 500, y: 200, size: 96, align: 'center', color: '#e63946', strokeWidth: 5, strokeColor: '#ffffff', shadow: true, letterSpacing: 3 });
     const yellow = '#ffd166';
+    // jednotný štýl nadpisov (rovnaký ako na pozadiach Match day / Výsledok / Strelci):
+    // biela tučná kurzíva s ostrým červeným tieňom; podnadpis = žltý štítok
+    const TITLE = { align: 'center', color: '#ffffff', bold: true, italic: true, shadow: true, shadowColor: '#e63946', shadowX: 0, shadowY: 6, shadowBlur: 0, letterSpacing: 0 };
+    const PILL = { align: 'center', color: '#0b2a1a', bold: true, italic: true, boxColor: yellow, boxGlow: true, boxBorder: 3, boxBorderColor: '#ffffff', rotate: -5 };
+    const bigTitle = (text) => Object.assign({ id: 'title', type: 'text', label: 'Nadpis', text, x: 500, y: 205, size: 104 }, TITLE);
 
     const DEFAULTS = {
         matchday: {
@@ -41,9 +45,9 @@
             defaultBackground: 'img/match-day-bg.png',
             elements: [
                 ...teamNames(),
-                { id: 'day', type: 'text', label: 'Deň', text: '{day}', x: 260, y: 760, size: 160, align: 'left' },
+                { id: 'day', type: 'text', label: 'Deň', text: '{day}', x: 250, y: 770, size: 180, align: 'left', bold: true, italic: true, shadow: true, shadowColor: '#e63946', shadowY: 6 },
                 { id: 'monthYear', type: 'text', label: 'Mesiac a rok', text: '{month} {year}', x: 470, y: 690, size: 67, align: 'left' },
-                { id: 'time', type: 'text', label: 'Čas', text: '{time}', x: 470, y: 770, size: 67, align: 'left' },
+                { id: 'time', type: 'text', label: 'Čas', text: '{time}', x: 470, y: 770, size: 67, align: 'left', bold: true, color: '#ffd166' },
                 competition(),
             ],
         },
@@ -90,8 +94,8 @@
             elements: [
                 { id: 'logo1', type: 'logo', label: 'Logo domácich', team: 'home', x: 165, y: 140, size: 130 },
                 { id: 'logo2', type: 'logo', label: 'Logo hostí', team: 'away', x: 705, y: 140, size: 130 },
-                { id: 'title', type: 'text', label: 'Nadpis', text: 'SÚHRN ZÁPASU', x: 500, y: 165, size: 30, align: 'center', color: yellow, letterSpacing: 3 },
-                { id: 'score', type: 'text', label: 'Skóre', text: '{score1}:{score2}', x: 500, y: 300, size: 130, align: 'center', color: '#ffffff', shadow: true },
+                Object.assign({ id: 'title', type: 'text', label: 'Nadpis', text: 'SÚHRN ZÁPASU', x: 500, y: 190, size: 34 }, PILL, { rotate: -3 }),
+                { id: 'score', type: 'text', label: 'Skóre', text: '{score1}:{score2}', x: 500, y: 305, size: 140, align: 'center', color: '#ffffff', bold: true, italic: true, shadow: true, shadowColor: '#e63946', shadowY: 6 },
                 { id: 'half', type: 'text', label: 'Polčas', text: '(polčas {halftime})', x: 500, y: 345, size: 22, align: 'center', opacity: 0.8 },
                 { id: 'name1', type: 'text', label: 'Názov domácich', text: '{d1name}', x: 230, y: 312, size: 22, align: 'center', maxWidth: 220 },
                 { id: 'name2', type: 'text', label: 'Názov hostí', text: '{d2name}', x: 770, y: 312, size: 22, align: 'center', maxWidth: 220 },
@@ -111,7 +115,7 @@
             width: 1000, height: 1000,
             defaultBackground: 'img/team-bg.jpg',
             elements: [
-                { id: 'title', type: 'text', label: 'Nadpis', text: 'VZÁJOMNÉ ZÁPASY', x: 500, y: 150, size: 64, align: 'center', color: '#e63946', strokeWidth: 4, strokeColor: '#ffffff', shadow: true, letterSpacing: 2 },
+                Object.assign({ id: 'title', type: 'text', label: 'Nadpis', text: 'VZÁJOMNÉ ZÁPASY', x: 500, y: 160, size: 76 }, TITLE),
                 { id: 'logo1', type: 'logo', label: 'Logo domácich', team: 'home', x: 130, y: 190, size: 120 },
                 { id: 'logo2', type: 'logo', label: 'Logo hostí', team: 'away', x: 750, y: 190, size: 120 },
                 { id: 'name1', type: 'text', label: 'Názov domácich', text: '{d1name}', x: 190, y: 345, size: 22, align: 'center', maxWidth: 260 },
@@ -130,12 +134,12 @@
             width: 1000, height: 1000,
             defaultBackground: 'img/team-bg.jpg',
             elements: [
-                { id: 'logoTeam', type: 'logo', label: 'Logo družstva', team: 'team', x: 430, y: 70, size: 140 },
-                { id: 'title', type: 'text', label: 'Nadpis', text: 'FORMA', x: 500, y: 300, size: 96, align: 'center', color: '#e63946', strokeWidth: 5, strokeColor: '#ffffff', shadow: true, letterSpacing: 4 },
-                { id: 'team', type: 'text', label: 'Družstvo', text: '{team}', x: 500, y: 350, size: 30, align: 'center', color: yellow, maxWidth: 800 },
-                { id: 'badges', type: 'formbadges', label: 'Forma (V/R/P)', x: 500, y: 385, size: 64, gap: 18 },
-                { id: 'lastL', type: 'text', label: 'Nadpis – zápasy', text: 'POSLEDNÝCH 5 ZÁPASOV', x: 500, y: 520, size: 20, align: 'center', opacity: 0.85, letterSpacing: 3 },
-                { id: 'fixtures', type: 'fixtures', label: 'Posledné zápasy', x: 140, y: 540, w: 720, rowH: 64, size: 22, maxRows: 5, maxY: 880 },
+                { id: 'logoTeam', type: 'logo', label: 'Logo družstva', team: 'team', x: 440, y: 120, size: 120 },
+                Object.assign({ id: 'title', type: 'text', label: 'Nadpis', text: 'FORMA', x: 500, y: 335, size: 100 }, TITLE),
+                { id: 'team', type: 'text', label: 'Družstvo', text: '{team}', x: 500, y: 382, size: 30, align: 'center', color: yellow, maxWidth: 700, bold: true },
+                { id: 'badges', type: 'formbadges', label: 'Forma (V/R/P)', x: 500, y: 410, size: 60, gap: 16 },
+                { id: 'lastL', type: 'text', label: 'Nadpis – zápasy', text: 'POSLEDNÝCH 5 ZÁPASOV', x: 500, y: 532, size: 20, align: 'center', opacity: 0.85, letterSpacing: 3 },
+                { id: 'fixtures', type: 'fixtures', label: 'Posledné zápasy', x: 150, y: 548, w: 700, rowH: 64, size: 22, maxRows: 5, maxY: 880 },
                 { id: 'next', type: 'text', label: 'Zápas', text: '{d1name} – {d2name} · {date} {time}', x: 500, y: 925, size: 18, align: 'center', opacity: 0.75, maxWidth: 860 },
             ],
         },
@@ -158,7 +162,7 @@
             width: 1000, height: 1000,
             defaultBackground: 'img/team-bg.jpg',
             elements: [
-                { id: 'title', type: 'text', label: 'Nadpis', text: '{roundTitle}', x: 500, y: 200, size: 80, align: 'center', color: '#e63946', strokeWidth: 4, strokeColor: '#ffffff', shadow: true, letterSpacing: 2 },
+                Object.assign({ id: 'title', type: 'text', label: 'Nadpis', text: '{roundTitle}', x: 500, y: 200, size: 92 }, TITLE),
                 { id: 'round', type: 'text', label: 'Kolo a dátum', text: '{roundLabel} · {date}', x: 500, y: 255, size: 26, align: 'center', color: yellow },
                 { id: 'comp', type: 'text', label: 'Súťaž', text: '{competition}', x: 500, y: 292, size: 20, align: 'center', opacity: 0.8 },
                 { id: 'fixtures', type: 'fixtures', label: 'Zápasy', x: 140, y: 330, w: 720, rowH: 72, size: 22, maxY: 915 },
@@ -189,9 +193,9 @@
             defaultBackground: 'img/team-bg.jpg',
             elements: [
                 { id: 'logoTeam', type: 'logo', label: 'Logo družstva', team: 'team', x: 150, y: 118, size: 100 },
-                { id: 'title', type: 'text', label: 'Nadpis', text: 'PROFIL HRÁČA', x: 500, y: 175, size: 34, align: 'center', color: yellow, letterSpacing: 4 },
+                Object.assign({ id: 'title', type: 'text', label: 'Nadpis', text: 'PROFIL HRÁČA', x: 500, y: 178, size: 34 }, PILL, { rotate: -3 }),
                 { id: 'photo', type: 'photo', label: 'Fotka hráča', x: 350, y: 205, w: 300, h: 300, shape: 'circle', borderWidth: 6, borderColor: '#ffffff', shadow: true },
-                { id: 'nr', type: 'text', label: 'Číslo (pri fotke)', text: '{playerNr}', x: 640, y: 500, size: 70, align: 'center', color: '#e63946', strokeWidth: 4, strokeColor: '#ffffff', showIf: 'photo' },
+                Object.assign({ id: 'nr', type: 'text', label: 'Číslo (pri fotke)', text: '{playerNr}', x: 640, y: 500, size: 76, showIf: 'photo' }, TITLE),
                 { id: 'name', type: 'text', label: 'Meno', text: '{player}', x: 500, y: 590, size: 60, align: 'center', uppercase: true, maxWidth: 700, shadow: true },
                 { id: 'team', type: 'text', label: 'Družstvo', text: '{team} · {category} · {season}', x: 500, y: 636, size: 22, align: 'center', color: yellow, maxWidth: 700 },
                 { id: 'shape', type: 'shape', label: 'Podklad štatistík', x: 160, y: 690, w: 680, h: 160, color: '#000000', opacity: 0.35, radius: 20 },
@@ -214,7 +218,7 @@
             elements: [
                 { id: 'logoTeam', type: 'logo', label: 'Logo družstva', team: 'team', x: 150, y: 118, size: 100 },
                 { id: 'logoOpp', type: 'logo', label: 'Logo súpera', team: 'opponent', x: 750, y: 118, size: 100 },
-                { id: 'title', type: 'text', label: 'Nadpis', text: 'HRÁČ ZÁPASU', x: 500, y: 200, size: 84, align: 'center', color: '#e63946', strokeWidth: 4, strokeColor: '#ffffff', shadow: true, letterSpacing: 2 },
+                Object.assign({ id: 'title', type: 'text', label: 'Nadpis', text: 'HRÁČ ZÁPASU', x: 500, y: 200, size: 96 }, TITLE),
                 { id: 'photo', type: 'photo', label: 'Fotka hráča', x: 360, y: 240, w: 280, h: 280, shape: 'circle', borderWidth: 6, borderColor: '#ffd166', shadow: true },
                 { id: 'name', type: 'text', label: 'Meno', text: '{player}', x: 500, y: 610, size: 62, align: 'center', uppercase: true, maxWidth: 700, shadow: true },
                 { id: 'nr', type: 'text', label: 'Číslo', text: '#{playerNr}', x: 500, y: 660, size: 28, align: 'center', color: yellow },
@@ -231,7 +235,7 @@
             elements: [
                 { id: 'logoTeam', type: 'logo', label: 'Logo družstva', team: 'team', x: 150, y: 118, size: 100 },
                 { id: 'logoTeam2', type: 'logo', label: 'Logo vpravo', team: 'team', x: 750, y: 118, size: 100 },
-                { id: 'title', type: 'text', label: 'Nadpis', text: 'JUBILEUM', x: 500, y: 200, size: 90, align: 'center', color: '#e63946', strokeWidth: 4, strokeColor: '#ffffff', shadow: true, letterSpacing: 3 },
+                Object.assign({ id: 'title', type: 'text', label: 'Nadpis', text: 'JUBILEUM', x: 500, y: 200, size: 104 }, TITLE),
                 { id: 'photo', type: 'photo', label: 'Fotka hráča', x: 385, y: 235, w: 230, h: 230, shape: 'circle', borderWidth: 6, borderColor: '#ffffff', shadow: true },
                 { id: 'value', type: 'text', label: 'Číslo jubilea', text: '{milestone}.', x: 500, y: 650, size: 170, align: 'center', color: yellow, shadow: true },
                 { id: 'label', type: 'text', label: 'Text jubilea', text: '{milestoneLabel}', x: 500, y: 715, size: 34, align: 'center', uppercase: true, maxWidth: 700 },
@@ -247,8 +251,8 @@
             defaultBackground: 'img/match-result-bg.png',
             elements: [
                 ...teamNames(),
-                { id: 'score', type: 'text', label: 'Skóre', text: '{score1}:{score2}', x: 500, y: 765, size: 227, align: 'center' },
-                { id: 'day', type: 'text', label: 'Deň', text: '{day}', x: 340, y: 890, size: 107, align: 'left' },
+                { id: 'score', type: 'text', label: 'Skóre', text: '{score1}:{score2}', x: 500, y: 770, size: 240, align: 'center', bold: true, italic: true, shadow: true, shadowColor: '#e63946', shadowY: 8 },
+                { id: 'day', type: 'text', label: 'Deň', text: '{day}', x: 340, y: 892, size: 107, align: 'left', bold: true },
                 { id: 'monthYear', type: 'text', label: 'Mesiac a rok', text: '{month} {year}', x: 490, y: 850, size: 40, align: 'left' },
                 { id: 'time', type: 'text', label: 'Čas', text: '{time}', x: 490, y: 890, size: 40, align: 'left' },
                 competition(),
@@ -261,7 +265,7 @@
             defaultBackground: 'img/match-result-goals-bg.png',
             elements: [
                 ...teamNames(),
-                { id: 'score', type: 'text', label: 'Skóre', text: '{score1}:{score2}', x: 500, y: 655, size: 107, align: 'center' },
+                { id: 'score', type: 'text', label: 'Skóre', text: '{score1}:{score2}', x: 500, y: 660, size: 120, align: 'center', bold: true, italic: true, shadow: true, shadowColor: '#e63946', shadowY: 5 },
                 { id: 'goalsHome', type: 'goals', label: 'Strelci domácich', side: 'home', x: 130, y: 615, size: 21, gap: 34, lineHeight: 1.2, maxWidth: 270, maxY: 925, align: 'left', autoFit: true, minScale: 0.6 },
                 { id: 'goalsAway', type: 'goals', label: 'Strelci hostí', side: 'away', x: 630, y: 615, size: 21, gap: 34, lineHeight: 1.2, maxWidth: 270, maxY: 925, align: 'left', autoFit: true, minScale: 0.6 },
                 competition(),
@@ -271,16 +275,16 @@
 
     /** Spoločné predvolené vlastnosti podľa typu prvku */
     const TYPE_DEFAULTS = {
-        text: { text: 'Text', size: 32, font: 'Biome', color: '#ffffff', align: 'left', maxWidth: 0, lineHeight: 1.25, uppercase: false, bold: false, italic: false, letterSpacing: 0, shadow: false, strokeWidth: 0, strokeColor: '#000000', opacity: 1 },
+        text: { text: 'Text', size: 32, font: 'Barlow Condensed', color: '#ffffff', align: 'left', maxWidth: 0, lineHeight: 1.25, uppercase: false, bold: false, italic: false, letterSpacing: 0, shadow: false, strokeWidth: 0, strokeColor: '#000000', opacity: 1 },
         logo: { team: 'home', size: 120, shadow: false, opacity: 1 },
-        goals: { events: 'goals', side: 'home', size: 21, font: 'Biome', color: '#ffffff', align: 'left', maxWidth: 270, gap: 34, lineHeight: 1.2, maxY: 925, autoFit: true, minScale: 0.6, format: "{min}' {name}", ownPrefix: '(vl.) ', uppercase: false, bold: false, shadow: false, strokeWidth: 0, strokeColor: '#000000', opacity: 1, ownColor: '' },
+        goals: { events: 'goals', side: 'home', size: 21, font: 'Barlow Condensed', color: '#ffffff', align: 'left', maxWidth: 270, gap: 34, lineHeight: 1.2, maxY: 925, autoFit: true, minScale: 0.6, format: "{min}' {name}", ownPrefix: '(vl.) ', uppercase: false, bold: false, shadow: false, strokeWidth: 0, strokeColor: '#000000', opacity: 1, ownColor: '' },
         shape: { w: 300, h: 60, color: '#000000', opacity: 0.5, radius: 12 },
-        photo: { w: 300, h: 300, shape: 'circle', fit: 'cover', borderWidth: 6, borderColor: '#ffffff', bgColor: '#0b2a1a', fallbackText: '{playerNr}', fallbackColor: '#e63946', fallbackColor2: '#8d0f1a', font: 'Biome', color: '#ffffff', shadow: true, opacity: 1, radius: 24 },
-        table: { w: 680, rowH: 42, size: 22, font: 'Biome', color: '#ffffff', headColor: '#ffd166', ownColor: '#ffffff', ptsColor: '#ffd166', highlight: 'rgba(230,57,70,0.85)', stripe: 'rgba(255,255,255,0.05)', header: true, showLogos: true, columns: 'p,w,d,l,score,pts', maxRows: 20, maxY: 915, autoFit: true, ownBold: true, uppercase: false, headName: 'Družstvo', opacity: 1 },
-        fixtures: { w: 720, rowH: 72, size: 22, font: 'Biome', color: '#ffffff', pillColor: '#e63946', pillColor2: 'rgba(255,255,255,0.14)', pillText: '#ffffff', highlight: 'rgba(255,209,102,0.16)', showLogos: true, showDate: false, maxRows: 12, maxY: 915, autoFit: true, uppercase: false, opacity: 1 },
-        compare: { w: 700, rowH: 56, size: 22, font: 'Biome', color: '#ffffff', labelColor: '#ffffff', barHome: '#e63946', barAway: '#ffd166', barBg: 'rgba(255,255,255,0.15)', barH: 8, uppercase: true, opacity: 1 },
-        formbadges: { size: 64, gap: 18, font: 'Biome', color: '#ffffff', winColor: '#22a06b', drawColor: '#f2a516', lossColor: '#d93a3a', max: 5, opacity: 1 },
-        players: { limit: 0, source: 'start', size: 26, font: 'Biome', color: '#ffffff', numColor: '#ffd166', align: 'left', letterSpacing: 0, italic: false, columns: 2, maxWidth: 330, colGap: 20, gap: 44, lineHeight: 1.2, maxY: 900, autoFit: true, minScale: 0.6, format: '{nr}  {name}', capMark: ' (C)', gkMark: ' (B)', emptyText: '', uppercase: false, bold: false, shadow: false, strokeWidth: 0, strokeColor: '#000000', opacity: 1 },
+        photo: { w: 300, h: 300, shape: 'circle', fit: 'cover', borderWidth: 6, borderColor: '#ffffff', bgColor: '#0b2a1a', fallbackText: '{playerNr}', fallbackColor: '#e63946', fallbackColor2: '#8d0f1a', font: 'Barlow Condensed', color: '#ffffff', shadow: true, opacity: 1, radius: 24 },
+        table: { w: 680, rowH: 42, size: 22, font: 'Barlow Condensed', color: '#ffffff', headColor: '#ffd166', ownColor: '#ffffff', ptsColor: '#ffd166', highlight: 'rgba(230,57,70,0.85)', stripe: 'rgba(255,255,255,0.05)', header: true, showLogos: true, columns: 'p,w,d,l,score,pts', maxRows: 20, maxY: 915, autoFit: true, ownBold: true, uppercase: false, headName: 'Družstvo', opacity: 1 },
+        fixtures: { w: 720, rowH: 72, size: 22, font: 'Barlow Condensed', color: '#ffffff', pillColor: '#e63946', pillColor2: 'rgba(255,255,255,0.14)', pillText: '#ffffff', highlight: 'rgba(255,209,102,0.16)', showLogos: true, showDate: false, maxRows: 12, maxY: 915, autoFit: true, uppercase: false, opacity: 1 },
+        compare: { w: 700, rowH: 56, size: 22, font: 'Barlow Condensed', color: '#ffffff', labelColor: '#ffffff', barHome: '#e63946', barAway: '#ffd166', barBg: 'rgba(255,255,255,0.15)', barH: 8, uppercase: true, opacity: 1 },
+        formbadges: { size: 64, gap: 18, font: 'Barlow Condensed', color: '#ffffff', winColor: '#22a06b', drawColor: '#f2a516', lossColor: '#d93a3a', max: 5, opacity: 1 },
+        players: { limit: 0, source: 'start', size: 26, font: 'Barlow Condensed', color: '#ffffff', numColor: '#ffd166', align: 'left', letterSpacing: 0, italic: false, columns: 2, maxWidth: 330, colGap: 20, gap: 44, lineHeight: 1.2, maxY: 900, autoFit: true, minScale: 0.6, format: '{nr}  {name}', capMark: ' (C)', gkMark: ' (B)', emptyText: '', uppercase: false, bold: false, shadow: false, strokeWidth: 0, strokeColor: '#000000', opacity: 1 },
     };
     MD.TYPE_DEFAULTS = TYPE_DEFAULTS;
 
@@ -291,7 +295,8 @@
     const clone = (o) => JSON.parse(JSON.stringify(o));
 
     function normalizeElement(el) {
-        return Object.assign({ visible: true }, TYPE_DEFAULTS[el.type] || {}, el);
+        const out = Object.assign({ visible: true }, TYPE_DEFAULTS[el.type] || {}, el);
+        return out;
     }
 
     function normalizeTemplate(id, tpl) {
@@ -314,6 +319,19 @@
         try { localStorage.setItem(key, JSON.stringify(value)); return true; }
         catch (e) { console.warn('localStorage write failed', e); return false; }
     }
+    // Jednorazový prechod na jednotné písmo: uložené šablóny s písmom Biome (komerčné, v repozitári
+    // nie je – bez neho sa kreslilo náhradným písmom) a pôvodnými červenými nadpismi dostanú nový štýl.
+    (function migrateFonts() {
+        const saved = readLS(LS_KEY, null);
+        if (!saved || readLS('matchday.migrated.font', false)) return;
+        Object.values(saved).forEach((tpl) => (tpl && tpl.elements || []).forEach((el) => {
+            if (el.font === 'Biome') el.font = 'Barlow Condensed';
+            if (el.type === 'text' && el.color === '#e63946' && el.strokeColor === '#ffffff' && el.strokeWidth > 0) Object.assign(el, TITLE, { strokeWidth: 0 });
+        }));
+        writeLS(LS_KEY, saved);
+        writeLS('matchday.migrated.font', true);
+    })();
+
 
     /* ------------------------------------------------------------------ */
     /* Šablóny                                                             */

@@ -19,7 +19,6 @@
         ['Bebas Neue', 'Športové / úzke', ''],
         ['Oswald', 'Športové / úzke', '400;700'],
         ['Teko', 'Športové / úzke', '400;700'],
-        ['Barlow Condensed', 'Športové / úzke', '400;700;900'],
         ['Saira Condensed', 'Športové / úzke', '400;700;900'],
         ['Big Shoulders Display', 'Športové / úzke', '400;700;900'],
         ['Fjalla One', 'Športové / úzke', ''],
@@ -43,8 +42,11 @@
         ['Pacifico', 'Ručne písané', ''],
     ];
 
+    /** Jediné predvolené písmo obrázkov aj stránky */
+    MD.FONT = 'Barlow Condensed';
     MD.FONTS = [
-        { value: 'Biome', label: 'Biome (pôvodné)', group: 'Pôvodné' },
+        { value: 'Barlow Condensed', label: 'Barlow Condensed (predvolené)', group: 'Predvolené' },
+        { value: 'Biome', label: 'Biome (iba ak je nahraté na serveri)', group: 'Predvolené' },
         ...GOOGLE.map(([name, group]) => ({ value: name, label: name, group, google: true })),
         ...['Arial', 'Verdana', 'Trebuchet MS', 'Impact', 'Georgia', 'Courier New'].map((n) => ({ value: n, label: n, group: 'Systémové' })),
     ];
@@ -100,13 +102,15 @@
     let basePromise = null;
     const loadedFamilies = {};
 
-    /** Biome + vlastné nahraté písma (raz za načítanie stránky) */
+    /** Predvolené písmo (Barlow Condensed z assets/fonts) + Biome, ak je na serveri, + vlastné nahraté písma */
     function loadBaseFonts() {
         if (basePromise) return basePromise;
         const tasks = [];
         if ('FontFace' in window) {
-            const face = new FontFace('Biome', 'url("' + MD.assetUrl('fonts/biome-w04-regular.otf') + '")');
-            tasks.push(face.load().then((f) => document.fonts.add(f)).catch((e) => console.warn('Font Biome sa nenačítal', e)));
+            [['semibold', 'normal', '400'], ['extrabold', 'normal', '700'], ['semibolditalic', 'italic', '400'], ['blackitalic', 'italic', '700']].forEach(([f, style, weight]) => {
+                const face = new FontFace(MD.FONT, 'url("' + MD.assetUrl('fonts/barlow-condensed-' + f + '.ttf') + '")', { style, weight });
+                tasks.push(face.load().then((x) => document.fonts.add(x)).catch((e) => console.warn('Písmo ' + MD.FONT + ' sa nenačítalo', e)));
+            });
             if (MD.store && MD.store.listFonts) {
                 tasks.push(MD.store.listFonts().then((list) => Promise.all(list.map(MD.registerCustomFont))).catch(() => {}));
             }
@@ -126,8 +130,14 @@
     };
 
     /** Načíta jedno písmo (normálne aj tučné), aby ho canvas vedel použiť */
+    let biomePromise = null;
     MD.loadFamily = function (family) {
         if (!family || !document.fonts || !document.fonts.load) return Promise.resolve();
+        // Biome (komerčné) iba na požiadanie – ak ho správca nahral na server
+        if (family === 'Biome' && 'FontFace' in window) {
+            biomePromise = biomePromise || new FontFace('Biome', 'url("' + MD.assetUrl('fonts/biome-w04-regular.otf') + '")').load().then((x) => document.fonts.add(x)).catch(() => null);
+            return biomePromise;
+        }
         if (!loadedFamilies[family]) {
             loadedFamilies[family] = Promise.all(['400', '700', 'italic 400'].map((w) =>
                 document.fonts.load(w + ' 48px "' + family + '"', FONT_SAMPLE).catch(() => null)
@@ -235,7 +245,7 @@
     /* Pomocné kreslenie                                                   */
     /* ------------------------------------------------------------------ */
     function fontString(el, size) {
-        return (el.italic ? 'italic ' : '') + (el.bold ? 'bold ' : '') + size + 'px "' + (el.font || 'Biome') + '", sans-serif';
+        return (el.italic ? 'italic ' : '') + (el.bold ? 'bold ' : '') + size + 'px "' + (el.font || MD.FONT) + '", sans-serif';
     }
 
     function applyTextStyle(ctx, el, size) {
@@ -277,10 +287,12 @@
         ctx.save();
         ctx.globalAlpha = el.opacity ?? 1;
         if (el.shadow) {
-            ctx.shadowColor = 'rgba(0,0,0,.65)';
-            ctx.shadowBlur = Math.max(4, size * 0.12);
-            ctx.shadowOffsetX = Math.max(1, size * 0.03);
-            ctx.shadowOffsetY = Math.max(1, size * 0.04);
+            // vlastná farba tieňa = ostrý posunutý tieň (štýl nadpisov), inak mäkký čierny
+            const hard = !!el.shadowColor;
+            ctx.shadowColor = el.shadowColor || 'rgba(0,0,0,.65)';
+            ctx.shadowBlur = hard ? (el.shadowBlur ?? 0) : Math.max(4, size * 0.12);
+            ctx.shadowOffsetX = hard ? (el.shadowX ?? 0) : Math.max(1, size * 0.03);
+            ctx.shadowOffsetY = hard ? (el.shadowY ?? Math.round(size * 0.035)) : Math.max(1, size * 0.04);
         }
         draw();
         ctx.restore();
@@ -315,10 +327,30 @@
         applyTextStyle(ctx, el, el.size);
         const lines = wrap(ctx, str, el.maxWidth);
         const lh = el.size * (el.lineHeight || 1.25);
+        const box = boxFromLines(ctx, el, lines, lh, el.size);
+        if (!str.trim() && !el.boxColor) return box;
+        ctx.save();
+        if (el.rotate) { ctx.translate(el.x, el.y); ctx.rotate(el.rotate * Math.PI / 180); ctx.translate(-el.x, -el.y); }
+        // podklad ("štítok") za textom
+        if (el.boxColor) {
+            const px = el.boxPadX ?? Math.round(el.size * 0.35), py = el.boxPadY ?? Math.round(el.size * 0.12);
+            const r = el.boxRadius ?? Math.round(el.size * 0.22);
+            ctx.save();
+            ctx.globalAlpha = el.opacity ?? 1;
+            if (el.boxGlow) { ctx.shadowColor = el.boxColor; ctx.shadowBlur = Math.round(el.size * 0.6); }
+            ctx.beginPath();
+            const bx = box.x - px, by = box.y - py, bw = box.w + px * 2, bh = box.h + py * 2;
+            if (ctx.roundRect) ctx.roundRect(bx, by, bw, bh, r); else ctx.rect(bx, by, bw, bh);
+            ctx.fillStyle = el.boxColor;
+            ctx.fill();
+            if (el.boxBorder) { ctx.shadowColor = 'transparent'; ctx.lineWidth = el.boxBorder; ctx.strokeStyle = el.boxBorderColor || '#fff'; ctx.stroke(); }
+            ctx.restore();
+        }
         ctx.fillStyle = el.color || '#fff';
         withEffects(ctx, el, el.size, () => drawLines(ctx, el, lines, el.x, el.y, lh, el.size));
+        ctx.restore();
         applyTextStyle(ctx, el, el.size);
-        return boxFromLines(ctx, el, lines, lh, el.size);
+        return box;
     }
 
     function drawLogo(ctx, el, assets, opts) {
@@ -541,7 +573,7 @@
             const txt = MD.fillTokens(el.fallbackText ?? '{playerNr}', tokens);
             if (txt) {
                 const size = Math.round(Math.min(el.w, el.h) * 0.45);
-                ctx.font = size + 'px "' + (el.font || 'Biome') + '", sans-serif';
+                ctx.font = size + 'px "' + (el.font || MD.FONT) + '", sans-serif';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillStyle = el.color || '#fff';
@@ -595,7 +627,7 @@
                 ctx.fillRect(el.x - 8, y + 2, W + 16, rowH - 4);
             }
             ctx.textBaseline = 'middle';
-            const f = (bold) => (bold ? 'bold ' : '') + size + 'px "' + (el.font || 'Biome') + '", sans-serif';
+            const f = (bold) => (bold ? 'bold ' : '') + size + 'px "' + (el.font || MD.FONT) + '", sans-serif';
             const color = isHead ? (el.headColor || '#ffd166') : (r.own && el.ownColor ? el.ownColor : (el.color || '#fff'));
             ctx.fillStyle = color;
             ctx.font = f(false);
@@ -653,7 +685,7 @@
                 ctx.fill();
             }
             ctx.textBaseline = 'middle';
-            ctx.font = size + 'px "' + (el.font || 'Biome') + '", sans-serif';
+            ctx.font = size + 'px "' + (el.font || MD.FONT) + '", sans-serif';
             ctx.fillStyle = el.color || '#fff';
             const name = (s) => fitText(ctx, el.uppercase ? s.toLocaleUpperCase('sk') : s, sideW);
             ctx.textAlign = 'right';
@@ -674,7 +706,7 @@
             ctx.fill();
             ctx.fillStyle = el.pillText || '#fff';
             ctx.textAlign = 'center';
-            ctx.font = (m.played ? 'bold ' : '') + Math.round(size * (m.played ? 1 : 0.8)) + 'px "' + (el.font || 'Biome') + '", sans-serif';
+            ctx.font = (m.played ? 'bold ' : '') + Math.round(size * (m.played ? 1 : 0.8)) + 'px "' + (el.font || MD.FONT) + '", sans-serif';
             ctx.fillText(m.played ? m.hs + ':' + m.as : (el.showDate && m.day ? m.day + ' ' : '') + (m.time || '–'), cx, mid + 1);
         });
         ctx.restore();
@@ -690,7 +722,7 @@
         const W = el.w || 700, rowH = el.rowH || 56;
         const size = el.size || 22;
         const barH = el.barH || 8;
-        const f = (bold) => (bold ? 'bold ' : '') + size + 'px "' + (el.font || 'Biome') + '", sans-serif';
+        const f = (bold) => (bold ? 'bold ' : '') + size + 'px "' + (el.font || MD.FONT) + '", sans-serif';
         ctx.save();
         ctx.globalAlpha = el.opacity ?? 1;
         ctx.textBaseline = 'alphabetic';
@@ -737,7 +769,7 @@
             ctx.fillStyle = { V: el.winColor || '#22a06b', R: el.drawColor || '#f2a516', P: el.lossColor || '#d93a3a' }[r] || '#888';
             ctx.beginPath(); ctx.arc(cx, cy, S / 2, 0, Math.PI * 2); ctx.fill();
             ctx.fillStyle = el.color || '#fff';
-            ctx.font = 'bold ' + Math.round(S * 0.5) + 'px "' + (el.font || 'Biome') + '", sans-serif';
+            ctx.font = 'bold ' + Math.round(S * 0.5) + 'px "' + (el.font || MD.FONT) + '", sans-serif';
             ctx.fillText(r, cx, cy + 1);
         });
         ctx.restore();
