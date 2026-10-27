@@ -42,6 +42,12 @@ $remotePhoto = $U && $U['photo'] ? $U['photo'] : ($P['photo'] ?? '');
 // jubileá – najbližší okrúhly počet zápasov
 $mil = fn($n, $steps) => array_values(array_filter($steps, fn($s) => $s >= $n))[0] ?? null;
 
+// panel Vytvoriť obrázok: hráč a jeho družstvo
+$bdAgeFab = !empty($U['birthyear']) ? (int)date('Y') - (int)$U['birthyear'] : 0;
+if ($teamId !== '') {
+	md_create_add(md_create_player($pp, $P, $name, $bdAgeFab));
+	md_create_add(md_create_team($teamId, $team, $cat, $season, $T['competition'] ?? ''));
+}
 add_layout("header", array("title" => $name . " – profil | Match Day", "scripts" => ["js/player.js"]));
 ?>
 

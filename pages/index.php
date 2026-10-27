@@ -128,6 +128,7 @@ $(function () {
 		$('#favLogo').attr('src', logoUrl(f.logo)).prop('hidden', !f.logo);
 		$('#favLink').attr('href', base + '/match-day-season-detail?' + new URLSearchParams({ s: season, team: f.club }));
 		$('#favWeekend').attr('href', base + '/generator?' + new URLSearchParams({ type: 'weekend', club: f.club, season, d1name: f.name || '', d1url: f.logo || '' }));
+		fetch(base + '/api-create?' + new URLSearchParams({ club: f.club, s: season })).then((r) => r.json()).then((j) => MD.create && MD.create.add(j.groups || [])).catch(() => {});
 		fetch(base + '/api-club?' + new URLSearchParams({ club: f.club, s: season })).then((r) => r.json()).then((j) => {
 			if (j.error) throw new Error(j.error);
 			const now = Date.now();

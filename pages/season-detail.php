@@ -53,6 +53,7 @@
 		return $p;
 	};
 
+	md_create_add(md_create_club(sn_club_slug($team), $clubName, $clubLogo, $s));
 	add_layout("header", array("title" => ($clubName ?: 'Zápasy') . ' ' . $s . " | Match Day"));
 ?>
 
@@ -113,6 +114,12 @@
 		$teamLink = url('druzstvo') . '?' . http_build_query(['team' => $team_id, 's' => $season, 'cat' => $team_name]);
 		$next = $upcoming[0] ?? null;
 		$last = $played ? end($played) : null;
+		// panel Vytvoriť obrázok: najbližší a posledný zápas a obrázky družstva
+		$mctx = ['myTeam' => $ownId, 'season' => $season, 'category' => $team_name];
+		$grp = fn($m) => $m ? md_create_pane(md_create_match(sn_match_brief($m), $mctx), $team_id) : null;
+		md_create_add($grp($next));
+		md_create_add($grp($last));
+		if ($matches) md_create_add(md_create_pane(md_create_team($team_id, ['name' => $tm['ownName'] ?: $team_name, 'logo' => $tm['ownLogo']], $team_name, $season, $matches[0]['competitionPart']['name'] ?? ''), $team_id));
 	?>
 	<div class="team-pane" data-team-pane="<?= plain($team_id) ?>"<?= $team_id === $sel ? '' : ' hidden' ?>>
 
@@ -136,13 +143,11 @@
 						<div class="d-flex flex-wrap gap-2 mt-3">
 							<?php if ($isRes): ?>
 								<a class="btn btn-primary btn-sm rounded-pill px-3" href="<?= plain(gen_link('result', $p)) ?>"><i class="bi bi-trophy me-1"></i>Výsledok</a>
-								<a class="btn btn-outline-primary btn-sm rounded-pill px-3" href="<?= plain(gen_link('goals', $p)) ?>"><i class="bi bi-list-ol me-1"></i>Strelci</a>
-								<a class="btn btn-outline-secondary btn-sm rounded-pill px-3" href="<?= plain(md_match_url($m['_id'] ?? '', $ownId)) ?>"><i class="bi bi-file-text me-1"></i>Detail zápasu</a>
 							<?php else: ?>
 								<a class="btn btn-primary btn-sm rounded-pill px-3" href="<?= plain(gen_link('matchday', $p)) ?>"><i class="bi bi-calendar-event me-1"></i>Match day</a>
-								<a class="btn btn-outline-primary btn-sm rounded-pill px-3" href="<?= plain(gen_link('lineup', $p)) ?>"><i class="bi bi-person-lines-fill me-1"></i>Zostava</a>
-								<a class="btn btn-outline-secondary btn-sm rounded-pill px-3" href="<?= plain(md_match_url($m['_id'] ?? '', $ownId)) ?>"><i class="bi bi-info-circle me-1"></i>Detail zápasu</a>
 							<?php endif; ?>
+							<?= md_create_btn($grp($m), 'Ďalšie obrázky', 'btn btn-outline-primary btn-sm rounded-pill px-3') ?>
+							<a class="btn btn-outline-secondary btn-sm rounded-pill px-3" href="<?= plain(md_match_url($m['_id'] ?? '', $ownId)) ?>"><i class="bi bi-info-circle me-1"></i>Detail zápasu</a>
 						</div>
 					</div>
 				</div>
@@ -219,23 +224,7 @@
 					<div class="match-actions">
 						<?php if (!$isBye): ?>
 							<a class="btn btn-<?= $isPlayed ? 'outline-primary' : 'primary' ?>" href="<?= plain(gen_link($isPlayed ? 'result' : 'matchday', $params)) ?>"><i class="bi bi-<?= $isPlayed ? 'trophy' : 'calendar-event' ?> me-1"></i><?= $isPlayed ? 'Výsledok' : 'Match day' ?></a>
-							<div class="dropdown">
-								<button class="btn btn-outline-secondary btn-more" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Ďalšie obrázky a zápis" title="Ďalšie"><i class="bi bi-three-dots"></i></button>
-								<ul class="dropdown-menu dropdown-menu-end app-dropdown">
-									<?php if ($params['matchID'] !== ''): ?><li><a class="dropdown-item" href="<?= plain($zapis) ?>"><i class="bi bi-info-circle"></i>Detail zápasu</a></li><li><hr class="dropdown-divider"></li><?php endif; ?>
-									<li><a class="dropdown-item" href="<?= plain(gen_link('matchday', $params)) ?>"><i class="bi bi-calendar-event"></i>Match day</a></li>
-									<?php if ($params['matchID'] !== ''): ?><li><a class="dropdown-item" href="<?= plain(gen_link('lineup', $params)) ?>"><i class="bi bi-person-lines-fill"></i>Zostava</a></li><?php endif; ?>
-									<?php if ($isPlayed): ?>
-										<li><a class="dropdown-item" href="<?= plain(gen_link('result', $params)) ?>"><i class="bi bi-trophy"></i>Výsledok</a></li>
-										<li><a class="dropdown-item" href="<?= plain(gen_link('goals', $params)) ?>"><i class="bi bi-list-ol"></i>Strelci</a></li>
-										<li><a class="dropdown-item" href="<?= plain(gen_link('report', $params)) ?>"><i class="bi bi-journal-text"></i>Súhrn zápasu</a></li>
-									<?php endif; ?>
-									<?php if ($params['matchID'] !== ''): ?>
-										<li><a class="dropdown-item" href="<?= plain(gen_link('h2h', $params)) ?>"><i class="bi bi-bar-chart-steps"></i>Vzájomné zápasy</a></li>
-										<li><a class="dropdown-item" href="<?= plain(gen_link('form', $params + ['side' => ($params['team2ID'] === $ownId ? 'away' : 'home')])) ?>"><i class="bi bi-graph-up-arrow"></i>Forma</a></li>
-									<?php endif; ?>
-								</ul>
-							</div>
+							<?= $params['matchID'] !== '' ? md_create_btn($grp($value), '', 'btn btn-outline-secondary btn-more') : '' ?>
 						<?php endif; ?>
 					</div>
 				</li>
@@ -269,6 +258,7 @@ $(function () {
 		$('[data-team-tab]').removeClass('active').removeAttr('aria-current');
 		$(this).addClass('active').attr('aria-current', 'true');
 		$('[data-team-pane]').each(function () { this.hidden = this.dataset.teamPane !== id; });
+		if (window.MD && MD.create) MD.create.setPane(id);
 		history.replaceState(null, '', this.href);
 	});
 	// zapamätať klub do "Naposledy hľadané"

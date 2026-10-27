@@ -112,6 +112,7 @@ $routes = array(
     "api-h2h"                 => "api/h2h",
     "api-player"              => "api/player",
     "api-club"                => "api/club",
+    "api-create"              => "api/create",
 
     // pôvodné serverové generátory (GD) – ponechané ako záloha
     "generate-match-result"   => "generate/generate-result",

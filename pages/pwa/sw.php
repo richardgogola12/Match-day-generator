@@ -10,6 +10,7 @@ $precache = [
     asset('js/storage.js'),
     asset('js/app.js'),
     asset('js/search.js'),
+    asset('js/create.js'),
     asset('js/renderer.js'),
     asset('js/editor.js'),
     asset('js/generator.js'),

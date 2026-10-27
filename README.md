@@ -15,6 +15,7 @@ Sedemnásť typov obrázkov, každý ako štvorcový príspevok (1000 × 1000) a
 - Zostava na zápas (základ, náhradníci, tréner) zo zápisu o stretnutí a súpiska družstva za sezónu zo zápisov odohratých zápasov; hráčov možno ručne upraviť (uloží sa v prehliadači)
 - Stránky: **zápis o stretnutí** (góly, karty, striedania, polčas, rozhodcovia, diváci, zostavy), **prehľad družstva** (štatistiky, hráči s minútami, oficiálna tabuľka, kolá celej súťaže) a **profil hráča** (štatistiky a zápasy sezóny s minútami, kariéra)
 - Generovanie obrázka priamo v prehliadači (HTML canvas) – stiahnutie PNG, kopírovanie, zdieľanie, **všetky typy naraz v ZIP**
+- **Plávajúce tlačidlo Vytvoriť obrázok** na stránkach klubu, družstva, zápasu a hráča: panel so všetkými obrázkami pre danú stránku a **odporúčaniami podľa situácie** (Match day pred zápasom, výsledok po zápase, kolo a tabuľka po kole, hráč mesiaca na začiatku mesiaca, víkend klubu …); logika v `includes/create.php`, panel `assets/js/create.js`
 - **Text príspevku** na Facebook / Instagram (skóre, strelci, súťaž, hashtagy) s tlačidlom Kopírovať
 - **Značka klubu** (`/znacka`): logo klubu a pás sponzorov sa vložia do každého obrázka; **klubové farby** prefarbia predvolené pozadia aj prvky šablón (predvoľby alebo farby zistené z loga)
 - **Môj klub** – najbližšie zápasy a posledné výsledky obľúbeného klubu priamo na úvodnej stránke s tlačidlami na obrázky
@@ -65,6 +66,7 @@ Používa [Sportnet Súťaže API v2](https://sutaze.api.sportnet.online/api/v2/
 | `assets/js/editor.js` | drag & drop editor šablón |
 | `assets/js/storage.js` | ukladanie nastavení v prehliadači (šablóny, pozadia, fotky, značka klubu) |
 | `assets/js/brand.js` | stránka Značka klubu |
+| `includes/create.php`, `assets/js/create.js` | plávajúce tlačidlo Vytvoriť obrázok a odporúčania |
 | `includes/sportnet.php` | spracovanie dát Sportnetu: zápis, tabuľka, kolá, štatistiky, hráči |
 | `storage/` | uložené obrázky a logy (mimo gitu) |
 

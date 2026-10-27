@@ -48,6 +48,10 @@ $pl = fn($pid, $name, $s, $strong = false) => ($u = $playerUrl($pid, $name, $s))
 
 $sections = [['priebeh', 'Priebeh'], ['statistika', 'Štatistika'], ['forma', 'Forma'], ['info', 'Delegované osoby a štadión'], ['zostavy', 'Zostavy'], ['h2h', 'Vzájomné zápasy'], ['tabulka', 'Tabuľka']];
 
+// panel Vytvoriť obrázok: zápas, "naše" družstvo a klub
+md_create_add(md_create_match($b, ['myTeam' => $myTeam, 'season' => $season, 'category' => $b[$tableSide]['cat']]));
+if ($b[$tableSide]['id'] !== '') md_create_add(md_create_team($b[$tableSide]['id'], ['name' => $b[$tableSide]['name'], 'logo' => $b[$tableSide]['logo']], $b[$tableSide]['cat'], $season, $b['competition']));
+if ($b[$tableSide]['club'] !== '') md_create_add(md_create_club(sn_club_slug($b[$tableSide]['club']), $b[$tableSide]['name'], $b[$tableSide]['logo'], $season));
 add_layout("header", array("title" => $b['home']['name'] . ' – ' . $b['away']['name'] . " | zápas | Match Day"));
 ?>
 

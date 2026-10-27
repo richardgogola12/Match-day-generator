@@ -19,6 +19,7 @@
 	$toc = [
 		'uvod'       => ['bi-info-circle', 'Čo aplikácia robí'],
 		'rychly'     => ['bi-lightning-charge', 'Rýchly štart'],
+		'vytvorit'   => ['bi-magic', 'Tlačidlo Vytvoriť obrázok'],
 		'vyhladanie' => ['bi-search', '1. Vyhľadanie klubu'],
 		'zapasy'     => ['bi-list-ul', '2. Zoznam zápasov'],
 		'moj-klub'   => ['bi-star', 'Môj klub na úvodnej stránke'],
@@ -165,10 +166,23 @@
 	<h2><i class="bi bi-lightning-charge"></i>Rýchly štart</h2>
 	<ol class="guide-steps">
 		<li>Do <strong>hľadania</strong> (na úvodnej stránke alebo hore v menu) napíšte názov svojho klubu a kliknite naň.</li>
-		<li>Navrchu stránky klubu je <strong>najbližší</strong> a <strong>posledný zápas</strong> – kliknite na <strong>Match day</strong>, <strong>Zostava</strong>, <strong>Výsledok</strong> alebo <strong>Strelci</strong>.</li>
+		<li>Vpravo dole kliknite na žlté tlačidlo <strong><i class="bi bi-magic"></i> Vytvoriť obrázok</strong> – navrchu sú obrázky, ktoré sa práve hodia (napr. výsledok včerajšieho zápasu).</li>
 		<li>Kliknite na <strong>Stiahnuť PNG</strong> – hotovo, obrázok môžete zverejniť.</li>
 	</ol>
 	<p class="mb-0">Ak chcete zmeniť vzhľad (pozadie, rozmiestnenie, písmo), otvorte <a href="<?= url('nastavenia') ?>">Šablóny</a>. Stačí to urobiť raz – všetky ďalšie obrázky sa vytvoria podľa vašej šablóny.</p>
+</section>
+
+<!-- ================================================================== -->
+<section id="vytvorit">
+	<h2><i class="bi bi-magic"></i>Tlačidlo Vytvoriť obrázok</h2>
+	<p>Na stránke klubu, družstva, zápasu a hráča (a na úvodnej stránke, ak máte <a href="#moj-klub">Môj klub</a>) je vpravo dole žlté plávajúce tlačidlo <strong><i class="bi bi-magic"></i> Vytvoriť obrázok</strong>. Otvorí panel so všetkými obrázkami, ktoré na danej stránke dávajú zmysel – nemusíte ich hľadať po stránke.</p>
+	<?= guide_shot('31-vytvorit.webp', 'Panel Vytvoriť obrázok', 'Navrchu odporúčané obrázky s dôvodom, pod nimi všetky obrázky k zápasu, družstvu a klubu.') ?>
+	<ul class="guide-list">
+		<li><strong>Odporúčané teraz</strong> – aplikácia sama vie, čo sa práve hodí: <em>Match day</em> týždeň pred zápasom, <em>Zostava</em> v deň zápasu, <em>Výsledok</em> a <em>Strelci</em> do 3 dní po zápase, <em>Výsledky / Program kola</em> a <em>Tabuľka</em> po kole, <em>Hráč mesiaca</em> na začiatku mesiaca, <em>Program víkendu</em> od štvrtka a <em>Výsledky víkendu</em> v pondelok a utorok, <em>Hráč zápasu</em> pre strelca, okrúhle <em>jubileum</em>. Číslo na tlačidle je počet odporúčaní.</li>
+		<li>Pod odporúčaniami sú skupiny – <strong>zápas</strong>, <strong>družstvo</strong>, <strong>hráč</strong>, <strong>klub</strong> – so všetkými obrázkami a krátkym popisom. Obrázky, ktoré vytvárate najčastejšie, sú v skupine vyššie.</li>
+		<li>V zoznamoch zápasov má každý zápas hlavné tlačidlo (<em>Match day</em> alebo <em>Výsledok</em>) a tlačidlo <i class="bi bi-magic"></i>, ktoré otvorí ten istý panel pre konkrétny zápas.</li>
+		<li>Na mobile sa panel vysunie zospodu.</li>
+	</ul>
 </section>
 
 <!-- ================================================================== -->
@@ -195,7 +209,7 @@
 	<ul class="guide-list">
 		<li><strong>Najbližší zápas</strong> – tlačidlá <strong>Match day</strong> (pozvánka) a <strong>Zostava</strong>.</li>
 		<li><strong>Posledný zápas</strong> – tlačidlá <strong>Výsledok</strong>, <strong>Strelci</strong> a <strong>Zápis</strong>.</li>
-		<li>V zozname má každý zápas jedno hlavné tlačidlo (<em>Match day</em> pri nadchádzajúcom, <em>Výsledok</em> pri odohratom) a tlačidlo <i class="bi bi-three-dots"></i> s ostatnými obrázkami (Zostava, Strelci, Súhrn) a zápisom o stretnutí.</li>
+		<li>V zozname má každý zápas jedno hlavné tlačidlo (<em>Match day</em> pri nadchádzajúcom, <em>Výsledok</em> pri odohratom) a tlačidlo <i class="bi bi-magic"></i> s ostatnými obrázkami (Zostava, Strelci, Súhrn, Vzájomné zápasy, Forma) – viď <a href="#vytvorit">Vytvoriť obrázok</a>.</li>
 		<li><strong>Filter</strong> <em>Všetky / Nadchádzajúce / Odohraté</em> skryje zápasy, ktoré práve nepotrebujete. Víťaz je zvýraznený zelenou.</li>
 		<li><strong>Družstvo</strong> otvorí prehľad družstva (viď <a href="#druzstvo">Prehľad družstva</a>), <strong>Súpiska</strong> vytvorí obrázok so všetkými hráčmi.</li>
 		<li>Kliknutím na <strong>výsledok</strong> otvoríte celý zápis o stretnutí.</li>
@@ -305,7 +319,7 @@
 <!-- ================================================================== -->
 <section id="zapis">
 	<h2><i class="bi bi-file-text"></i>Detail zápasu</h2>
-	<p>Na stránke klubu kliknite na <strong>výsledok</strong> (alebo čas pri nadchádzajúcom zápase), na <strong>Detail zápasu</strong> alebo v ponuke <i class="bi bi-three-dots"></i>. Funguje pre odohraté aj nadchádzajúce zápasy – pred zápasom tak hneď vidíte formu, vzájomné zápasy a tabuľku. Lišta pod hlavičkou presúva medzi časťami stránky.</p>
+	<p>Na stránke klubu kliknite na <strong>výsledok</strong> (alebo čas pri nadchádzajúcom zápase), alebo na <strong>Detail zápasu</strong>. Funguje pre odohraté aj nadchádzajúce zápasy – pred zápasom tak hneď vidíte formu, vzájomné zápasy a tabuľku. Lišta pod hlavičkou presúva medzi časťami stránky.</p>
 	<?= guide_shot('19-zapis.webp', 'Stránka detailu zápasu', 'Priebeh, štatistika vzájomných zápasov, forma, delegované osoby, štadión, zostavy, vzájomné zápasy a tabuľka – pri každej časti je tlačidlo na obrázok.') ?>
 	<ul class="guide-list">
 		<li><strong>Priebeh zápasu</strong> – góly <i class="bi bi-circle-fill ev-goal"></i>, žlté a červené karty a striedania <i class="bi bi-arrow-left-right"></i> s minútami; domáci vľavo, hostia vpravo. Obrázky: Výsledok, Strelci, Súhrn.</li>
@@ -330,7 +344,7 @@
 		<dt><i class="bi bi-speedometer2"></i>Prehľad</dt>
 		<dd>Miesto v tabuľke, body, výhry/remízy/prehry, skóre, zápasy bez inkasovaného gólu, priemerná návštevnosť, forma (posledných 5 zápasov), bilancia doma a vonku, najvyššia výhra a rebríčky – strelci, najviac odohraných minút a žlté karty.</dd>
 		<dt><i class="bi bi-trophy"></i>Výsledky</dt>
-		<dd>Všetky odohraté zápasy družstva v sezóne (aj pohárové), farebne výhra / remíza / prehra. Pri zápase je tlačidlo <em>Výsledok</em> a v ponuke <i class="bi bi-three-dots"></i> Strelci, Súhrn, Zostava, Vzájomné zápasy, Forma a detail zápasu.</dd>
+		<dd>Všetky odohraté zápasy družstva v sezóne (aj pohárové), farebne výhra / remíza / prehra. Pri zápase je tlačidlo <em>Výsledok</em> a tlačidlo <i class="bi bi-magic"></i> s ďalšími obrázkami (Strelci, Súhrn, Zostava, Vzájomné zápasy, Forma); kliknutím na skóre otvoríte detail zápasu.</dd>
 		<dt><i class="bi bi-calendar-event"></i>Program</dt>
 		<dd>Nadchádzajúce zápasy s tlačidlom <em>Match day</em> a ostatnými obrázkami v ponuke; hore obrázok programu kola.</dd>
 		<dt><i class="bi bi-people"></i>Súpiska</dt>
@@ -364,7 +378,7 @@
 <!-- ================================================================== -->
 <section id="obr-druzstvo">
 	<h2><i class="bi bi-table"></i>Obrázky Tabuľka, Kolo a Štatistiky</h2>
-	<p>V prehľade družstva kliknite na <strong>Vytvoriť obrázok</strong> a vyberte typ. V generátore potom prepínate medzi <em>Súpiska, Tabuľka, Kolo</em> a <em>Štatistiky</em>.</p>
+	<p>V prehľade družstva kliknite na <strong>Vytvoriť obrázok</strong> (alebo na plávajúce tlačidlo vpravo dole) a vyberte typ. V generátore potom prepínate medzi <em>Súpiska, Tabuľka, Kolo</em> a <em>Štatistiky</em>.</p>
 	<?= guide_shot('22-kolo.webp', 'Generátor s obrázkom kola', 'Obrázok kola: výber kola vpravo; nadpis sa sám zmení na PROGRAM KOLA alebo VÝSLEDKY KOLA.') ?>
 	<ul class="guide-list">
 		<li><strong>Tabuľka</strong> – aktuálne poradie s logami; vaše družstvo je zvýraznené. V editore nastavíte stĺpce (napr. pridať rozdiel skóre <code>gd</code>), farby a počet riadkov.</li>

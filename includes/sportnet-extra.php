@@ -248,3 +248,4 @@ function sportnet_player_recent($sportnetId, array $clubs, $limit = 5) {
     usort($out, fn($a, $b) => strcmp($b['brief']['date'], $a['brief']['date']));
     return $out;
 }
+require_once __DIR__ . '/create.php';

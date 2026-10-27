@@ -11,6 +11,23 @@
 	</div>
 </footer>
 
+<!-- Vytvoriť obrázok: plávajúce tlačidlo a inteligentný panel (includes/create.php, assets/js/create.js) -->
+<?php $mdCreate = $GLOBALS['md_create'] ?? []; $mdRec = 0; foreach ($mdCreate as $g) foreach ($g['items'] as $i) if (!empty($i['rec'])) $mdRec++; ?>
+<button type="button" class="md-fab" id="mdFab" aria-controls="mdCreate"<?= $mdCreate ? '' : ' hidden' ?>>
+	<i class="bi bi-magic"></i><span class="md-fab-label">Vytvoriť obrázok</span><span class="md-fab-badge" id="mdFabBadge"<?= $mdRec ? '' : ' hidden' ?>><?= $mdRec ?></span>
+</button>
+<div class="offcanvas offcanvas-end md-create" tabindex="-1" id="mdCreate" aria-labelledby="mdCreateTitle">
+	<div class="offcanvas-header">
+		<div>
+			<h5 class="offcanvas-title" id="mdCreateTitle"><i class="bi bi-magic me-2"></i>Vytvoriť obrázok</h5>
+			<div class="small text-muted-2">Odporúčané podľa toho, čo práve prezeráte</div>
+		</div>
+		<button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Zavrieť"></button>
+	</div>
+	<div class="offcanvas-body" id="mdCreateBody"></div>
+</div>
+<script type="application/json" id="mdCreateData"><?= json_encode(array_values($mdCreate), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP) ?></script>
+
 <!-- Toasty -->
 <div class="toast-container position-fixed top-0 end-0 p-3" id="toastArea" style="margin-top:64px"></div>
 
@@ -68,6 +85,7 @@
 <script src="<?= url("includes/vendor/bootstrap/bootstrap.bundle.min.js") ?>"></script>
 <script src="<?= asset("js/app.js") ?>"></script>
 <script src="<?= asset("js/search.js") ?>"></script>
+<script src="<?= asset("js/create.js") ?>"></script>
 <?php foreach ($GLOBALS['page_scripts'] ?? [] as $s): ?>
 <script src="<?= asset($s) ?>"></script>
 <?php endforeach; ?>

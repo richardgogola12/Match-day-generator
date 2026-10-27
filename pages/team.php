@@ -50,6 +50,12 @@ $leaders = [
 	['yellow', 'Žlté karty', 'bi-square-fill text-warning', 'ŽK'],
 ];
 
+// panel Vytvoriť obrázok: družstvo, najbližší a posledný zápas, klub
+$mctx = ['myTeam' => $team['id'] ?: $teamId, 'season' => $season, 'category' => $cat];
+md_create_add(md_create_team($teamId, $team, $cat, $season, $compName, $C));
+if ($fixtures) md_create_add(md_create_match($fixtures[0], $mctx));
+if ($results) md_create_add(md_create_match($results[0], $mctx));
+if ($team['club']) md_create_add(md_create_club(sn_club_slug($team['club']), $team['name'], $team['logo'], $season));
 add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – prehľad | Match Day"));
 ?>
 
@@ -83,16 +89,7 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 					<li class="nav-item" role="presentation"><button class="nav-link<?= $tab === $k ? ' active' : '' ?>" data-bs-toggle="pill" data-bs-target="#t-<?= $k ?>" data-tab="<?= $k ?>" type="button" role="tab"><i class="bi <?= $ic ?> me-1"></i><?= $lab ?></button></li>
 				<?php endforeach; ?>
 			</ul>
-			<div class="dropdown">
-				<button class="btn btn-primary dropdown-toggle rounded-pill" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="bi bi-image me-1"></i>Vytvoriť obrázok</button>
-				<ul class="dropdown-menu dropdown-menu-end app-dropdown">
-					<li><a class="dropdown-item" href="<?= plain(md_gen_link('squad', $tp)) ?>"><i class="bi bi-people"></i>Súpiska</a></li>
-					<li><a class="dropdown-item" href="<?= plain(md_gen_link('table', $tp)) ?>"><i class="bi bi-list-ol"></i>Tabuľka súťaže</a></li>
-					<li><a class="dropdown-item" href="<?= plain(md_gen_link('round', $tp + ['roundNo' => $rounds[$curIdx]['no'] ?? ''])) ?>"><i class="bi bi-calendar-week"></i>Program / výsledky kola</a></li>
-					<li><a class="dropdown-item" href="<?= plain(md_gen_link('stats', $tp)) ?>"><i class="bi bi-bar-chart-line"></i>Štatistiky družstva</a></li>
-					<li><a class="dropdown-item" href="<?= plain(md_gen_link('month', $tp)) ?>"><i class="bi bi-star"></i>Hráč / strelec mesiaca</a></li>
-				</ul>
-			</div>
+			<button type="button" class="btn btn-primary rounded-pill" onclick="MD.create && MD.create.open()"><i class="bi bi-magic me-1"></i>Vytvoriť obrázok</button>
 		</div>
 	</div>
 
@@ -151,7 +148,7 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 
 		<?php
 		/** Riadok zápasu v Výsledkoch / Programe */
-		$matchRow = function ($m) use ($team, $teamId, $season) {
+		$matchRow = function ($m) use ($team, $teamId, $season, $mctx) {
 			[$dT, $tT] = format_match_date($m['date']);
 			$p = md_match_params($m, $team['id'] ?: $teamId);
 			$side = $m['away']['id'] === ($team['id'] ?: $teamId) ? 'away' : 'home';
@@ -163,21 +160,7 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 				<a class="a<?= $side === 'away' ? ' own' : '' ?>" href="<?= plain(md_team_url($m['away']['id'], $season)) ?>"><?php if ($m['away']['logo']): ?><img src="<?= plain($m['away']['logo']) ?>" alt="" loading="lazy"><?php endif; ?><span><?= plain($m['away']['name']) ?></span></a>
 				<span class="acts">
 					<a class="btn btn-sm btn-outline-primary rounded-pill" href="<?= plain(md_gen_link($m['played'] ? 'result' : 'matchday', $p)) ?>"><i class="bi bi-image me-1"></i><?= $m['played'] ? 'Výsledok' : 'Match day' ?></a>
-					<span class="dropdown">
-						<button class="btn btn-sm btn-outline-secondary btn-more rounded-pill" type="button" data-bs-toggle="dropdown" aria-label="Ďalšie obrázky"><i class="bi bi-three-dots"></i></button>
-						<ul class="dropdown-menu dropdown-menu-end app-dropdown">
-							<li><a class="dropdown-item" href="<?= plain(md_match_url($m['id'], $team['id'])) ?>"><i class="bi bi-info-circle"></i>Detail zápasu</a></li><li><hr class="dropdown-divider"></li>
-							<?php if ($m['played']): ?>
-								<li><a class="dropdown-item" href="<?= plain(md_gen_link('goals', $p)) ?>"><i class="bi bi-list-ol"></i>Strelci</a></li>
-								<li><a class="dropdown-item" href="<?= plain(md_gen_link('report', $p)) ?>"><i class="bi bi-file-text"></i>Súhrn zápasu</a></li>
-							<?php else: ?>
-								<li><a class="dropdown-item" href="<?= plain(md_gen_link('matchday', $p)) ?>"><i class="bi bi-calendar-event"></i>Match day</a></li>
-							<?php endif; ?>
-							<li><a class="dropdown-item" href="<?= plain(md_gen_link('lineup', $p + ['side' => $side])) ?>"><i class="bi bi-person-lines-fill"></i>Zostava</a></li>
-							<li><a class="dropdown-item" href="<?= plain(md_gen_link('h2h', $p)) ?>"><i class="bi bi-bar-chart-steps"></i>Vzájomné zápasy</a></li>
-							<li><a class="dropdown-item" href="<?= plain(md_gen_link('form', $p + ['side' => $side])) ?>"><i class="bi bi-graph-up-arrow"></i>Forma</a></li>
-						</ul>
-					</span>
+					<?= md_create_btn(md_create_match($m, $mctx), '', 'btn btn-sm btn-outline-secondary btn-more rounded-pill') ?>
 				</span>
 			</li>
 			<?php return ob_get_clean();
