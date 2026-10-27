@@ -6,7 +6,7 @@
     if (!el || !window.bootstrap) return;
     const base = (window.MD_BASE || '').replace(/\/$/, '');
     const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    const logo = (u) => (u ? base + '/api-logo?url=' + encodeURIComponent(u) : '');
+    const logo = (u) => u || ''; // priamo zo Sportnetu; pri chybe sa prepne na proxy servera (header.php)
     const oc = bootstrap.Offcanvas.getOrCreateInstance(el);
     let groups = [];
     let pane = document.querySelector('[data-team-pane]:not([hidden])')?.dataset.teamPane || null; // stránka klubu: aktuálne družstvo

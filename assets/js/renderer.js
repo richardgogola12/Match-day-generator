@@ -168,8 +168,13 @@
             if (!src) return resolve(null);
             const img = new Image();
             img.decoding = 'async';
+            let tries = 0;
             img.onload = () => resolve(img);
-            img.onerror = () => resolve(null);
+            // logo zo servera občas zlyhá (pomalý Sportnet) – ešte dva pokusy, potom bez loga
+            img.onerror = () => {
+                if (++tries > 2 || /^(data|blob):/.test(src)) return resolve(null);
+                setTimeout(() => { img.src = src + (src.includes('?') ? '&' : '?') + 'r=' + tries + Date.now(); }, 400 * tries + Math.random() * 400);
+            };
             img.src = src;
         });
     };

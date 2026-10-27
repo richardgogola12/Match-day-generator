@@ -46,6 +46,26 @@
 	<!-- Téma (svetlá/tmavá) – nastaví sa ešte pred vykreslením, aby stránka neblikla -->
 	<script>
 		window.MD_BASE = <?= json_encode(BASE_PATH) ?>;
+		// obrázky (logá, fotky), ktoré sa nenačítali: 1) nový pokus, 2) originál / proxy servera, 3) náhradná ikona
+		window.addEventListener('error', function (e) {
+			var img = e.target;
+			if (!img || img.tagName !== 'IMG') return;
+			var src = img.getAttribute('src') || '';
+			if (!src || /^(data|blob):/.test(src)) return;
+			var step = +(img.getAttribute('data-md-try') || 0);
+			if (step > 2) return;
+			img.setAttribute('data-md-try', step + 1);
+			var m = src.match(/api-logo\?(?:[^#]*&)?url=([^&#]+)/);
+			var orig = img.getAttribute('data-md-orig') || (m ? decodeURIComponent(m[1]) : src);
+			img.setAttribute('data-md-orig', orig);
+			var proxied = window.MD_BASE + '/api-logo?fb=1&url=' + encodeURIComponent(orig);
+			var photo = img.closest && img.closest('.player-photo');
+			var ph = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z" fill="#94a3b8" fill-opacity=".35" stroke="#94a3b8" stroke-width="1.2"/></svg>');
+			if (m && step === 0) setTimeout(function () { img.src = src + '&r=' + Date.now(); }, 500 + Math.random() * 900);
+			else if (m && step === 1) img.src = orig;
+			else if (!m && step === 0) img.src = proxied;
+			else if (!photo) { img.setAttribute('data-md-try', 9); img.src = ph; img.classList.add('img-failed'); }
+		}, true);
 		(function () {
 			try {
 				var p = JSON.parse(localStorage.getItem('matchday.prefs.v1') || '{}');
