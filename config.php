@@ -9,6 +9,8 @@ if (is_file(__DIR__ . '/config.local.php')) require __DIR__ . '/config.local.php
 // PROJECT NAME
 // ---------------------------------------------------------------------------------
 define('APP_NAME', 'Match Day Generator');
+// časové pásmo (dátumy v logoch, galérii a údržbe)
+date_default_timezone_set(defined('APP_TIMEZONE') ? APP_TIMEZONE : 'Europe/Bratislava');
 
 // Vývojový režim: zobrazuje chyby PHP na stránke. Na produkcii nechajte false (nastavte v config.local.php).
 defined('APP_DEBUG') || define('APP_DEBUG', false);
@@ -58,6 +60,28 @@ define('LOG_DIR', APP_DIR . '/storage/logs/');
 defined('LOG_RETENTION_MONTHS') || define('LOG_RETENTION_MONTHS', 12); // staršie mesačné logy sa automaticky zmažú (0 = nikdy)
 
 // ---------------------------------------------------------------------------------
+// CACHE, BEZPEČNOSŤ A ÚDRŽBA (všetko sa dá zmeniť v config.local.php)
+// ---------------------------------------------------------------------------------
+define('CACHE_DIR', APP_DIR . '/storage/cache');                 // cache Sportnetu a lôg (z webu nedostupná)
+define('LOGO_CACHE_DIR', CACHE_DIR . '/logos');
+define('PRIVATE_DIR', APP_DIR . '/storage/private');             // heslo správcu (hash), tajný kľúč, stav údržby
+// Overovanie HTTPS certifikátov pri spojení so Sportnetom. Ak hosting nemá aktuálne CA certifikáty,
+// nastavte SSL_CAINFO na cestu k súboru cacert.pem (https://curl.se/ca/cacert.pem); vypnúť iba v núdzi.
+defined('SSL_VERIFY') || define('SSL_VERIFY', true);
+defined('SSL_CAINFO') || define('SSL_CAINFO', '');
+// Domény, z ktorých server smie sťahovať logá a fotky (+ domény, ktoré sa objavia v odpovediach Sportnetu).
+defined('IMAGE_HOSTS') || define('IMAGE_HOSTS', 'sportnet.online,futbalnet.sk,futbalsfz.sk,sportnet.sk,sme.sk,mediamanager.ws,issf.sk');
+// Limity ukladania obrázkov na server
+defined('SAVE_LIMIT_IP') || define('SAVE_LIMIT_IP', 240);          // uložení za hodinu z jednej IP adresy
+defined('SAVE_LIMIT_CLIENT') || define('SAVE_LIMIT_CLIENT', 180);  // uložení za hodinu z jedného prehliadača
+defined('STORAGE_MAX_MB') || define('STORAGE_MAX_MB', 3000);        // max. veľkosť všetkých uložených obrázkov (0 = bez limitu)
+defined('STORAGE_KEEP_DAYS') || define('STORAGE_KEEP_DAYS', 365);   // obrázky staršie ako N dní sa automaticky zmažú (0 = nikdy)
+// Nočná úloha (cron): obnova cache, údržba a kontrola Sportnetu – viď README
+defined('CRON_KEY') || define('CRON_KEY', '');                     // kľúč pre spustenie cez URL /cron?key=… ('' = iba z príkazového riadku)
+defined('ADMIN_EMAIL') || define('ADMIN_EMAIL', '');               // sem príde e-mail, keď kontrola Sportnetu nájde chybu
+defined('MAIL_FROM') || define('MAIL_FROM', '');                   // odosielateľ e-mailu (prázdne = noreply@doména)
+
+// ---------------------------------------------------------------------------------
 // EXTERNÉ API
 // ---------------------------------------------------------------------------------
 define('API_SEASONS', 'https://sutaze.api.sportnet.online/api/v2/public/futbalsfz.sk/seasons');
@@ -100,6 +124,7 @@ $routes = array(
     "kontrola"                => "sportnet-check",
     "zdielaj"                 => "share",
     "znacka"                  => "brand",
+    "cron"                    => "cron",
 
     // JSON / obrázkové API pre prehliadač
     "api-logo"                => "api/logo",

@@ -75,20 +75,12 @@
 		})();
 	</script>
 
-	<!-- Fonts -->
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-	<!-- Bootstrap 5 + ikony -->
+	<!-- Písma a ikony sú na našom serveri (rýchlejšie, bez Google Fonts / CDN – GDPR) -->
+	<link rel="preload" href="<?= url("assets/fonts/inter-latin.woff") ?>" as="font" type="font/woff" crossorigin>
+	<link rel="preload" href="<?= url("assets/vendor/icons/fonts/bootstrap-icons.woff2?dd67030699838ea613ee6dbda90effa6") ?>" as="font" type="font/woff2" crossorigin>
 	<link rel="stylesheet" href="<?= url("includes/vendor/bootstrap/bootstrap.min.css") ?>">
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
-	<!-- jQuery + select2 -->
+	<link rel="stylesheet" href="<?= asset("vendor/icons/bootstrap-icons.min.css") ?>">
 	<script src="<?= url("includes/vendor/jquery/jquery.min.js") ?>"></script>
-	<link rel="stylesheet" href="<?= url("includes/vendor/select2/select2.min.css") ?>">
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
-	<script src="<?= url("includes/vendor/select2/select2.min.js") ?>"></script>
 
 	<!-- App -->
 	<link rel="stylesheet" href="<?= asset("css/style.css") ?>">
@@ -178,4 +170,7 @@
 	</div>
 </nav>
 
+<?php if (md_sportnet_down()): ?>
+<div class="sportnet-down" role="status"><div class="container-xxl"><i class="bi bi-cloud-slash me-2"></i>Sportnet momentálne neodpovedá – zobrazujem naposledy uložené údaje. Skúste to o chvíľu znova.</div></div>
+<?php endif; ?>
 <main class="app-main">

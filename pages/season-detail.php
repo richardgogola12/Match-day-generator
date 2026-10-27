@@ -60,7 +60,7 @@
 <section class="hero hero-sm">
 	<div class="container-xxl">
 		<div class="club-head">
-			<?php if ($clubLogo): ?><img class="club-logo" src="<?= plain($clubLogo) ?>" alt=""><?php else: ?><span class="club-logo empty"><i class="bi bi-shield"></i></span><?php endif; ?>
+			<?php if ($clubLogo): ?><img class="club-logo" src="<?= plain(md_logo($clubLogo, 128)) ?>" alt=""><?php else: ?><span class="club-logo empty"><i class="bi bi-shield"></i></span><?php endif; ?>
 			<div class="min-w-0 flex-grow-1">
 				<h1 class="mb-2"><?= plain($clubName ?: 'Zápasy klubu') ?></h1>
 				<form class="d-flex flex-wrap gap-2 align-items-center" method="get" action="<?= url('match-day-season-detail') ?>">
@@ -136,9 +136,9 @@
 							<span class="small text-muted-2"><?= plain($dT) ?><?= $isRes ? '' : ' · ' . plain($tT) ?></span>
 						</div>
 						<div class="spot-teams">
-							<a class="spot-team text-reset text-decoration-none" href="<?= plain(md_team_url($m['homeTeam']['_id'] ?? '', $season)) ?>"><?php if (!empty($m['homeTeam']['logoUrl'])): ?><img src="<?= plain($m['homeTeam']['logoUrl']) ?>" alt=""><?php endif; ?><span><?= plain($m['homeTeam']['name'] ?? '') ?></span></a>
+							<a class="spot-team text-reset text-decoration-none" href="<?= plain(md_team_url($m['homeTeam']['_id'] ?? '', $season)) ?>"><?php if (!empty($m['homeTeam']['logoUrl'])): ?><img src="<?= plain(md_logo($m['homeTeam']['logoUrl'], 128)) ?>" alt=""><?php endif; ?><span><?= plain($m['homeTeam']['name'] ?? '') ?></span></a>
 							<a class="spot-score text-decoration-none" href="<?= plain(md_match_url($m['_id'] ?? '', $ownId)) ?>" title="Detail zápasu"><?= $isRes ? plain(($m['homeTeam']['score'] ?? '') . ':' . ($m['awayTeam']['score'] ?? '')) : 'vs' ?></a>
-							<a class="spot-team away text-reset text-decoration-none" href="<?= plain(md_team_url($m['awayTeam']['_id'] ?? '', $season)) ?>"><?php if (!empty($m['awayTeam']['logoUrl'])): ?><img src="<?= plain($m['awayTeam']['logoUrl']) ?>" alt=""><?php endif; ?><span><?= plain($m['awayTeam']['name'] ?? '') ?></span></a>
+							<a class="spot-team away text-reset text-decoration-none" href="<?= plain(md_team_url($m['awayTeam']['_id'] ?? '', $season)) ?>"><?php if (!empty($m['awayTeam']['logoUrl'])): ?><img src="<?= plain(md_logo($m['awayTeam']['logoUrl'], 128)) ?>" alt=""><?php endif; ?><span><?= plain($m['awayTeam']['name'] ?? '') ?></span></a>
 						</div>
 						<div class="d-flex flex-wrap gap-2 mt-3">
 							<?php if ($isRes): ?>
@@ -208,7 +208,7 @@
 					<div class="match-teams">
 						<div class="match-team home <?= $win1 ? 'winner' : '' ?>">
 							<a class="name text-reset text-decoration-none" href="<?= plain($tu($home)) ?>"><?= plain($home['name'] ?? '') ?></a>
-							<?php if ($logo1): ?><img class="team-logo" src="<?= plain($logo1) ?>" alt="" loading="lazy"><?php else: ?><span class="team-logo empty"><i class="bi bi-shield"></i></span><?php endif; ?>
+							<?php if ($logo1): ?><img class="team-logo" src="<?= plain(md_logo($logo1)) ?>" alt="" loading="lazy"><?php else: ?><span class="team-logo empty"><i class="bi bi-shield"></i></span><?php endif; ?>
 						</div>
 						<?php if ($isPlayed): ?>
 							<a class="match-score" href="<?= plain($zapis) ?>" title="Zápis o stretnutí"><?= plain($home['score'] ?? '') ?> : <?= plain($away['score'] ?? '') ?></a>
@@ -216,7 +216,7 @@
 							<?php if ($isBye): ?><div class="match-score upcoming">–</div><?php else: ?><a class="match-score upcoming" href="<?= plain($zapis) ?>" title="Detail zápasu: forma, vzájomné zápasy, tabuľka"><?= plain($timeTxt) ?></a><?php endif; ?>
 						<?php endif; ?>
 						<div class="match-team away <?= $win2 ? 'winner' : '' ?>">
-							<?php if ($logo2): ?><img class="team-logo" src="<?= plain($logo2) ?>" alt="" loading="lazy"><?php else: ?><span class="team-logo empty"><i class="bi bi-shield"></i></span><?php endif; ?>
+							<?php if ($logo2): ?><img class="team-logo" src="<?= plain(md_logo($logo2)) ?>" alt="" loading="lazy"><?php else: ?><span class="team-logo empty"><i class="bi bi-shield"></i></span><?php endif; ?>
 							<a class="name text-reset text-decoration-none" href="<?= plain($tu($away)) ?>"><?= plain($away['name'] ?? '') ?></a>
 						</div>
 					</div>

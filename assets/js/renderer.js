@@ -60,16 +60,21 @@
         return groups;
     };
 
-    // Google Fonts CSS – každé písmo zvlášť, aby chyba jedného nezablokovala ostatné.
-    // Samotné súbory písma sa sťahujú až keď sú naozaj potrebné.
-    (function injectGoogleFonts() {
-        GOOGLE.forEach(([n, , w]) => {
+    // Google Fonts sa načítajú až vtedy, keď ich šablóna naozaj používa (rýchlosť + žiadne zbytočné spojenia na Google)
+    const googleCss = {};
+    MD.loadGoogleCss = function (name) {
+        const g = GOOGLE.find(([n]) => n === name);
+        if (!g) return Promise.resolve();
+        if (!googleCss[name]) googleCss[name] = new Promise((resolve) => {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
-            link.href = 'https://fonts.googleapis.com/css2?family=' + n.replace(/ /g, '+') + (w ? ':wght@' + w : '') + '&display=swap';
+            link.href = 'https://fonts.googleapis.com/css2?family=' + name.replace(/ /g, '+') + (g[2] ? ':wght@' + g[2] : '') + '&display=swap';
+            link.onload = link.onerror = () => resolve();
             document.head.appendChild(link);
+            setTimeout(resolve, 3000);
         });
-    })();
+        return googleCss[name];
+    };
 
     const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'Máj', 'Jún', 'Júl', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec'];
     const MONTHS_LONG = ['Január', 'Február', 'Marec', 'Apríl', 'Máj', 'Jún', 'Júl', 'August', 'September', 'Október', 'November', 'December'];
@@ -139,9 +144,9 @@
             return biomePromise;
         }
         if (!loadedFamilies[family]) {
-            loadedFamilies[family] = Promise.all(['400', '700', 'italic 400'].map((w) =>
+            loadedFamilies[family] = MD.loadGoogleCss(family).then(() => Promise.all(['400', '700', 'italic 400'].map((w) =>
                 document.fonts.load(w + ' 48px "' + family + '"', FONT_SAMPLE).catch(() => null)
-            ));
+            )));
         }
         return loadedFamilies[family];
     };

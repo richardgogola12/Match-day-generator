@@ -727,7 +727,8 @@
 		<div class="col-md-6"><div class="guide-card h-100"><i class="bi bi-hdd-network"></i><div><strong>Na serveri</strong><br><span>Uložené obrázky (PNG) s údajmi o zápase a záznam v logu: čo a kedy sa vytvorilo, rodina prehliadača a systému (napr. Chrome / Android) a anonymné ID.</span></div></div></div>
 	</div>
 	<p class="mt-3">Všetko, čo je uložené v prehliadači, vymažete odkazom <strong>Obnoviť nastavenia</strong> v pätičke stránky. Vyberiete, čo sa má zmazať (šablóny a pozadia, fotky hráčov, predvoľby, offline cache, prípadne aj ID galérie) a aplikácia sa vráti do pôvodného stavu. Predtým si môžete stiahnuť zálohu.</p>
-	<p class="mt-3 mb-0">Aplikácia <strong>neukladá IP adresy</strong>, presnú verziu prehliadača, model zariadenia, jazyk, polohu ani odkiaľ ste prišli. Nepoužíva reklamné ani analytické cookies. Galéria každého prehliadača je oddelená – iní používatelia vaše obrázky v galérii nevidia (vidia ich iba ak im pošlete odkaz).</p>
+	<p class="mt-3">Písma a ikony sú priamo na našom serveri – stránka sa nepripája na Google Fonts ani iné CDN (výnimkou sú iba voliteľné písma, ktoré si sami vyberiete v editore šablón).</p>
+	<p class="mt-3 mb-0">Aplikácia <strong>neukladá IP adresy</strong> (proti zneužitiu sa počíta iba počet požiadaviek pod anonymným kódom, ktorý sa po 2 dňoch maže), presnú verziu prehliadača, model zariadenia, jazyk, polohu ani odkiaľ ste prišli. Nepoužíva reklamné ani analytické cookies. Galéria každého prehliadača je oddelená – iní používatelia vaše obrázky v galérii nevidia (vidia ich iba ak im pošlete odkaz).</p>
 </section>
 
 <!-- ================================================================== -->
@@ -736,25 +737,29 @@
 	<p>Správca vidí obrázky zo všetkých prehliadačov a log generovania. Prihlasuje sa na stránke <a href="<?= url('spravca') ?>"><code><?= plain(BASE_PATH) ?>/spravca</code></a> (odkaz <em>Správca</em> je aj v pätičke stránky).</p>
 	<?= guide_shot('14-spravca.webp', 'Prehľad správcu', 'Prehľad správcu: počet obrázkov, obsadené miesto a odkazy na galériu všetkých a log.') ?>
 	<ol class="guide-steps">
-		<li>Predvolené heslo správcu je <code>asd123</code>. Na verejnom serveri ho zmeňte v súbore <code>config.local.php</code>: <code>define('GALLERY_ADMIN_KEY', 'dlhé-náhodné-heslo');</code> – kým platí predvolené heslo, prehľad správcu na to upozorní.</li>
+		<li>Predvolené heslo správcu je <code>asd123</code>. Po prihlásení ho zmeňte v časti <strong>Zmeniť heslo</strong> – na serveri sa uloží iba jeho <em>hash</em> (heslo sa z neho nedá spätne zistiť). Kým platí predvolené heslo, prehľad správcu na to upozorní. Heslo (alebo jeho hash) môžete nastaviť aj v <code>config.local.php</code> – má potom prednosť.</li>
 		<li>Otvorte <strong>/spravca</strong>, zadajte heslo a kliknite na <strong>Prihlásiť</strong>. V menu pribudne položka <strong>Správca</strong>.</li>
 		<li><strong>Galéria všetkých</strong> zobrazí obrázky zo všetkých prehliadačov vrátane tých, ktoré si používatelia skryli. Ikonou <i class="bi bi-trash"></i> obrázok <strong>natrvalo zmažete</strong> zo servera.</li>
 		<li><strong>Log generovania</strong> zobrazí po mesiacoch, kedy a aký obrázok vznikol. Dá sa prehľadávať a stiahnuť ako TXT.</li>
-		<li><strong>Kontrola Sportnetu</strong> (menu Správca) postupne overí všetkých 13 zdrojov dát na zadanom klube – sezóny, hľadanie, družstvá, zápasy, zápis, tabuľku, minúty, hráča, vzájomné zápasy – s časom odozvy. Zelená = v poriadku, žltá = zdroj odpovedá, ale klub nemá dáta (skúste iný), červená = Sportnet neodpovedá alebo zmenil formát. Tlačidlom <strong>Vymazať cache</strong> sa zahodia uložené odpovede Sportnetu a logá, takže sa načítajú nanovo.</li>
+		<li><strong>Kontrola Sportnetu</strong> (menu Správca) postupne overí všetkých 14 zdrojov dát na zadanom klube – sezóny, hľadanie, družstvá, zápasy, zápis, tabuľku, minúty, hráča, vzájomné zápasy a sťahovanie lôg – s časom odozvy. Zelená = v poriadku, žltá = zdroj odpovedá, ale klub nemá dáta (skúste iný), červená = Sportnet neodpovedá alebo zmenil formát. Tlačidlom <strong>Vymazať cache</strong> sa zahodia uložené odpovede Sportnetu a logá, takže sa načítajú nanovo.</li>
+		<li><strong>Úložisko a údržba</strong> – koľko miesta zaberajú obrázky a limit. Obrázky staršie ako 365 dní a stará cache sa mažú automaticky raz za deň; tlačidlom <strong>Spustiť údržbu teraz</strong> to urobíte hneď.</li>
+		<li><strong>Nočná úloha</strong> – raz za noc obnoví údaje družstiev, ktoré sa používajú (stránky sú potom ráno rýchle), urobí údržbu a skontroluje Sportnet. Ak je nastavený <code>ADMIN_EMAIL</code>, pri chybe Sportnetu príde e-mail. Nastavenie je v README (cron: <code>php cli/cron.php</code>, alebo webcron na <code>/cron?key=…</code>).</li>
 		<li><strong>Kontrola údajov zostavy</strong> – ak by Sportnet zmenil formát zápisu a zostavy by sa prestali načítavať, prihlásený správca vidí surové údaje zápisu na adrese <code>api-match?id=ID_ZÁPASU&amp;debug=1</code> (ID zápasu je v adrese generátora za <code>matchID=</code>).</li>
 		<li>Po skončení sa odhláste (menu Správca → <strong>Odhlásiť</strong>).</li>
 	</ol>
 	<?= guide_shot('15-log.webp', 'Log generovania pre správcu', 'Log generovania – bez IP adries a osobných údajov.') ?>
 	<div class="guide-warn">
 		<i class="bi bi-exclamation-triangle-fill"></i>
-		<div>Heslo nikdy nepíšte do adresy stránky ani ho neposielajte e-mailom. Po 5 nesprávnych pokusoch sa prihlasovanie na 10 minút zablokuje. Zmenou hesla v <code>config.local.php</code> sa všetci správcovia odhlásia.</div>
+		<div>Heslo nikdy nepíšte do adresy stránky ani ho neposielajte e-mailom. Po 5 nesprávnych pokusoch (alebo 10 z jednej IP adresy za 15 minút) sa prihlasovanie na 10 minút zablokuje. Zmenou hesla sa všetci správcovia odhlásia.</div>
 	</div>
 	<h3>Inštalácia na server</h3>
 	<ul class="guide-list mb-0">
 		<li>PHP 8.1 alebo novšie s rozšíreniami <code>gd</code>, <code>curl</code>, <code>mbstring</code>; Apache s <code>mod_rewrite</code>.</li>
 		<li>Ak aplikácia nebeží v priečinku <code>/match-day</code>, upravte <code>BASE_PATH</code> v <code>config.php</code>.</li>
 		<li>Skopírujte <code>config.local.example.php</code> ako <code>config.local.php</code> a zmeňte predvolené heslo správcu (<code>asd123</code>).</li>
-		<li>Priečinky <code>storage/generated</code> a <code>storage/logs</code> musia byť zapisovateľné pre PHP.</li>
+		<li>Priečinok <code>storage</code> (generated, logs, cache, private) musí byť zapisovateľný pre PHP. Podpriečinky cache a private sú z webu nedostupné.</li>
+		<li>Spojenie so Sportnetom overuje HTTPS certifikát. Ak hosting nemá aktuálne certifikáty, použije sa priložený balík <code>includes/cacert.pem</code>.</li>
+		<li>Logá a fotky sa sťahujú iba z domén Sportnetu (<code>IMAGE_HOSTS</code>); zablokované domény uvidíte v Kontrole Sportnetu.</li>
 		<li>Staršie logy s IP adresami a údajmi o zariadeniach sa po aktualizácii automaticky vyčistia.</li>
 	</ul>
 </section>
@@ -770,6 +775,8 @@
 			['Štatistiky hráča nesedia', 'Minúty, zápasy a štarty sú oficiálne čísla Sportnetu; góly a karty sa skladajú zo zápisov o stretnutí – ak klub nezadal udalosti, v štatistike chýbajú. Ak hráč hrá aj za iné družstvo klubu, štatistiky sú iba za toto družstvo (súčet za celú kariéru je v profile hráča).'],
 			['Fotka hráča sa nezobrazuje na inom zariadení', 'Fotky sa ukladajú iba v prehliadači, v ktorom ste ich nahrali. Preneste ich zálohou: Šablóny → Záloha → Exportovať a v druhom prehliadači Importovať.'],
 			['Zostava alebo súpiska je prázdna či neúplná', 'Zostava sa berie zo zápisu o stretnutí – ak ho klub ešte nevyplnil, je prázdna. Súpiska sa skladá zo zápisov odohratých zápasov, preto v nej chýbajú hráči, ktorí ešte nenastúpili. V oboch prípadoch hráčov doplníte cez Upraviť hráčov. Tlačidlom so šípkou načítate údaje zo Sportnetu znova.'],
+			['Uloženie hlási „Príliš veľa uložení za hodinu“', 'Server má limit uložení za hodinu (ochrana pred zaplnením disku). Obrázok si môžete stále stiahnuť tlačidlom Stiahnuť PNG; ukladanie bude o chvíľu znova fungovať. Správca môže limit zmeniť (SAVE_LIMIT_CLIENT, SAVE_LIMIT_IP v config.local.php).'],
+			['Hore je žltý pás „Sportnet momentálne neodpovedá“', 'Sportnet API je dočasne nedostupné. Stránky ukazujú naposledy uložené údaje, takže môžete ďalej pracovať; nové výsledky sa doplnia, keď Sportnet znova odpovedá.'],
 			['Nenačítajú sa sezóny alebo kluby', 'Údaje prichádzajú zo Sportnet API. Ak je dočasne nedostupné, zobrazí sa upozornenie. Obnovte stránku o chvíľu. Klub vyhľadáte až po napísaní aspoň 3 znakov.'],
 			['Na obrázku chýbajú strelci', 'Zápis o stretnutí ešte nemusí byť uzavretý alebo v ňom nie sú zadaní strelci. Skúste to neskôr. Skontrolujte tiež, že šablóna Strelci obsahuje dva prvky „Zoznam strelcov“ (domáci a hostia).'],
 			['Logo tímu sa nezobrazuje', 'Klub nemá na Sportnete nahraté logo, alebo sa ho nepodarilo stiahnuť. V editore skontrolujte, či prvok loga nie je skrytý (ikona oka).'],

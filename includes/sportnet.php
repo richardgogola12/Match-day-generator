@@ -288,6 +288,7 @@ function sn_match_brief($m) {
 function sportnet_competition($teamId) {
     $cacheF = sn_cache_file('competition|' . $teamId);
     if (is_file($cacheF) && filemtime($cacheF) > time() - 1800 && is_array($c = json_decode((string)file_get_contents($cacheF), true))) return $c;
+    if (($stale = md_bg_stale($cacheF, 1800, fn() => sportnet_competition($teamId))) !== null) return $stale;
 
     $list = sn_fetch_cached(sprintf(API_MATCHES, rawurlencode($teamId)), 1800);
     if (!empty($list['error'])) return ['error' => 'Zápasy družstva sa nepodarilo načítať zo Sportnetu.'];
@@ -403,6 +404,7 @@ function sportnet_competition($teamId) {
 function sportnet_team($teamId) {
     $cacheF = sn_cache_file('team|' . $teamId);
     if (is_file($cacheF) && filemtime($cacheF) > time() - 3600 && is_array($c = json_decode((string)file_get_contents($cacheF), true))) return $c;
+    if (($stale = md_bg_stale($cacheF, 3600, fn() => sportnet_team($teamId))) !== null) return $stale;
 
     $list = sn_fetch_cached(sprintf(API_MATCHES, rawurlencode($teamId)), 1800);
     if (!empty($list['error'])) return ['error' => 'Zápasy družstva sa nepodarilo načítať zo Sportnetu.'];

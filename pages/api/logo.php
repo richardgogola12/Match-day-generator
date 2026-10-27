@@ -7,9 +7,11 @@
  *   GET api-logo?url=https://...
  */
 $url = trim($_GET['url'] ?? '');
-$cacheDir = sys_get_temp_dir() . '/match-day-logos';
+$cacheDir = md_cache_dir('logos');
 // raw=1: fotka hráča – bez odstraňovania bieleho pozadia (to je iba pre logá)
 $raw = !empty($_GET['raw']);
+// s=32|64|128|256: zmenšený náhľad (WebP) na zobrazenie v zoznamoch – plné PNG iba pre canvas
+$size = in_array((int)($_GET['s'] ?? 0), [32, 64, 128, 256], true) ? (int)$_GET['s'] : 0;
 $cacheFile = $cacheDir . '/' . sha1(($raw ? 'raw|' : '') . $url) . '.png';
 
 /** chyba: starú verziu z cache, inak presmerovanie na originál (fb=1, iba pre <img>) alebo 404 bez cache */
@@ -25,18 +27,19 @@ $fail = function ($code, $msg) use ($cacheFile, $url) {
 $fresh = is_file($cacheFile) && filesize($cacheFile) > 0 && filemtime($cacheFile) > time() - 7 * 86400;
 if (!$fresh) {
     if ($url === '' || !preg_match('#^https?://#i', $url)) { http_response_code(400); header('Cache-Control: no-store'); exit('Neplatná URL'); }
-    // DNS občas zlyhá – skúsi sa dvakrát
-    $ok = is_public_http_url($url);
-    if (!$ok) { usleep(300000); $ok = is_public_http_url($url); }
-    if (!$ok) { if ($fail(400, 'Neplatná URL') === 'stale') goto send; }
-    if (!is_dir($cacheDir)) @mkdir($cacheDir, 0775, true);
+    // nové logo sťahujeme zo Sportnetu – najviac 600 za hodinu z jednej IP adresy
+    if (!md_rate_limit('logo|' . md_ip_hash(), 600, 3600)) { if ($fail(429, 'Príliš veľa požiadaviek') === 'stale') goto send; }
     // zámok: to isté logo sa pri súbežných požiadavkách spracuje iba raz
     $lock = @fopen($cacheFile . '.lock', 'c');
     if ($lock) flock($lock, LOCK_EX);
     clearstatcache(true, $cacheFile);
     if (!(is_file($cacheFile) && filesize($cacheFile) > 0 && filemtime($cacheFile) > time() - 7 * 86400)) {
-        $bin = fetch_binary($url);
-        if (!$bin) { usleep(400000); $bin = fetch_binary($url); } // druhý pokus
+        // iba povolené domény a verejné IP; presmerovania sa overujú (includes/security.php)
+        $bin = md_safe_fetch_image($url);
+        if (!$bin) { usleep(400000); $bin = md_safe_fetch_image($url); } // druhý pokus
+        // ochrana pamäte: obrázok najviac 4000 × 4000 px
+        $dim = $bin ? @getimagesizefromstring($bin) : false;
+        if (!$dim || $dim[0] > 4000 || $dim[1] > 4000) $bin = false;
         $img = $bin ? @imagecreatefromstring($bin) : false;
         if (!$img) {
             if ($lock) { flock($lock, LOCK_UN); fclose($lock); }
@@ -66,7 +69,32 @@ if (!$fresh) {
 
 send:
 while (ob_get_level() > 0) ob_end_clean();
+if ($size > 0 && function_exists('imagewebp')) {
+    $small = substr($cacheFile, 0, -4) . '-' . $size . '.webp';
+    if (!is_file($small) || filemtime($small) < filemtime($cacheFile)) {
+        $src = @imagecreatefrompng($cacheFile);
+        if ($src) {
+            $w = imagesx($src); $h = imagesy($src);
+            $r = min(1, $size / max($w, $h));
+            $nw = max(1, (int)round($w * $r)); $nh = max(1, (int)round($h * $r));
+            $dst = imagecreatetruecolor($nw, $nh);
+            imagealphablending($dst, false); imagesavealpha($dst, true);
+            imagefill($dst, 0, 0, imagecolorallocatealpha($dst, 0, 0, 0, 127));
+            imagecopyresampled($dst, $src, 0, 0, 0, 0, $nw, $nh, $w, $h);
+            $tmpS = $small . '.tmp' . getmypid();
+            if (@imagewebp($dst, $tmpS, 86)) @rename($tmpS, $small); else @unlink($tmpS);
+        }
+    }
+    if (is_file($small)) {
+        header('Content-Type: image/webp');
+        header('Cache-Control: public, max-age=2592000');
+        header('Content-Length: ' . filesize($small));
+        readfile($small);
+        exit;
+    }
+}
 header('Content-Type: image/png');
 header('Cache-Control: public, max-age=604800');
+header('Content-Length: ' . filesize($cacheFile));
 readfile($cacheFile);
 exit;

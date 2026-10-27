@@ -63,7 +63,7 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 	<div class="container-xxl">
 		<?php if ($team['club']): ?><a href="<?= plain(md_club_url($team['club'], $season, $teamId)) ?>" class="btn btn-sm btn-outline-light rounded-pill mb-3"><i class="bi bi-arrow-left me-1"></i> Zápasy klubu</a><?php else: ?><button type="button" onclick="history.length > 1 ? history.back() : location.href='<?= url('/') ?>'" class="btn btn-sm btn-outline-light rounded-pill mb-3"><i class="bi bi-arrow-left me-1"></i> Späť</button><?php endif; ?>
 		<div class="d-flex align-items-center gap-3">
-			<?php if ($team['logo']): ?><img class="hero-logo" src="<?= plain(url('api-logo') . '?url=' . rawurlencode($team['logo'])) ?>" alt="" width="64" height="64"><?php endif; ?>
+			<?php if ($team['logo']): ?><img class="hero-logo" src="<?= plain(md_logo($team['logo'], 64)) ?>" alt="" width="64" height="64"><?php endif; ?>
 			<div>
 				<h1 class="mb-1"><?= plain($team['name'] ?: 'Družstvo') ?> <span class="accent"><?= plain($cat) ?></span></h1>
 				<div class="d-flex flex-wrap gap-2">
@@ -155,9 +155,9 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 			ob_start(); ?>
 			<li class="tm-row">
 				<a class="when" href="<?= plain(md_match_url($m['id'], $team['id'])) ?>"><?= plain($dT) ?><small><?= plain($tT) ?> · <?= plain($m['round'] ? (preg_match('/kolo/i', $m['round']) ? $m['round'] : $m['round'] . '. kolo') : $m['competition']) ?></small></a>
-				<a class="h<?= $side === 'home' ? ' own' : '' ?>" href="<?= plain(md_team_url($m['home']['id'], $season)) ?>"><span><?= plain($m['home']['name']) ?></span><?php if ($m['home']['logo']): ?><img src="<?= plain($m['home']['logo']) ?>" alt="" loading="lazy"><?php endif; ?></a>
+				<a class="h<?= $side === 'home' ? ' own' : '' ?>" href="<?= plain(md_team_url($m['home']['id'], $season)) ?>"><span><?= plain($m['home']['name']) ?></span><?php if ($m['home']['logo']): ?><img src="<?= plain(md_logo($m['home']['logo'])) ?>" alt="" loading="lazy"><?php endif; ?></a>
 				<a class="sc<?= $m['played'] ? ' res-' . plain($m['result'] ?? '') : ' upcoming' ?>" href="<?= plain(md_match_url($m['id'], $team['id'])) ?>" title="Detail zápasu"><?= $m['played'] ? (int)$m['home']['score'] . ':' . (int)$m['away']['score'] : plain($tT ?: '–') ?></a>
-				<a class="a<?= $side === 'away' ? ' own' : '' ?>" href="<?= plain(md_team_url($m['away']['id'], $season)) ?>"><?php if ($m['away']['logo']): ?><img src="<?= plain($m['away']['logo']) ?>" alt="" loading="lazy"><?php endif; ?><span><?= plain($m['away']['name']) ?></span></a>
+				<a class="a<?= $side === 'away' ? ' own' : '' ?>" href="<?= plain(md_team_url($m['away']['id'], $season)) ?>"><?php if ($m['away']['logo']): ?><img src="<?= plain(md_logo($m['away']['logo'])) ?>" alt="" loading="lazy"><?php endif; ?><span><?= plain($m['away']['name']) ?></span></a>
 				<span class="acts">
 					<a class="btn btn-sm btn-outline-primary rounded-pill" href="<?= plain(md_gen_link($m['played'] ? 'result' : 'matchday', $p)) ?>"><i class="bi bi-image me-1"></i><?= $m['played'] ? 'Výsledok' : 'Match day' ?></a>
 					<?= md_create_btn(md_create_match($m, $mctx), '', 'btn btn-sm btn-outline-secondary btn-more rounded-pill') ?>
@@ -259,7 +259,7 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 							<?php foreach ($C['table'] as $r): ?>
 								<tr class="<?= !empty($r['own']) ? 'is-own' : '' ?>">
 									<td class="fw-bold"><?= (int)$r['pos'] ?>.</td>
-									<td><a class="d-inline-flex align-items-center gap-2 text-reset text-decoration-none" href="<?= plain($r['id'] === $team['id'] ? '#' : md_team_url($r['id'], $season)) ?>"><?php if ($r['logo']): ?><img src="<?= plain(url('api-logo') . '?url=' . rawurlencode($r['logo'])) ?>" alt="" width="26" height="26" loading="lazy"><?php endif; ?><span class="fw-semibold"><?= plain($r['name']) ?></span></a></td>
+									<td><a class="d-inline-flex align-items-center gap-2 text-reset text-decoration-none" href="<?= plain($r['id'] === $team['id'] ? '#' : md_team_url($r['id'], $season)) ?>"><?php if ($r['logo']): ?><img src="<?= plain(md_logo($r['logo'], 64)) ?>" alt="" width="26" height="26" loading="lazy"><?php endif; ?><span class="fw-semibold"><?= plain($r['name']) ?></span></a></td>
 									<td class="text-end"><?= (int)$r['p'] ?></td><td class="text-end"><?= (int)$r['w'] ?></td><td class="text-end"><?= (int)$r['d'] ?></td><td class="text-end"><?= (int)$r['l'] ?></td>
 									<td class="text-end text-nowrap"><?= (int)$r['gf'] ?>:<?= (int)$r['ga'] ?></td>
 									<td class="text-end fw-bold"><?= (int)$r['pts'] ?></td>

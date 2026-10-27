@@ -14,3 +14,20 @@ define('LOG_ENABLED', true);
 
 // Vývojový režim – zobrazuje chyby PHP priamo na stránke. Na produkcii false.
 define('APP_DEBUG', false);
+
+// Heslo správcu môže byť aj hash (odporúčané), napr.:
+//   php -r "echo password_hash('moje-heslo', PASSWORD_DEFAULT);"
+// define('GALLERY_ADMIN_KEY', '$2y$10$....');
+// Heslo sa dá zmeniť aj priamo v aplikácii (Správca → Zmeniť heslo) – uloží sa iba jeho hash.
+
+// E-mail pre upozornenia z nočnej kontroly Sportnetu a kľúč pre spustenie cez URL
+// define('ADMIN_EMAIL', 'vas@email.sk');
+// define('CRON_KEY', 'dlhy-nahodny-retazec');
+
+// Ak hosting nemá aktuálne CA certifikáty (chyba „SSL certificate problem“):
+// define('SSL_CAINFO', __DIR__ . '/storage/private/cacert.pem');
+
+// Ďalšie domény lôg a fotiek (oddelené čiarkou), limity a uchovávanie obrázkov
+// define('IMAGE_HOSTS', 'sportnet.online,futbalnet.sk,mediamanager.ws,moja-domena.sk');
+// define('STORAGE_MAX_MB', 3000);
+// define('STORAGE_KEEP_DAYS', 365);

@@ -99,7 +99,7 @@ $(function () {
 
 	/* ---------- Môj klub: najbližšie zápasy a posledné výsledky ---------- */
 	const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-	const logoUrl = (u) => u || ''; // pri chybe sa logo načíta cez server (header.php)
+	const logoUrl = (u) => (u ? base + '/api-logo?s=64&fb=1&url=' + encodeURIComponent(u) : ''); // malé WebP; pri chybe originál
 	const fmt = (iso) => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString('sk-SK', { timeZone: 'Europe/Bratislava', weekday: 'short', day: 'numeric', month: 'numeric' }) + ' · ' + d.toLocaleTimeString('sk-SK', { timeZone: 'Europe/Bratislava', hour: '2-digit', minute: '2-digit' }); };
 	function genUrl(type, m, season) {
 		const q = { type, d1name: m.home.name, d2name: m.away.name, d1url: m.home.logo, d2url: m.away.logo, startDate: m.date, competitionName: m.competition, round: m.round,

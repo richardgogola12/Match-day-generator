@@ -1,6 +1,5 @@
 <?php
-
-
+require_once __DIR__ . '/security.php';
 
 /**
  * Define class autoload
@@ -279,14 +278,17 @@ function getJsonFromUrl(string $url, bool $assoc = true) {
         // stabilita medzi server-mi
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
 
-        // SSL (zachováš, kým nebude CA cert)
-        CURLOPT_SSL_VERIFYPEER => false,
-        CURLOPT_SSL_VERIFYHOST => false,
-    ]);
+    ] + md_curl_ssl_opts());
 
     $response = curl_exec($ch);
+    // hosting bez aktuálnych CA certifikátov: druhý pokus so záložným balíkom includes/cacert.pem
+    if ($response === false && md_curl_ca_error(curl_errno($ch))) {
+        curl_setopt_array($ch, md_curl_ssl_opts(true));
+        $response = curl_exec($ch);
+    }
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $curlErr  = curl_error($ch);
+    md_sportnet_status($response !== false && $httpCode < 500 && $httpCode !== 0);
 
     // curl handle sa uvoľní automaticky (curl_close je od PHP 8.5 zastarané)
 
@@ -542,27 +544,7 @@ function is_public_http_url($url) {
  * Stiahne binárny obsah z URL (napr. logo); vracia string alebo false
  */
 function fetch_binary($url, $maxBytes = 5242880) {
-    $ch = curl_init();
-    curl_setopt_array($ch, [
-        CURLOPT_URL            => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_MAXREDIRS      => 3,
-        CURLOPT_TIMEOUT        => 15,
-        CURLOPT_USERAGENT      => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36',
-        CURLOPT_SSL_VERIFYPEER => false,
-        CURLOPT_SSL_VERIFYHOST => false,
-    ]);
-    if (defined('CURLOPT_PROTOCOLS_STR')) {
-        curl_setopt($ch, CURLOPT_PROTOCOLS_STR, 'http,https');
-        curl_setopt($ch, CURLOPT_REDIR_PROTOCOLS_STR, 'http,https');
-    }
-    $data = curl_exec($ch);
-    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    // curl handle sa uvoľní automaticky (curl_close je od PHP 8.5 zastarané)
-
-    if ($data === false || $code !== 200 || strlen($data) > $maxBytes) return false;
-    return $data;
+    return md_safe_fetch_image($url, $maxBytes); // iba povolené domény a verejné IP (viď includes/security.php)
 }
 
 /**
@@ -730,7 +712,7 @@ function human_bytes($b) {
 function is_admin() {
     return GALLERY_ADMIN_KEY !== ''
         && isset($_SESSION['md_admin'])
-        && hash_equals(hash('sha256', 'md-admin|' . GALLERY_ADMIN_KEY), (string)$_SESSION['md_admin']);
+        && hash_equals(hash('sha256', 'md-admin|' . md_admin_hash()), (string)$_SESSION['md_admin']);
 }
 
 /**
@@ -740,10 +722,12 @@ function admin_login($password) {
     if (GALLERY_ADMIN_KEY === '') return false;
     $fail = $_SESSION['md_admin_fail'] ?? ['n' => 0, 't' => 0];
     if ($fail['n'] >= 5 && time() - $fail['t'] < 600) return false;
+    // aj bez cookie: najviac 10 pokusov za 15 minút z jednej IP adresy
+    if (!md_rate_limit('login|' . md_ip_hash(), 10, 900)) return false;
 
-    if (is_string($password) && hash_equals(GALLERY_ADMIN_KEY, $password)) {
+    if (md_admin_verify($password)) {
         session_regenerate_id(true);
-        $_SESSION['md_admin'] = hash('sha256', 'md-admin|' . GALLERY_ADMIN_KEY);
+        $_SESSION['md_admin'] = hash('sha256', 'md-admin|' . md_admin_hash());
         unset($_SESSION['md_admin_fail']);
         return true;
     }
@@ -755,6 +739,9 @@ function admin_login($password) {
 /** Zostávajúce minúty blokovania po neúspešných pokusoch (0 = neblokované) */
 function admin_lock_minutes() {
     $fail = $_SESSION['md_admin_fail'] ?? ['n' => 0, 't' => 0];
+    $ipWait = md_rate_retry_after('login|' . md_ip_hash(), 900);
+    $hits = md_json_read(md_cache_dir('ratelimit') . '/' . sha1('login|' . md_ip_hash()) . '.json');
+    if (count(array_filter($hits, fn($t) => $t > time() - 900)) >= 10) return (int)ceil($ipWait / 60);
     return ($fail['n'] >= 5 && time() - $fail['t'] < 600) ? (int)ceil((600 - (time() - $fail['t'])) / 60) : 0;
 }
 
@@ -1151,9 +1138,7 @@ function sportnet_goals(array $match, $homeId) {
 
 /** Priečinok dočasnej cache odpovedí Sportnetu */
 function sn_cache_file($key) {
-    $dir = sys_get_temp_dir() . '/match-day-cache';
-    if (!is_dir($dir)) @mkdir($dir, 0775, true);
-    return $dir . '/' . sha1($key) . '.json';
+    return md_cache_dir('sportnet') . '/' . sha1($key) . '.json';
 }
 
 /** JSON z URL s cache na disku (ttl v sekundách); pri chybe vráti starú cache, ak existuje */
@@ -1163,13 +1148,17 @@ function sn_fetch_cached($url, $ttl) {
         $d = json_decode((string)file_get_contents($f), true);
         if (is_array($d)) return $d;
     }
+    // stará verzia sa zobrazí hneď, nová sa stiahne na pozadí
+    if (($stale = md_bg_stale($f, $ttl, fn() => sn_fetch_cached($url, $ttl))) !== null) return $stale;
     try {
         $d = getJsonFromUrl($url);
     } catch (Throwable $e) {
         $d = null;
     }
     if (is_array($d) && empty($d['error'])) {
-        @file_put_contents($f, json_encode($d, JSON_UNESCAPED_UNICODE), LOCK_EX);
+        $json = json_encode($d, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        @file_put_contents($f, $json, LOCK_EX);
+        md_learn_image_hosts($json);
         return $d;
     }
     if (is_file($f)) {
@@ -1183,9 +1172,11 @@ function sn_fetch_cached($url, $ttl) {
 function sn_fetch_many(array $urls, $ttl, $parallel = 6) {
     $out = [];
     $todo = [];
+    $stale = [];
     foreach ($urls as $i => $url) {
         $f = sn_cache_file($url);
         if (is_file($f) && filemtime($f) > time() - $ttl && is_array($d = json_decode((string)file_get_contents($f), true))) $out[$i] = $d;
+        elseif (!$GLOBALS['md_in_bg'] && is_file($f) && filemtime($f) > time() - 7 * 86400 && is_array($d = json_decode((string)file_get_contents($f), true))) { $out[$i] = $d; $stale[$i] = $url; }
         else $todo[$i] = $url;
     }
     foreach (array_chunk($todo, $parallel, true) as $chunk) {
@@ -1197,8 +1188,7 @@ function sn_fetch_many(array $urls, $ttl, $parallel = 6) {
                 CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true, CURLOPT_TIMEOUT => 20,
                 CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36',
                 CURLOPT_HTTPHEADER => ['Accept: application/json'],
-                CURLOPT_SSL_VERIFYPEER => false, CURLOPT_SSL_VERIFYHOST => false,
-            ]);
+            ] + md_curl_ssl_opts(defined('MD_CA_FALLBACK')));
             curl_multi_add_handle($mh, $ch);
             $handles[$i] = $ch;
         }
@@ -1209,11 +1199,15 @@ function sn_fetch_many(array $urls, $ttl, $parallel = 6) {
         foreach ($handles as $i => $ch) {
             $body = curl_multi_getcontent($ch);
             $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            if ($code === 0 && !defined('MD_CA_FALLBACK') && md_curl_ca_error(curl_errno($ch))) define('MD_CA_FALLBACK', true);
+            md_sportnet_status($code > 0 && $code < 500);
             curl_multi_remove_handle($mh, $ch);
             $d = $code === 200 ? json_decode((string)$body, true) : null;
             $f = sn_cache_file($chunk[$i]);
             if (is_array($d)) {
-                @file_put_contents($f, json_encode($d, JSON_UNESCAPED_UNICODE), LOCK_EX);
+                $json = json_encode($d, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                @file_put_contents($f, $json, LOCK_EX);
+                md_learn_image_hosts($json);
                 $out[$i] = $d;
             } elseif (is_file($f)) {
                 $out[$i] = json_decode((string)file_get_contents($f), true) ?: null;
@@ -1223,6 +1217,8 @@ function sn_fetch_many(array $urls, $ttl, $parallel = 6) {
         }
         curl_multi_close($mh);
     }
+    // staré odpovede sa obnovia na pozadí
+    if ($stale) md_background('many|' . sha1(implode('|', $stale)), fn() => sn_fetch_many(array_values($stale), 0, $parallel));
     ksort($out);
     return $out;
 }

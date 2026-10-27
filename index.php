@@ -49,6 +49,7 @@ if ($__needSession && !session_id()) {
 }
 
 require INCLUDES_DIR . "functions.php";
+md_security_headers();
 
 //parse first segment of url address
 $page = segment(1);

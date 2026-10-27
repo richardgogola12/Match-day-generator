@@ -18,6 +18,14 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
 $client = client_hash();
 if ($client === '') json_response(['error' => 'Chýba identifikátor prehliadača'], 400);
 
+// limity: ochrana pred zaplnením disku (počet uložení za hodinu z IP adresy a z prehliadača)
+foreach ([['ip|' . md_ip_hash(), SAVE_LIMIT_IP], ['client|' . $client, SAVE_LIMIT_CLIENT]] as [$bucket, $max]) {
+    if (!md_rate_limit('save|' . $bucket, $max, 3600)) {
+        header('Retry-After: ' . md_rate_retry_after('save|' . $bucket, 3600));
+        json_response(['error' => 'Príliš veľa uložení za hodinu – skúste to neskôr. Stiahnuť PNG môžete aj tak.', 'limit' => true], 429);
+    }
+}
+
 $types = image_types();
 $type = $_GET['type'] ?? '';
 if (!isset($types[$type])) json_response(['error' => 'Neznámy typ obrázka'], 400);
@@ -27,6 +35,10 @@ if ($raw === false || $raw === '') {
     json_response(['error' => 'Prázdny obrázok – skontrolujte post_max_size na serveri'], 400);
 }
 if (strlen($raw) > MAX_IMAGE_BYTES) json_response(['error' => 'Obrázok je príliš veľký'], 413);
+if (md_storage_full(strlen($raw))) {
+    md_maintenance(); // skúsi zmazať staré obrázky
+    if (md_storage_full(strlen($raw))) json_response(['error' => 'Úložisko na serveri je plné – obrázok si stiahnite. Správca môže zmazať staré obrázky.', 'full' => true], 507);
+}
 if (strncmp($raw, "\x89PNG\r\n\x1a\n", 8) !== 0) json_response(['error' => 'Súbor nie je PNG'], 415);
 
 $info = @getimagesizefromstring($raw);
@@ -96,12 +108,15 @@ $meta = $m + [
     'typeName' => $types[$type],
     'width'    => $info[0],
     'height'   => $info[1],
+    'bytes'    => strlen($raw),
     'created'  => $old['created'] ?? $now,
     'updated'  => $now,
 ];
 file_put_contents($jsonFile, json_encode($meta, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
 
 $rel = $date->format('Y-m') . '/' . $name . '.png';
+md_storage_add(strlen($raw) - (int)($old['bytes'] ?? 0));
+md_background('maintenance', fn() => md_maintenance()); // raz za deň: staré obrázky a cache
 gallery_thumb($png); // náhľad do galérie (zlyhanie nevadí – galéria použije PNG)
 
 // záznam do TXT logu (chyba logu nesmie zablokovať uloženie obrázka)

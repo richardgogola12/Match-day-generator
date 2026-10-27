@@ -1,3 +1,5 @@
+/* Inter (OFL) – text stránky, lokálne (assets/fonts/inter-latin.woff, latinka + stredoeurópske znaky) */
+@font-face { font-family: 'Inter'; src: url('../fonts/inter-latin.woff') format('woff'); font-weight: 400 800; font-style: normal; font-display: swap; }
 /* =====================================================================
  * Match Day – vzhľad (Bootstrap 5.3 + vlastné premenné, svetlá/tmavá téma)
  * ===================================================================== */
@@ -1106,3 +1108,7 @@ body.has-fab .app-footer { padding-bottom: 5rem; }
 .mdc-item.is-big { padding: .75rem .85rem; margin-bottom: .45rem; }
 .mdc-item.is-big .mdc-ic { background: #ffd166; color: #0b2a1a; }
 [data-bs-theme="dark"] .mdc-why { color: #ffd166; }
+
+/* ---------- Výpadok Sportnetu ---------- */
+.sportnet-down { background: #fff3cd; color: #664d03; border-bottom: 1px solid #ffe69c; font-size: .9rem; padding: .55rem 0; }
+[data-bs-theme="dark"] .sportnet-down { background: #332701; color: #ffda6a; border-color: #664d03; }

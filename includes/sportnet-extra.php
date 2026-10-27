@@ -113,6 +113,7 @@ function sportnet_h2h(array $b, $limit = 10) {
     if ($hc === '' || $ac === '' || $hc === $ac) return $res;
     $cacheF = sn_cache_file('h2h|' . $hc . '|' . $ac . '|' . ($b['home']['ageCategory'] ?? '') . '|' . ($b['home']['gender'] ?? '') . '|' . $b['id']);
     if (is_file($cacheF) && filemtime($cacheF) > time() - 3 * 3600 && is_array($c = json_decode((string)file_get_contents($cacheF), true))) return $c;
+    if (($stale = md_bg_stale($cacheF, 3 * 3600, fn() => sportnet_h2h($b))) !== null) return $stale;
 
     $data = sn_fetch_cached(sprintf(API_H2H, rawurlencode($hc), rawurlencode($ac)), 6 * 3600);
     $list = array_values(array_filter((array)($data['mutualMatches'] ?? []), fn($m) => is_array($m) && sn_is_played($m) && ($m['_id'] ?? '') !== $b['id']));

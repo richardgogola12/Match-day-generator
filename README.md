@@ -22,7 +22,7 @@ Sedemnásť typov obrázkov, každý ako štvorcový príspevok (1000 × 1000) a
 - **Verejná stránka obrázka** (`/zdielaj?f=…`) s náhľadom pre sociálne siete (Open Graph) – odkaz z generátora aj galérie
 - **Drag & drop editor šablón** – pozície prvkov, písmo, farby, obrys, tieň, vlastné texty a podklady
 - Nastavenie zoznamu strelcov (osadenie, rozostupy, šírka stĺpca, automatické zmenšenie)
-- Jednotné písmo **Barlow Condensed** (OFL, v `assets/fonts`) pre obrázky aj stránku; ďalších 25 Google Fonts + nahranie vlastného písma
+- Jednotné písmo **Barlow Condensed** (OFL, v `assets/fonts`) pre obrázky, text stránky v lokálnom písme Inter (OFL); ďalších 25 Google Fonts sa načíta iba ak ich šablóna použije + nahranie vlastného písma
 - Moderné predvolené pozadia (Match day, Výsledok, Strelci a panel pre ostatné obrázky)
 - Všetky nastavenia sa ukladajú **v prehliadači** (localStorage + IndexedDB), záloha cez export/import JSON
 - Ukladanie vygenerovaných obrázkov na server + galéria (obrázky z daného prehliadača): náhľady, filter, hľadanie, zoradenie, prezeranie na celú obrazovku s listovaním, stiahnutie, zdieľanie
@@ -36,8 +36,23 @@ Sedemnásť typov obrázkov, každý ako štvorcový príspevok (1000 × 1000) a
 2. Ak aplikácia nebeží v `/match-day`, upravte `BASE_PATH` v `config.php`.
 3. Skopírujte `config.local.example.php` ako **`config.local.php`** a zmeňte predvolené heslo správcu `asd123` (`GALLERY_ADMIN_KEY`).
    Tento súbor sa do gitu nenahráva.
-4. Priečinky `storage/generated` a `storage/logs` musia byť zapisovateľné pre PHP (práva 775).
+4. Priečinok `storage` (`generated`, `logs`, `cache`, `private`) musí byť zapisovateľný pre PHP (práva 775). `cache` a `private` sú z webu nedostupné.
 5. PWA (inštalácia aplikácie) funguje iba cez **https**.
+6. **Nočná úloha** (odporúčané) – obnoví cache Sportnetu pre používané družstvá, zmaže staré obrázky a skontroluje Sportnet (pri chybe pošle e-mail na `ADMIN_EMAIL`):
+   ```
+   10 4 * * *  php /cesta/k/match-day/cli/cron.php > /dev/null 2>&1
+   ```
+   Bez prístupu ku cronu: nastavte `CRON_KEY` v `config.local.php` a vo webcron službe hostingu volajte `https://vas-web/match-day/cron?key=…`.
+
+## Bezpečnosť a rýchlosť
+- Heslo správcu sa ukladá iba ako hash (`storage/private/admin.json`), zmena hesla priamo v aplikácii; prihlasovanie má limit pokusov aj podľa IP.
+- Spojenia so Sportnetom overujú HTTPS certifikát (`SSL_VERIFY`; záložný balík CA `includes/cacert.pem`, vlastný cez `SSL_CAINFO`).
+- Proxy na logá (`api-logo`) sťahuje iba z povolených domén (`IMAGE_HOSTS` + domény z odpovedí Sportnetu), iba z verejných IP, každé presmerovanie sa overuje a spojenie ide na overenú IP.
+- Ukladanie obrázkov má limit za hodinu (`SAVE_LIMIT_IP`, `SAVE_LIMIT_CLIENT`), celkovú kvótu (`STORAGE_MAX_MB`) a automatické mazanie starých (`STORAGE_KEEP_DAYS`).
+- Bezpečnostné hlavičky: Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, HSTS (na https).
+- IP adresy sa nikam neukladajú – limity používajú iba HMAC hash s tajným kľúčom servera.
+- Cache Sportnetu: po vypršaní sa hneď zobrazí posledná verzia a nová sa stiahne na pozadí (po odoslaní stránky); pri výpadku Sportnetu sa zobrazí upozornenie.
+- Logá v zoznamoch sú zmenšené WebP náhľady (`api-logo?s=64`), pozadia šablón WebP (~40 kB), písma a ikony lokálne (žiadne Google Fonts / CDN), kompresia a dlhá cache v `.htaccess`.
 
 ## Dáta zo Sportnetu
 Používa [Sportnet Súťaže API v2](https://sutaze.api.sportnet.online/api/v2/docs/) (adresy v `config.php`):
@@ -88,3 +103,4 @@ Používa [Sportnet Súťaže API v2](https://sutaze.api.sportnet.online/api/v2/
 | `/galeria?vsetky=1` | galéria všetkých prehliadačov (iba správca) |
 | `/log` | log generovania (iba správca) |
 | `/kontrola` | kontrola zdrojov dát Sportnetu (iba správca) |
+| `/cron?key=…` | nočná úloha cez webcron (iba s `CRON_KEY`) |

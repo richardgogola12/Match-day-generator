@@ -22,17 +22,17 @@ $precache = [
     asset('fonts/barlow-condensed-extrabold.ttf'),
     asset('fonts/barlow-condensed-semibolditalic.ttf'),
     asset('fonts/barlow-condensed-blackitalic.ttf'),
-    asset('img/match-day-bg.png'),
-    asset('img/match-result-bg.png'),
-    asset('img/match-result-goals-bg.png'),
-    asset('img/team-bg.jpg'),
+    asset('img/match-day-bg.webp'),
+    asset('img/match-result-bg.webp'),
+    asset('img/match-result-goals-bg.webp'),
+    asset('img/team-bg.webp'),
     asset('icons/icon.svg'),
     asset('icons/icon-192.png'),
     url('includes/vendor/bootstrap/bootstrap.min.css'),
     url('includes/vendor/bootstrap/bootstrap.bundle.min.js'),
     url('includes/vendor/jquery/jquery.min.js'),
-    url('includes/vendor/select2/select2.min.js'),
-    url('includes/vendor/select2/select2.min.css'),
+    asset('fonts/inter-latin.woff'),
+    asset('vendor/icons/bootstrap-icons.min.css'),
 ];
 $version = substr(sha1(implode('|', $precache)), 0, 10);
 

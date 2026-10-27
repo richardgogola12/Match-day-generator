@@ -29,7 +29,7 @@
     ]);
     const competition = () => ({ id: 'competition', type: 'text', label: 'Súťaž | kolo', text: '{competition} | {roundLabel}', x: 60, y: 940, size: 20, align: 'left', maxWidth: 0 });
 
-    // spoločné prvky šablón Zostava a Súpiska (panel pozadia team-bg.jpg: x 116–884, y 96–932)
+    // spoločné prvky šablón Zostava a Súpiska (panel pozadia team-bg.webp: x 116–884, y 96–932)
     const yellow = '#ffd166';
     // jednotný štýl nadpisov (rovnaký ako na pozadiach Match day / Výsledok / Strelci):
     // biela tučná kurzíva s ostrým červeným tieňom; podnadpis = žltý štítok
@@ -42,7 +42,7 @@
             name: 'Match day',
             icon: 'bi-calendar-event',
             width: 1000, height: 1000,
-            defaultBackground: 'img/match-day-bg.png',
+            defaultBackground: 'img/match-day-bg.webp',
             elements: [
                 ...teamNames(),
                 { id: 'day', type: 'text', label: 'Deň', text: '{day}', x: 250, y: 770, size: 180, align: 'left', bold: true, italic: true, shadow: true, shadowColor: '#e63946', shadowY: 6 },
@@ -55,7 +55,7 @@
             name: 'Zostava',
             icon: 'bi-person-lines-fill',
             width: 1000, height: 1000,
-            defaultBackground: 'img/team-bg.jpg',
+            defaultBackground: 'img/team-bg.webp',
             elements: [
                 { id: 'logoTeam', type: 'logo', label: 'Logo družstva', team: 'team', x: 150, y: 118, size: 100 },
                 { id: 'logoOpp', type: 'logo', label: 'Logo súpera', team: 'opponent', x: 750, y: 118, size: 100 },
@@ -75,7 +75,7 @@
             name: 'Súpiska',
             icon: 'bi-people',
             width: 1000, height: 1000,
-            defaultBackground: 'img/team-bg.jpg',
+            defaultBackground: 'img/team-bg.webp',
             elements: [
                 { id: 'logoTeam', type: 'logo', label: 'Logo vľavo', team: 'team', x: 150, y: 118, size: 100 },
                 { id: 'logoTeam2', type: 'logo', label: 'Logo vpravo', team: 'team', x: 750, y: 118, size: 100 },
@@ -90,7 +90,7 @@
             name: 'Súhrn zápasu',
             icon: 'bi-file-text',
             width: 1000, height: 1000,
-            defaultBackground: 'img/team-bg.jpg',
+            defaultBackground: 'img/team-bg.webp',
             elements: [
                 { id: 'logo1', type: 'logo', label: 'Logo domácich', team: 'home', x: 165, y: 140, size: 130 },
                 { id: 'logo2', type: 'logo', label: 'Logo hostí', team: 'away', x: 705, y: 140, size: 130 },
@@ -113,7 +113,7 @@
             name: 'Vzájomné zápasy',
             icon: 'bi-bar-chart-steps',
             width: 1000, height: 1000,
-            defaultBackground: 'img/team-bg.jpg',
+            defaultBackground: 'img/team-bg.webp',
             elements: [
                 Object.assign({ id: 'title', type: 'text', label: 'Nadpis', text: 'VZÁJOMNÉ ZÁPASY', x: 500, y: 160, size: 76 }, TITLE),
                 { id: 'logo1', type: 'logo', label: 'Logo domácich', team: 'home', x: 130, y: 190, size: 120 },
@@ -132,7 +132,7 @@
             name: 'Forma',
             icon: 'bi-graph-up-arrow',
             width: 1000, height: 1000,
-            defaultBackground: 'img/team-bg.jpg',
+            defaultBackground: 'img/team-bg.webp',
             elements: [
                 { id: 'logoTeam', type: 'logo', label: 'Logo družstva', team: 'team', x: 440, y: 120, size: 120 },
                 Object.assign({ id: 'title', type: 'text', label: 'Nadpis', text: 'FORMA', x: 500, y: 335, size: 100 }, TITLE),
@@ -147,7 +147,7 @@
             name: 'Víkend klubu',
             icon: 'bi-calendar2-week',
             width: 1000, height: 1000,
-            defaultBackground: 'img/team-bg.jpg',
+            defaultBackground: 'img/team-bg.webp',
             elements: [
                 { id: 'logoTeam', type: 'logo', label: 'Logo klubu vľavo', team: 'team', x: 150, y: 118, size: 100 },
                 { id: 'logoTeam2', type: 'logo', label: 'Logo klubu vpravo', team: 'team', x: 750, y: 118, size: 100 },
@@ -162,7 +162,7 @@
             name: 'Tabuľka',
             icon: 'bi-list-ol',
             width: 1000, height: 1000,
-            defaultBackground: 'img/team-bg.jpg',
+            defaultBackground: 'img/team-bg.webp',
             elements: [
                 bigTitle('TABUĽKA'),
                 { id: 'logoTeam', type: 'logo', label: 'Logo družstva', team: 'team', x: 150, y: 118, size: 100 },
@@ -175,7 +175,7 @@
             name: 'Kolo',
             icon: 'bi-calendar-week',
             width: 1000, height: 1000,
-            defaultBackground: 'img/team-bg.jpg',
+            defaultBackground: 'img/team-bg.webp',
             elements: [
                 Object.assign({ id: 'title', type: 'text', label: 'Nadpis', text: '{roundTitle}', x: 500, y: 200, size: 92 }, TITLE),
                 { id: 'round', type: 'text', label: 'Kolo a dátum', text: '{roundLabel} · {date}', x: 500, y: 255, size: 26, align: 'center', color: yellow },
@@ -187,7 +187,7 @@
             name: 'Štatistiky',
             icon: 'bi-bar-chart-line',
             width: 1000, height: 1000,
-            defaultBackground: 'img/team-bg.jpg',
+            defaultBackground: 'img/team-bg.webp',
             elements: [
                 { id: 'logoTeam', type: 'logo', label: 'Logo družstva', team: 'team', x: 150, y: 118, size: 100 },
                 bigTitle('ŠTATISTIKY'),
@@ -205,7 +205,7 @@
             name: 'Profil hráča',
             icon: 'bi-person-vcard',
             width: 1000, height: 1000,
-            defaultBackground: 'img/team-bg.jpg',
+            defaultBackground: 'img/team-bg.webp',
             elements: [
                 { id: 'logoTeam', type: 'logo', label: 'Logo družstva', team: 'team', x: 150, y: 118, size: 100 },
                 Object.assign({ id: 'title', type: 'text', label: 'Nadpis', text: 'PROFIL HRÁČA', x: 500, y: 178, size: 34 }, PILL, { rotate: -3 }),
@@ -229,7 +229,7 @@
             name: 'Hráč zápasu',
             icon: 'bi-award',
             width: 1000, height: 1000,
-            defaultBackground: 'img/team-bg.jpg',
+            defaultBackground: 'img/team-bg.webp',
             elements: [
                 { id: 'logoTeam', type: 'logo', label: 'Logo družstva', team: 'team', x: 150, y: 118, size: 100 },
                 { id: 'logoOpp', type: 'logo', label: 'Logo súpera', team: 'opponent', x: 750, y: 118, size: 100 },
@@ -246,7 +246,7 @@
             name: 'Jubileum',
             icon: 'bi-trophy',
             width: 1000, height: 1000,
-            defaultBackground: 'img/team-bg.jpg',
+            defaultBackground: 'img/team-bg.webp',
             elements: [
                 { id: 'logoTeam', type: 'logo', label: 'Logo družstva', team: 'team', x: 150, y: 118, size: 100 },
                 { id: 'logoTeam2', type: 'logo', label: 'Logo vpravo', team: 'team', x: 750, y: 118, size: 100 },
@@ -263,7 +263,7 @@
             name: 'Hráč mesiaca',
             icon: 'bi-star',
             width: 1000, height: 1000,
-            defaultBackground: 'img/team-bg.jpg',
+            defaultBackground: 'img/team-bg.webp',
             elements: [
                 { id: 'logoTeam', type: 'logo', label: 'Logo družstva', team: 'team', x: 150, y: 118, size: 100 },
                 Object.assign({ id: 'title', type: 'text', label: 'Nadpis', text: '{monthTitle}', x: 520, y: 200, size: 70, maxWidth: 560 }, TITLE),
@@ -281,7 +281,7 @@
             name: 'Narodeniny',
             icon: 'bi-cake2',
             width: 1000, height: 1000,
-            defaultBackground: 'img/team-bg.jpg',
+            defaultBackground: 'img/team-bg.webp',
             elements: [
                 { id: 'logoTeam', type: 'logo', label: 'Logo družstva', team: 'team', x: 150, y: 118, size: 100 },
                 Object.assign({ id: 'title', type: 'text', label: 'Nadpis', text: 'VŠETKO NAJLEPŠIE', x: 520, y: 200, size: 70, maxWidth: 560 }, TITLE),
@@ -297,7 +297,7 @@
             name: 'Výsledok',
             icon: 'bi-trophy',
             width: 1000, height: 1000,
-            defaultBackground: 'img/match-result-bg.png',
+            defaultBackground: 'img/match-result-bg.webp',
             elements: [
                 ...teamNames(),
                 { id: 'score', type: 'text', label: 'Skóre', text: '{score1}:{score2}', x: 500, y: 770, size: 240, align: 'center', bold: true, italic: true, shadow: true, shadowColor: '#e63946', shadowY: 8 },
@@ -311,7 +311,7 @@
             name: 'Strelci',
             icon: 'bi-list-ol',
             width: 1000, height: 1000,
-            defaultBackground: 'img/match-result-goals-bg.png',
+            defaultBackground: 'img/match-result-goals-bg.webp',
             elements: [
                 ...teamNames(),
                 { id: 'score', type: 'text', label: 'Skóre', text: '{score1}:{score2}', x: 500, y: 660, size: 120, align: 'center', bold: true, italic: true, shadow: true, shadowColor: '#e63946', shadowY: 5 },
