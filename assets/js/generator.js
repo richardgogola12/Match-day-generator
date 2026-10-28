@@ -44,6 +44,8 @@
     let matchInfo = null;  // { goals, cards, subs, report, lineups }
     let teamInfo = null;   // { team, players, coach, stats, competitionData }
     const logoCache = {};
+    // kvalita: HD = dvojnásobné rozlíšenie (2000 × 2000, story 2160 × 3840), štandard = 1000 × 1000
+    let quality = MD.store.pref('quality') === 1 ? 1 : 2;
 
     function logo(url) {
         if (!url) return Promise.resolve(null);
@@ -647,9 +649,9 @@
                 if (type === 'season') assets.photo = await photoFor(((data.players || {}).scorers || [])[0]);
             }
             if (seq !== renderSeq) return;
-            MD.render(sq, tpl, data, assets);
+            MD.render(sq, tpl, data, assets, { scale: quality });
             last = { tpl, assets, brand, theme };
-            MD.compose(canvas, sq, { format: curFormat(), brand, theme: theme || MD.BASE_COLORS, teamLogo: assets.logos.team || assets.logos.home, title: storyTitle(), subtitle: storySubtitle() });
+            MD.compose(canvas, sq, { format: curFormat(), scale: quality, brand, theme: theme || MD.BASE_COLORS, teamLogo: assets.logos.team || assets.logos.home, title: storyTitle(), subtitle: storySubtitle() });
             $('#out').closest('.preview-frame').toggleClass('is-story', format === 'story');
             $('#btnDownload, #btnCopy, #btnSaveServer').prop('disabled', false);
             renderPostText();
@@ -915,6 +917,14 @@
     /* Prepínače                                                           */
     /* ------------------------------------------------------------------ */
     /* formát: štvorec 1:1 alebo story 9:16 */
+    const syncQuality = () => $('#qualitySwitch [data-q]').removeClass('active').filter('[data-q="' + quality + '"]').addClass('active');
+    syncQuality();
+    $('#qualitySwitch').on('click', '[data-q]', function () {
+        quality = +this.dataset.q === 1 ? 1 : 2;
+        MD.store.pref('quality', quality);
+        syncQuality();
+        render();
+    });
     const syncFormat = () => $('#formatSwitch [data-format]').removeClass('active').filter('[data-format="' + format + '"]').addClass('active');
     syncFormat();
     $('#formatSwitch').on('click', '[data-format]', function () {
@@ -1014,7 +1024,7 @@
             // plagát do tlače: dvojnásobné rozlíšenie (2480 × 3508 px = A4 pri 300 DPI)
             const hi = document.createElement('canvas'), out = document.createElement('canvas');
             MD.render(hi, last.tpl, data, last.assets, { scale: 2 });
-            MD.compose(out, hi, { format: 'square', brand: last.brand, theme: last.theme || MD.BASE_COLORS });
+            MD.compose(out, hi, { format: 'square', scale: 2, brand: last.brand, theme: last.theme || MD.BASE_COLORS });
             const pdf = await MD.pdf(out, { title: metaTitle() });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(pdf);

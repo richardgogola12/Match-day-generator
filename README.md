@@ -2,7 +2,7 @@
 
 PHP + Bootstrap 5 aplikácia na generovanie zápasových grafík pre futbalové kluby (dáta zo Sportnet / Futbalnet SFZ).
 
-Devätnásť typov obrázkov, každý ako štvorcový príspevok (1000 × 1000) aj **story 9:16** (1080 × 1920); plagát A4 (1240 × 1754, PDF na tlač 300 DPI):
+Devätnásť typov obrázkov, každý ako štvorcový príspevok aj **story 9:16**, v kvalite **HD 2×** (2000 × 2000, story 2160 × 3840; pozadia šablón v 2000 px) alebo štandard (1000 × 1000); plagát A4 (1240 × 1754, PDF na tlač 300 DPI):
 - ku klubu: **Víkend klubu** (program / výsledky všetkých družstiev v týždni)
 - k zápasu: **Match day**, **Zostava**, **Výsledok**, **Strelci**, **Súhrn zápasu**, **Vzájomné zápasy**, **Forma**, **Plagát A4** (pozvánka na tlač s QR kódom)
 - k družstvu: **Súpiska**, **Tabuľka**, **Kolo** (program / výsledky), **Štatistiky**, **Hráč / strelec mesiaca**, **Koniec sezóny** (miesto, body, skóre, najlepší strelec, najviac minút)

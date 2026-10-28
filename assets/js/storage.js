@@ -22,12 +22,12 @@
      * (veľkosti písma sú v px; GD body × 1.333)
      * ------------------------------------------------------------------ */
     const teamNames = () => ([
-        { id: 'name1', type: 'text', label: 'Názov domácich', text: '{d1name}', x: 310, y: 535, size: 24, align: 'center', maxWidth: 260, lineHeight: 1.25 },
-        { id: 'name2', type: 'text', label: 'Názov hostí', text: '{d2name}', x: 700, y: 535, size: 24, align: 'center', maxWidth: 260, lineHeight: 1.25 },
-        { id: 'logo1', type: 'logo', label: 'Logo domácich', team: 'home', x: 70, y: 440, size: 120 },
-        { id: 'logo2', type: 'logo', label: 'Logo hostí', team: 'away', x: 820, y: 440, size: 120 },
+        { id: 'name1', type: 'text', label: 'Názov domácich', text: '{d1name}', x: 315, y: 540, size: 29, align: 'center', bold: true, shadow: true, maxWidth: 270, lineHeight: 1.15 },
+        { id: 'name2', type: 'text', label: 'Názov hostí', text: '{d2name}', x: 690, y: 540, size: 29, align: 'center', bold: true, shadow: true, maxWidth: 270, lineHeight: 1.15 },
+        { id: 'logo1', type: 'logo', label: 'Logo domácich', team: 'home', x: 58, y: 428, size: 144 },
+        { id: 'logo2', type: 'logo', label: 'Logo hostí', team: 'away', x: 798, y: 428, size: 144 },
     ]);
-    const competition = () => ({ id: 'competition', type: 'text', label: 'Súťaž | kolo', text: '{competition} | {roundLabel}', x: 60, y: 940, size: 20, align: 'left', maxWidth: 0 });
+    const competition = () => ({ id: 'competition', type: 'text', label: 'Súťaž | kolo', text: '{competition} | {roundLabel}', x: 60, y: 940, size: 21, align: 'left', bold: true, opacity: 0.92, letterSpacing: 0.5, maxWidth: 0 });
 
     // spoločné prvky šablón Zostava a Súpiska (panel pozadia team-bg.webp: x 116–884, y 96–932)
     const yellow = '#ffd166';
@@ -369,8 +369,8 @@
             elements: [
                 ...teamNames(),
                 { id: 'score', type: 'text', label: 'Skóre', text: '{score1}:{score2}', x: 500, y: 660, size: 120, align: 'center', bold: true, italic: true, shadow: true, shadowColor: '#e63946', shadowY: 5 },
-                { id: 'goalsHome', type: 'goals', label: 'Strelci domácich', side: 'home', x: 130, y: 615, size: 21, gap: 34, lineHeight: 1.2, maxWidth: 270, maxY: 925, align: 'left', autoFit: true, minScale: 0.6 },
-                { id: 'goalsAway', type: 'goals', label: 'Strelci hostí', side: 'away', x: 630, y: 615, size: 21, gap: 34, lineHeight: 1.2, maxWidth: 270, maxY: 925, align: 'left', autoFit: true, minScale: 0.6 },
+                { id: 'goalsHome', type: 'goals', label: 'Strelci domácich', side: 'home', x: 110, y: 618, size: 27, gap: 40, lineHeight: 1.15, maxWidth: 290, maxY: 925, align: 'left', autoFit: true, minScale: 0.6 },
+                { id: 'goalsAway', type: 'goals', label: 'Strelci hostí', side: 'away', x: 620, y: 618, size: 27, gap: 40, lineHeight: 1.15, maxWidth: 290, maxY: 925, align: 'left', autoFit: true, minScale: 0.6 },
                 competition(),
             ],
         },

@@ -96,6 +96,13 @@
 							<button type="button" class="btn btn-outline-secondary" data-format="story"><i class="bi bi-phone me-1"></i>Story 9:16</button>
 						</div>
 					</div>
+					<div class="d-flex align-items-center justify-content-between gap-2 mt-2" id="qualityRow">
+						<span class="small fw-semibold text-muted-2">Kvalita</span>
+						<div class="btn-group btn-group-sm" role="group" aria-label="Kvalita obrázka" id="qualitySwitch">
+							<button type="button" class="btn btn-outline-secondary" data-q="2" title="2000 × 2000 px (story 2160 × 3840) – ostré aj na veľkých displejoch a pri zväčšení"><i class="bi bi-badge-hd me-1"></i>HD 2×</button>
+							<button type="button" class="btn btn-outline-secondary" data-q="1" title="1000 × 1000 px – menší súbor"><i class="bi bi-image me-1"></i>Štandard</button>
+						</div>
+					</div>
 
 					<div class="d-grid gap-2 mt-4">
 						<button type="button" class="btn btn-primary btn-lg" id="btnDownload" disabled><i class="bi bi-download me-2"></i>Stiahnuť PNG</button>

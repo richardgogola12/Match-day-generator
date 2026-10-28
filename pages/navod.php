@@ -474,9 +474,11 @@
 	<h2><i class="bi bi-phone"></i>Story, ZIP a text príspevku</h2>
 	<p>Pod typmi obrázkov v generátore je prepínač <strong>Formát</strong>:</p>
 	<ul class="guide-list">
-		<li><strong>Príspevok 1:1</strong> – štvorcový obrázok (1000 × 1000 px) na bežný príspevok.</li>
+		<li><strong>Príspevok 1:1</strong> – štvorcový obrázok na bežný príspevok.</li>
 		<li><strong>Story 9:16</strong> – obrázok na výšku (1080 × 1920 px) pre Instagram a Facebook stories: hore logo a súťaž, v strede šablóna, dole dátum alebo pás sponzorov. Voľba sa zapamätá a na server sa ukladá ako samostatný súbor.</li>
 	</ul>
+	<p>Pod formátom je prepínač <strong>Kvalita</strong>: <strong><i class="bi bi-badge-hd"></i> HD 2×</strong> (predvolené) vytvorí obrázok v dvojnásobnom rozlíšení – príspevok <strong>2000 × 2000 px</strong>, story <strong>2160 × 3840 px</strong> – ostrý aj na veľkých displejoch, pri zväčšení a po kompresii na Facebooku. <strong>Štandard</strong> (1000 × 1000 px) dá menší súbor. Voľba sa zapamätá. Plagát A4 sa do PDF vždy vytvorí v rozlíšení na tlač.</p>
+
 	<?= guide_shot('26-story.webp', 'Generátor v story formáte', 'Story 9:16 – ten istý obrázok na výšku.') ?>
 	<p>Tlačidlo <strong><i class="bi bi-file-zip"></i> Všetky (ZIP)</strong> vytvorí naraz všetky typy obrázkov zápasu (alebo družstva, hráča) a stiahne ich v jednom ZIP súbore. Obrázky bez údajov (napr. zostava, ktorá ešte nie je v zápise) sa preskočia.</p>
 	<p>V karte <strong>Text príspevku</strong> je hotový text na Facebook alebo Instagram – výsledok, strelci s minútami, súťaž, kolo a hashtagy. Text môžete upraviť a tlačidlom <strong>Kopírovať text</strong> ho skopírujete; šípkou ho vygenerujete znova.</p>

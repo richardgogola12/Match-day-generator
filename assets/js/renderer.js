@@ -861,6 +861,7 @@
         if (canvas.height !== tpl.height * scale) canvas.height = tpl.height * scale;
         const ctx = canvas.getContext('2d');
         ctx.setTransform(scale, 0, 0, scale, 0, 0);
+        ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high'; // ostré zmenšené logá a fotky
         ctx.clearRect(0, 0, tpl.width, tpl.height);
         drawBackground(ctx, tpl, assets.background);
 
@@ -1167,10 +1168,12 @@
      *   format 'story'  – 1080×1920: rozmazané pozadie, šablóna v strede, logo hore, sponzori dole.
      * @param {HTMLCanvasElement} out
      * @param {HTMLCanvasElement} sq
-     * @param {object} o { format, brand: {logo, sponsors, cfg}, teamLogo, title, subtitle, theme }
+     * @param {object} o { format, brand: {logo, sponsors, cfg}, teamLogo, title, subtitle, theme, scale }
+     *   scale – v akom rozlíšení je sq vykreslená (2 = HD); výsledok má rovnaké rozlíšenie
      */
     MD.compose = function (out, sq, o) {
         o = o || {};
+        const k = o.scale > 0 ? o.scale : 1;
         const brand = o.brand || {};
         const cfg = brand.cfg || {};
         const useLogo = brand.logo && cfg.logo && cfg.logo.on;
@@ -1179,7 +1182,9 @@
             out.width = sq.width; out.height = sq.height;
             const ctx = out.getContext('2d');
             ctx.drawImage(sq, 0, 0);
-            const W = sq.width, H = sq.height;
+            ctx.setTransform(k, 0, 0, k, 0, 0);
+            ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+            const W = sq.width / k, H = sq.height / k;
             let bottom = H;
             if (useSp) {
                 const h = Math.round((cfg.sponsors.height || 92) * W / 1000);
@@ -1193,8 +1198,10 @@
             return out;
         }
         const W = 1080, H = 1920;
-        out.width = W; out.height = H;
+        out.width = W * k; out.height = H * k;
         const ctx = out.getContext('2d');
+        ctx.setTransform(k, 0, 0, k, 0, 0);
+        ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
         const theme = o.theme || {};
         // pozadie: tmavý trávnik vo farbách klubu, pruhy a žiara (bez rozmazaných textov šablóny)
         const base = theme.base || '#0b2a1a';
