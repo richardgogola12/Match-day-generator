@@ -461,9 +461,9 @@
 <section id="znacka-klubu">
 	<h2><i class="bi bi-palette"></i>Značka klubu: logo, sponzori, farby</h2>
 	<p>Na stránke <a href="<?= url('znacka') ?>">Značka</a> (v menu) nastavíte raz, čo sa má objaviť v <strong>každom</strong> obrázku. Vpravo je náhľad na ukážkových dátach (štvorec aj story).</p>
-	<?= guide_shot('28-znacka.webp', 'Stránka Značka klubu', 'Klubové farby, logo klubu a pás sponzorov s náhľadom.') ?>
+	<?= guide_shot('28-znacka.webp', 'Stránka Značka klubu', 'Klubové farby (24 predvolieb alebo vlastné), logo klubu a pás sponzorov s náhľadom.') ?>
 	<ul class="guide-list">
-		<li><strong>Farby klubu</strong> – vyberte predvoľbu alebo vlastné tri farby: <em>hlavnú</em> (namiesto červenej), <em>doplnkovú</em> (namiesto žltej) a <em>tmavú</em> (namiesto tmavozeleného trávnika). Tlačidlo <strong>Zistiť farby z loga</strong> ich nastaví podľa nahratého loga. Prefarbia sa predvolené pozadia aj prvky šablón; vlastné nahraté pozadia ostanú bez zmeny.</li>
+		<li><strong>Farby klubu</strong> – vyberte jednu z 24 predvolieb (každá má miniatúrny náhľad) alebo vlastné tri farby: <em>hlavnú</em> (namiesto červenej), <em>doplnkovú</em> (namiesto žltej) a <em>tmavú</em> (namiesto tmavozeleného trávnika). Tlačidlo <strong>Zistiť farby z loga</strong> ich nastaví podľa nahratého loga. Prefarbia sa predvolené pozadia aj prvky šablón; vlastné nahraté pozadia ostanú bez zmeny.</li>
 		<li><strong>Logo klubu</strong> – nahrajte logo (najlepšie PNG s priehľadným pozadím), vyberte roh, veľkosť a priehľadnosť. V story formáte je logo hore nad obrázkom.</li>
 		<li><strong>Pás sponzorov</strong> – jeden obrázok so všetkými logami sponzorov vedľa seba (napr. 2000 × 200 px). Vloží sa na spodok obrázka (s bielym podkladom alebo bez neho), v story formáte pod obrázok s nadpisom <em>Partneri klubu</em>. Ak pás prekrýva nejaký prvok, posuňte ho v <a href="<?= url('nastavenia') ?>">šablóne</a> vyššie.</li>
 		<li>Všetko sa ukladá iba v tomto prehliadači a prenáša sa so <a href="#zaloha">zálohou nastavení</a>.</li>

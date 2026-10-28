@@ -916,7 +916,7 @@
         const anchors = [['primary', 355, 26], ['accent', 42, 18], ['base', 140, 80]].map(([k, h, win]) => {
             const [sh, ss, sl] = rgbHsl(...hexRgb(MD.BASE_COLORS[k]));
             const [th, ts, tl] = rgbHsl(...hexRgb(theme[k] || MD.BASE_COLORS[k]));
-            return { h, win, dh: th - sh, ks: ss ? ts / ss : 1, kl: sl ? tl / sl : 1, gray: ts < 0.08, same: (theme[k] || '').toLowerCase() === MD.BASE_COLORS[k] };
+            return { k, h, win, dh: th - sh, ks: ss ? ts / ss : 1, kl: sl ? tl / sl : 1, gray: ts < 0.08, same: (theme[k] || '').toLowerCase() === MD.BASE_COLORS[k] };
         }).filter((a) => !a.same);
         const c = document.createElement('canvas');
         c.width = img.naturalWidth || img.width; c.height = img.naturalHeight || img.height;
@@ -928,12 +928,15 @@
             const d = id.data;
             for (let i = 0; i < d.length; i += 4) {
                 const [h, s, l] = rgbHsl(d[i], d[i + 1], d[i + 2]);
-                if (s < 0.04) continue;
-                const ws = Math.min(1, (s - 0.04) / 0.12); // málo sýte pixely sa menia postupne (bez fľakov)
+                if (s < 0.04 || l > 0.93) continue;
+                // málo sýte a takmer biele pixely (okraje bieleho textu, šum kompresie) sa menia postupne – bez farebných fľakov
+                const ws = Math.min(1, (s - 0.04) / 0.12) * (l > 0.72 ? Math.max(0, (0.93 - l) / 0.21) * Math.min(1, s / 0.5) : 1);
+                if (ws <= 0.02 && l >= 0.5) continue;
                 for (const a of anchors) {
                     let dist = Math.abs(h - a.h); if (dist > 180) dist = 360 - dist;
                     if (dist > a.win) continue;
-                    const w = (dist < a.win * 0.6 ? 1 : 1 - (dist - a.win * 0.6) / (a.win * 0.4)) * ws;
+                    // tmavé zelené plochy (trávnik, žiara) sa prefarbia celé, aj keď sú málo sýte
+                    const w = (dist < a.win * 0.6 ? 1 : 1 - (dist - a.win * 0.6) / (a.win * 0.4)) * (a.k === 'base' && l < 0.5 ? 1 : ws);
                     // plne prefarbený odtieň, potom plynulý prechod RGB (žiadne dúhové medzistupne)
                     const ns = Math.min(1, a.gray ? s * 0.15 : s * a.ks);
                     const nl = Math.min(1, l * Math.min(a.kl, 3));

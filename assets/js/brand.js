@@ -9,18 +9,38 @@
     let brandImgs = { logo: null, sponsors: null };
     let format = 'square';
 
+    // [názov, hlavná, doplnková (štítky), tmavá (pozadie)] – doplnková musí byť svetlá, tmavá dosť tmavá (čitateľnosť)
     const PRESETS = [
         ['Predvolené', '#e63946', '#ffd166', '#0b2a1a'],
+        ['Červeno-biele', '#d7192d', '#ffffff', '#1b0508'],
         ['Modro-biele', '#1f6feb', '#8fd3ff', '#0a1a33'],
-        ['Zeleno-biele', '#1fa463', '#f4f4f4', '#062014'],
+        ['Nebesky modré', '#3fa9f5', '#ffffff', '#071a2b'],
+        ['Kráľovská modrá', '#2541b2', '#ffd700', '#0a1033'],
+        ['Trikolóra', '#ee1c25', '#ffffff', '#0b1f4a'],
+        ['Zeleno-biele', '#1fa463', '#e9f7ef', '#062014'],
+        ['Zeleno-žlté', '#2e9d3a', '#ffe14d', '#07210d'],
+        ['Limetkové', '#84cc16', '#f7fee7', '#0d1a05'],
+        ['Tyrkysové', '#00b3a4', '#ffe066', '#032321'],
+        ['Petrolejové', '#0e7490', '#fde68a', '#031c22'],
         ['Čierno-biele', '#9aa0a6', '#ffffff', '#111111'],
+        ['Strieborné', '#8e9aaf', '#e6ebf2', '#0f141c'],
         ['Žlto-čierne', '#f5c400', '#ffffff', '#141414'],
-        ['Bordovo-modré', '#8b1538', '#4ea8ff', '#0d1530'],
+        ['Zlato-čierne', '#c9a227', '#f5e6b8', '#0f0d08'],
+        ['Grafit a oranžová', '#f97316', '#ffffff', '#18181b'],
         ['Oranžové', '#ff7a00', '#ffd166', '#1a1208'],
+        ['Bordovo-modré', '#8b1538', '#4ea8ff', '#0d1530'],
+        ['Vínovo-zlaté', '#7a1f3d', '#e8b04b', '#1a0710'],
+        ['Modro-červené', '#e11d48', '#93c5fd', '#0b1533'],
         ['Fialové', '#7b3fe4', '#ffd166', '#160b2e'],
+        ['Ružové', '#e83e8c', '#ffd1e6', '#230716'],
+        ['Neónové', '#ff2e88', '#00e5ff', '#0a0a1a'],
+        ['Hnedo-béžové', '#a0522d', '#f1d7b5', '#1a0f08'],
     ];
+    // náhľad predvoľby = miniatúra obrázka: tmavé pozadie, nadpis s tieňom hlavnej farby, štítok doplnkovej
     $('#bcPresets').html(PRESETS.map(([n, a, b, c], i) =>
-        '<button type="button" class="brand-preset" data-i="' + i + '" title="' + n + '"><span style="background:' + a + '"></span><span style="background:' + b + '"></span><span style="background:' + c + '"></span><small>' + n + '</small></button>').join(''));
+        '<button type="button" class="brand-preset" data-i="' + i + '" title="' + n + '" aria-label="Farby ' + n + '">' +
+        '<span class="bp-mini" style="--p:' + a + ';--a:' + b + ';--b:' + c + '"><span class="bp-title">MATCH</span><span class="bp-pill" style="color:' + c + '">DAY</span><span class="bp-bar"></span></span>' +
+        '<small>' + n + '</small></button>').join(''));
 
     function save() { store.brand(cfg); schedule(); }
 
