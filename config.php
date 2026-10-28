@@ -79,7 +79,13 @@ defined('STORAGE_KEEP_DAYS') || define('STORAGE_KEEP_DAYS', 365);   // obrázky 
 // Nočná úloha (cron): obnova cache, údržba a kontrola Sportnetu – viď README
 defined('CRON_KEY') || define('CRON_KEY', '');                     // kľúč pre spustenie cez URL /cron?key=… ('' = iba z príkazového riadku)
 defined('ADMIN_EMAIL') || define('ADMIN_EMAIL', '');               // sem príde e-mail, keď kontrola Sportnetu nájde chybu
-defined('MAIL_FROM') || define('MAIL_FROM', '');                   // odosielateľ e-mailu (prázdne = noreply@doména)
+defined('MAIL_FROM') || define('MAIL_FROM', '');                   // odosielateľ e-mailu (prázdne = SMTP_USER alebo noreply@doména)
+// SMTP (odporúčané – e-maily z mail() často končia v spame). Prázdny SMTP_HOST = funkcia mail() servera.
+defined('SMTP_HOST') || define('SMTP_HOST', '');                   // napr. smtp.websupport.sk, smtp.gmail.com
+defined('SMTP_PORT') || define('SMTP_PORT', 587);                  // 587 = STARTTLS, 465 = SSL
+defined('SMTP_SECURE') || define('SMTP_SECURE', (int)SMTP_PORT === 465 ? 'ssl' : ((int)SMTP_PORT === 25 ? '' : 'tls'));
+defined('SMTP_USER') || define('SMTP_USER', '');
+defined('SMTP_PASS') || define('SMTP_PASS', '');
 
 // ---------------------------------------------------------------------------------
 // EXTERNÉ API

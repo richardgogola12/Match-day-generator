@@ -31,3 +31,10 @@ define('APP_DEBUG', false);
 // define('IMAGE_HOSTS', 'sportnet.online,futbalnet.sk,mediamanager.ws,moja-domena.sk');
 // define('STORAGE_MAX_MB', 3000);
 // define('STORAGE_KEEP_DAYS', 365);
+
+// Odosielanie e-mailov cez SMTP (Správca → Poslať skúšobný e-mail overí nastavenie)
+// define('SMTP_HOST', 'smtp.websupport.sk');   // Gmail: smtp.gmail.com (heslo aplikácie), Seznam: smtp.seznam.cz
+// define('SMTP_PORT', 465);                     // 465 = SSL, 587 = STARTTLS
+// define('SMTP_USER', 'noreply@vas-web.sk');
+// define('SMTP_PASS', 'heslo-schranky');
+// define('MAIL_FROM', 'noreply@vas-web.sk');    // pri Gmaile musí byť rovnaká ako SMTP_USER

@@ -408,3 +408,5 @@ function md_logo($url, $size = 64) {
     if ($url === '') return '';
     return url('api-logo') . '?' . http_build_query(['s' => $size, 'fb' => 1, 'url' => $url]);
 }
+
+require_once __DIR__ . '/mail.php';

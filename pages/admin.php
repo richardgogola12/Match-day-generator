@@ -33,6 +33,13 @@ if (is_post_request()) {
             $_SESSION['md_admin'] = hash('sha256', 'md-admin|' . md_admin_hash_reload());
             $pwMsg = ['success', 'Heslo bolo zmenené. Na serveri je uložený iba jeho hash.'];
         } else $pwMsg = ['danger', 'Heslo sa nepodarilo uložiť – priečinok storage/private nie je zapisovateľný.'];
+    } elseif ($action === 'mailtest' && is_admin()) {
+        $to = trim((string)($_POST['to'] ?? '')) ?: ADMIN_EMAIL;
+        if (!md_rate_limit('mailtest|' . md_ip_hash(), 10, 3600)) $mailMsg = ['danger', 'Príliš veľa skúšobných e-mailov – skúste to o hodinu.'];
+        else {
+            [$ok, $info] = md_send_mail($to, 'Match Day: skúšobný e-mail', "Toto je skúšobný e-mail z aplikácie Match Day Generator (" . APP_URL . ").\n\nAk ho čítate, odosielanie upozornení funguje.\n\nOdoslané: " . date('j. n. Y H:i'));
+            $mailMsg = [$ok ? 'success' : 'danger', ($ok ? 'E-mail odoslaný na ' . $to . '. ' : 'E-mail sa nepodarilo odoslať. ') . $info];
+        }
     } elseif ($action === 'maintenance' && is_admin()) {
         $r = md_maintenance(true);
         $mtMsg = 'Údržba hotová: zmazaných ' . $r['images'] . ' starých obrázkov' . ($r['bytes'] ? ' (' . human_bytes($r['bytes']) . ')' : '') . ' a ' . $r['cache'] . ' starých súborov cache.';
@@ -174,6 +181,19 @@ add_layout("header", array("title" => "Správca | Match Day", "noindex" => true)
 					<form method="post" action="<?= url('spravca') ?>">
 						<input type="hidden" name="action" value="maintenance"><input type="hidden" name="csrf" value="<?= plain(csrf_token()) ?>">
 						<button class="btn btn-sm btn-outline-primary" type="submit"><i class="bi bi-recycle me-1"></i>Spustiť údržbu teraz</button>
+					</form>
+					<hr class="my-4">
+					<h2 class="h6 section-title text-uppercase text-muted-2 mb-2" id="email"><i class="bi bi-envelope me-1"></i>E-mailové upozornenia</h2>
+					<?php if (!empty($mailMsg)): ?><div class="alert alert-<?= $mailMsg[0] ?> py-2 small"><?= plain($mailMsg[1]) ?></div><?php endif; ?>
+					<ul class="small text-muted-2 ps-3 mb-3">
+						<li>Príjemca: <?= ADMIN_EMAIL !== '' ? '<strong>' . plain(ADMIN_EMAIL) . '</strong>' : '<span class="text-warning">nenastavený</span> (<code>ADMIN_EMAIL</code> v config.local.php)' ?></li>
+						<li>Odosielanie: <?= SMTP_HOST !== '' ? 'SMTP <strong>' . plain(SMTP_HOST) . ':' . (int)SMTP_PORT . '</strong> (' . plain(SMTP_SECURE ?: 'bez šifrovania') . ')' . (SMTP_USER !== '' ? ', účet ' . plain(SMTP_USER) : '') : 'funkcia <code>mail()</code> servera – odporúčame nastaviť SMTP' ?></li>
+						<li>Odosielateľ: <?= plain(md_mail_from()) ?></li>
+					</ul>
+					<form method="post" action="<?= url('spravca') ?>#email" class="d-flex flex-wrap gap-2">
+						<input type="hidden" name="action" value="mailtest"><input type="hidden" name="csrf" value="<?= plain(csrf_token()) ?>">
+						<input type="email" class="form-control form-control-sm" style="max-width:16rem" name="to" placeholder="<?= plain(ADMIN_EMAIL ?: 'vas@email.sk') ?>" value="<?= plain(ADMIN_EMAIL) ?>" required>
+						<button class="btn btn-sm btn-outline-primary" type="submit"><i class="bi bi-send me-1"></i>Poslať skúšobný e-mail</button>
 					</form>
 				</div></div>
 			</div>

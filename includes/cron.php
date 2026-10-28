@@ -52,15 +52,13 @@ function md_cron($log = null) {
     $prev = md_json_read(md_private_file('cron.json'));
     $state['mailed'] = $prev['mailed'] ?? 0;
     if ($fails && ADMIN_EMAIL !== '' && ($prev['mailed'] ?? 0) < time() - 20 * 3600) {
-        $host = parse_url(APP_URL, PHP_URL_HOST) ?: 'localhost';
-        $from = MAIL_FROM !== '' ? MAIL_FROM : 'noreply@' . preg_replace('/^www\./', '', $host);
         $body = "Nočná kontrola Sportnetu našla " . count($fails) . " chýb:\n\n";
         foreach ($fails as $f) $body .= "• " . $f['name'] . " (" . $f['what'] . "): " . $f['msg'] . "\n  " . $f['url'] . "\n";
         $body .= "\nPodrobnosti: " . APP_URL . "/kontrola\n";
-        $ok = @mail(ADMIN_EMAIL, '=?UTF-8?B?' . base64_encode('Match Day: problém so Sportnetom') . '?=', $body,
-            "From: Match Day <$from>\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit");
+        [$ok, $info] = md_send_mail(ADMIN_EMAIL, 'Match Day: problém so Sportnetom', $body);
         if ($ok) $state['mailed'] = time();
-        $log($ok ? 'E-mail odoslaný na ' . ADMIN_EMAIL . '.' : 'E-mail sa nepodarilo odoslať (funkcia mail() na serveri).');
+        $state['mail'] = $info;
+        $log(($ok ? 'E-mail odoslaný na ' . ADMIN_EMAIL . '. ' : 'E-mail sa nepodarilo odoslať. ') . $info);
     }
     $state['seconds'] = round(microtime(true) - $t0, 1);
     md_json_write(md_private_file('cron.json'), $state);

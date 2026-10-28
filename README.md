@@ -43,6 +43,7 @@ Sedemnásť typov obrázkov, každý ako štvorcový príspevok (1000 × 1000) a
    10 4 * * *  php /cesta/k/match-day/cli/cron.php > /dev/null 2>&1
    ```
    Bez prístupu ku cronu: nastavte `CRON_KEY` v `config.local.php` a vo webcron službe hostingu volajte `https://vas-web/match-day/cron?key=…`.
+7. **E-maily cez SMTP** – do `config.local.php` doplňte `ADMIN_EMAIL`, `SMTP_HOST`, `SMTP_PORT` (465 = SSL, 587 = STARTTLS), `SMTP_USER`, `SMTP_PASS` (a `MAIL_FROM`). Nastavenie overíte v časti Správca → **Poslať skúšobný e-mail**. Bez `SMTP_HOST` sa použije funkcia `mail()` servera.
 
 ## Bezpečnosť a rýchlosť
 - Heslo správcu sa ukladá iba ako hash (`storage/private/admin.json`), zmena hesla priamo v aplikácii; prihlasovanie má limit pokusov aj podľa IP.
