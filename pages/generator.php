@@ -1,7 +1,7 @@
 <?php
 	$GROUPS = [
-		'match'  => ['matchday' => ['bi-calendar-event', 'Match day'], 'lineup' => ['bi-person-lines-fill', 'Zostava'], 'result' => ['bi-trophy', 'Výsledok'], 'goals' => ['bi-list-ol', 'Strelci'], 'report' => ['bi-file-text', 'Súhrn'], 'h2h' => ['bi-bar-chart-steps', 'Vzájomné'], 'form' => ['bi-graph-up-arrow', 'Forma']],
-		'team'   => ['squad' => ['bi-people', 'Súpiska'], 'table' => ['bi-list-ol', 'Tabuľka'], 'round' => ['bi-calendar-week', 'Kolo'], 'stats' => ['bi-bar-chart-line', 'Štatistiky'], 'month' => ['bi-star', 'Hráč mesiaca']],
+		'match'  => ['matchday' => ['bi-calendar-event', 'Match day'], 'lineup' => ['bi-person-lines-fill', 'Zostava'], 'result' => ['bi-trophy', 'Výsledok'], 'goals' => ['bi-list-ol', 'Strelci'], 'report' => ['bi-file-text', 'Súhrn'], 'h2h' => ['bi-bar-chart-steps', 'Vzájomné'], 'form' => ['bi-graph-up-arrow', 'Forma'], 'poster' => ['bi-file-earmark-richtext', 'Plagát A4']],
+		'team'   => ['squad' => ['bi-people', 'Súpiska'], 'table' => ['bi-list-ol', 'Tabuľka'], 'round' => ['bi-calendar-week', 'Kolo'], 'stats' => ['bi-bar-chart-line', 'Štatistiky'], 'month' => ['bi-star', 'Hráč mesiaca'], 'season' => ['bi-flag', 'Koniec sezóny']],
 		'player' => ['player' => ['bi-person-vcard', 'Profil'], 'motm' => ['bi-award', 'Hráč zápasu'], 'milestone' => ['bi-trophy', 'Jubileum'], 'birthday' => ['bi-cake2', 'Narodeniny']],
 		'club'   => ['weekend' => ['bi-calendar2-week', 'Víkend klubu']],
 	];
@@ -33,7 +33,7 @@
 
 	add_layout("header", array(
 		"title"   => $mode === 'match' ? "Generátor – " . $match['d1name'] . " vs " . $match['d2name'] : "Generátor – " . $match['d1name'],
-		"scripts" => ["js/renderer.js", "js/generator.js"],
+		"scripts" => ["js/qr.js", "js/renderer.js", "js/generator.js"],
 	));
 ?>
 
@@ -89,7 +89,7 @@
 						<div class="form-text mt-2"><i class="bi bi-info-circle me-1"></i>Výsledok, strelci a súhrn budú dostupné po odohratí zápasu.</div>
 					<?php endif; ?>
 
-					<div class="d-flex align-items-center justify-content-between gap-2 mt-3">
+					<div class="d-flex align-items-center justify-content-between gap-2 mt-3" id="formatRow">
 						<span class="small fw-semibold text-muted-2">Formát</span>
 						<div class="btn-group btn-group-sm" role="group" aria-label="Formát obrázka" id="formatSwitch">
 							<button type="button" class="btn btn-outline-secondary" data-format="square"><i class="bi bi-square me-1"></i>Príspevok 1:1</button>
@@ -99,6 +99,7 @@
 
 					<div class="d-grid gap-2 mt-4">
 						<button type="button" class="btn btn-primary btn-lg" id="btnDownload" disabled><i class="bi bi-download me-2"></i>Stiahnuť PNG</button>
+						<button type="button" class="btn btn-success btn-lg" id="btnPdf" hidden><i class="bi bi-printer me-2"></i>Stiahnuť PDF na tlač (A4)</button>
 						<div class="d-flex gap-2">
 							<button type="button" class="btn btn-outline-secondary flex-fill" id="btnCopy" disabled><i class="bi bi-clipboard me-1"></i>Kopírovať</button>
 							<button type="button" class="btn btn-outline-secondary flex-fill" id="btnShare" hidden><i class="bi bi-share me-1"></i>Zdieľať</button>
@@ -236,6 +237,20 @@
 						<input class="form-check-input" type="checkbox" role="switch" id="roundOwnFirst" checked>
 						<label class="form-check-label small" for="roundOwnFirst">Zápas nášho družstva ako prvý</label>
 					</div>
+				</div>
+			</div>
+			<div class="card-app mb-4" id="seasonCard" hidden>
+				<div class="card-body">
+					<h2 class="h6 section-title text-uppercase text-muted-2 mb-3">Koniec sezóny</h2>
+					<label class="form-label small fw-semibold" for="seasonTitle">Nadpis</label>
+					<select class="form-select" id="seasonTitle">
+						<option value="">Automaticky (podľa mesiaca)</option>
+						<option value="SEZÓNA">Sezóna</option>
+						<option value="JESEŇ">Jesenná časť</option>
+						<option value="JAR">Jarná časť</option>
+						<option value="BILANCIA">Bilancia</option>
+					</select>
+					<div class="form-text">Konečné miesto v tabuľke, body, skóre, najlepší strelec a hráči s najviac minútami.</div>
 				</div>
 			</div>
 			<div class="card-app mb-4" id="monthCard" hidden>

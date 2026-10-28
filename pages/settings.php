@@ -2,7 +2,7 @@
 	add_layout("header", array(
 		"title"      => "Šablóny | Match Day",
 		"body_class" => "page-settings",
-		"scripts"    => ["js/renderer.js", "js/editor.js"],
+		"scripts"    => ["js/qr.js", "js/renderer.js", "js/editor.js"],
 	));
 ?>
 
@@ -109,6 +109,7 @@
 									<li><button class="dropdown-item" data-add="fixtures"><i class="bi bi-calendar-week me-2"></i>Zoznam zápasov</button></li>
 									<li><button class="dropdown-item" data-add="compare"><i class="bi bi-bar-chart-steps me-2"></i>Porovnanie tímov</button></li>
 									<li><button class="dropdown-item" data-add="formbadges"><i class="bi bi-circle-half me-2"></i>Forma (V/R/P)</button></li>
+									<li><button class="dropdown-item" data-add="qr"><i class="bi bi-qr-code me-2"></i>QR kód</button></li>
 								</ul>
 							</div>
 						</div>

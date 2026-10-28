@@ -11,8 +11,8 @@
     const guideV = document.getElementById('guideV');
     const guideH = document.getElementById('guideH');
 
-    const TYPE_ICON = { text: 'bi-fonts', logo: 'bi-shield', goals: 'bi-list-ol', shape: 'bi-square-fill', players: 'bi-people', photo: 'bi-person-bounding-box', table: 'bi-table', fixtures: 'bi-calendar-week', compare: 'bi-bar-chart-steps', formbadges: 'bi-circle-half' };
-    const TYPE_NAME = { text: 'Text', logo: 'Logo', goals: 'Strelci / karty', shape: 'Obdĺžnik', players: 'Hráči', photo: 'Fotka hráča', table: 'Tabuľka', fixtures: 'Zoznam zápasov', compare: 'Porovnanie tímov', formbadges: 'Forma (V/R/P)' };
+    const TYPE_ICON = { text: 'bi-fonts', logo: 'bi-shield', goals: 'bi-list-ol', shape: 'bi-square-fill', players: 'bi-people', photo: 'bi-person-bounding-box', table: 'bi-table', fixtures: 'bi-calendar-week', compare: 'bi-bar-chart-steps', formbadges: 'bi-circle-half', qr: 'bi-qr-code' };
+    const TYPE_NAME = { text: 'Text', logo: 'Logo', goals: 'Strelci / karty', shape: 'Obdĺžnik', players: 'Hráči', photo: 'Fotka hráča', table: 'Tabuľka', fixtures: 'Zoznam zápasov', compare: 'Porovnanie tímov', formbadges: 'Forma (V/R/P)', qr: 'QR kód' };
     const LISTS = ['goals', 'players', 'table', 'fixtures']; // prvky so spodnou hranicou (maxY)
     const FONTED = ['text', 'goals', 'players', 'table', 'fixtures', 'compare', 'formbadges']; // prvky s písmom
 
@@ -274,6 +274,8 @@
                 el.rowH = Math.max(16, Math.round(o.rowH + dy / 6));
             } else if (el.type === 'formbadges') {
                 el.size = Math.max(10, Math.round(o.size + Math.max(dx, dy) / 5));
+            } else if (el.type === 'qr') {
+                el.size = Math.max(60, rnd(o.size + Math.max(dx, dy)));
             } else if (el.type === 'players') {
                 // šírka stĺpca podľa toho, koľko stĺpcov má zoznam
                 el.maxWidth = Math.max(40, rnd(o.maxWidth + dx / Math.max(1, o.columns || 1)));
@@ -557,6 +559,15 @@
             { prop: 'uppercase', label: 'VEĽKÉ', type: 'switch', col: 6 },
             { prop: 'opacity', label: 'Krytie', type: 'range', min: 0, max: 1, step: 0.05, col: 12 },
         ],
+        qr: [
+            { prop: 'label', label: 'Názov prvku', type: 'text', col: 12 },
+            { prop: 'text', label: 'Obsah (adresa alebo text, značky ako {matchUrl})', type: 'text', col: 12 },
+            ...position,
+            { prop: 'size', label: 'Veľkosť', type: 'number', min: 60, max: 2000, col: 4 },
+            { prop: 'color', label: 'Farba', type: 'color', col: 4 },
+            { prop: 'bgColor', label: 'Podklad', type: 'color', col: 4 },
+            { prop: 'opacity', label: 'Krytie', type: 'range', min: 0, max: 1, step: 0.05, col: 12 },
+        ],
         formbadges: [
             { prop: 'label', label: 'Názov prvku', type: 'text', col: 12 },
             { prop: 'x', label: 'X (stred)', type: 'number', col: 6 },
@@ -753,6 +764,7 @@
             fixtures: { x: Math.round(W * 0.14), y: Math.round(H * 0.33), w: Math.round(W * 0.72), maxY: Math.round(H * 0.92) },
             compare: { x: Math.round(W * 0.15), y: Math.round(H * 0.38), w: Math.round(W * 0.7) },
             formbadges: { x: Math.round(W / 2), y: Math.round(H * 0.4) },
+            qr: { x: Math.round(W * 0.75), y: Math.round(H * 0.75), size: Math.round(Math.min(W, H) * 0.18) },
         }[type];
         const el = Object.assign({}, MD.TYPE_DEFAULTS[type], base, pos);
         if (type === 'shape') S.tpl.elements.unshift(el); // podklad dať pod ostatné

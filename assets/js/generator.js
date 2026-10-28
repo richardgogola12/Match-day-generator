@@ -10,6 +10,9 @@
     const canvas = document.getElementById('out');
     const sq = document.createElement('canvas');      // vykreslená šablóna (štvorec) – výsledok sa skladá do #out
     let brandPromise = null;
+    let last = null; // posledné vykreslenie (šablóna, logá …) – pre PDF vo vyššom rozlíšení
+    // plagát je vždy A4 na výšku – formát story sa naň nepoužije
+    const curFormat = () => (type === 'poster' ? 'square' : format);
     const loadBrand = () => (brandPromise || (brandPromise = MD.store.loadBrand().catch(() => ({ cfg: MD.store.brand() }))));
     const $loading = $('#loading');
     const proxied = (u) => (u ? 'api-logo?url=' + encodeURIComponent(u) : '');
@@ -31,6 +34,8 @@
         goals: [], cards: [], report: {},
         players: { start: [], subs: [], squad: [] },
     };
+    // odkaz na detail zápasu (QR kód na plagáte)
+    data.matchUrl = M.matchID ? location.origin + (window.MD_BASE || '') + '/zapas?' + new URLSearchParams({ matchID: M.matchID, myTeam: M.myTeam || '' }) : location.origin + (window.MD_BASE || '') + '/';
 
     /* ------------------------------------------------------------------ */
     /* Načítanie dát                                                       */
@@ -273,6 +278,11 @@
     const plural = (n, one, few, many) => (n === 1 ? one : n >= 2 && n <= 4 ? few : many);
     let monthSel = M.month || '';
     const monthUnit = (kind, n) => (kind === 'goals' ? plural(n, 'gól', 'góly', 'gólov') : kind === 'minutes' ? plural(n, 'minúta', 'minúty', 'minút') : plural(n, 'zápas', 'zápasy', 'zápasov'));
+    /** nadpis bilancie podľa ročného obdobia: jeseň (sep–feb), inak celá sezóna */
+    function autoSeasonTitle() {
+        const m = new Date().getMonth() + 1;
+        return m >= 9 || m <= 2 ? 'JESEŇ' : 'SEZÓNA';
+    }
     function monthsAvailable() {
         const set = new Set();
         ((teamInfo && teamInfo.players) || []).forEach((p) => (p.matches || []).forEach((m) => { if (m.date && m.score !== '') set.add(ymdOf(new Date(m.date)).slice(0, 7)); }));
@@ -375,6 +385,18 @@
             data.team = M.d1name;
             data.startDate = w.rows[0] ? w.rows[0].date : '';
             data.table = [];
+        }
+
+        if (type === 'season') {
+            const all = (teamInfo && teamInfo.players) || [];
+            const hasMin = all.some((p) => p.minutes > 0);
+            const second = hasMin ? leaders('minutes', 5).map((p) => Object.assign({}, p, { value: p.minutes + '′' })) : leaders('apps', 5).map((p) => Object.assign({}, p, { value: p.apps + '×' }));
+            const top = leaders('goals', 5);
+            const g = top[0] ? top[0].goals : 0;
+            const t = $('#seasonTitle').val() || autoSeasonTitle();
+            data.players = { scorers: top, seasonSecond: second };
+            data.seasonInfo = { title: t, scorer: top[0] ? top[0].name : '', goals: top[0] ? g + ' ' + plural(g, 'gól', 'góly', 'gólov') : '', secondLabel: hasMin ? 'NAJVIAC MINÚT' : 'NAJVIAC ZÁPASOV' };
+            data.startDate = '';
         }
 
         if (type === 'month') {
@@ -577,7 +599,7 @@
 
         try {
             const tpl = MD.store.loadTemplate(type);
-            const needMatch = MODE === 'match' && ['goals', 'lineup', 'report'].includes(type);
+            const needMatch = MODE === 'match' && ['goals', 'lineup', 'report', 'poster'].includes(type);
             const theme = MD.store.brandColors();
             const [, bg, logos, brand] = await Promise.all([
                 MD.ensureFonts(tpl),
@@ -593,6 +615,9 @@
             renderPlayersCard();
             applyTypeData();
             renderMonthCard();
+            $('#seasonCard').prop('hidden', type !== 'season');
+            $('#formatRow').toggleClass('d-none', type === 'poster');
+            $('#btnPdf').prop('hidden', type !== 'poster');
             const T = ownTeam();
 
             // logá: družstvo / súper, logá v tabuľke a kole, fotka hráča
@@ -619,10 +644,12 @@
                 urls.forEach((u, i) => { if (imgs[i]) assets.teamLogos[u] = imgs[i]; });
                 if (MODE === 'player') assets.photo = await loadPhoto();
                 if (type === 'month') assets.photo = await photoFor(((data.players || {}).month || [])[0]);
+                if (type === 'season') assets.photo = await photoFor(((data.players || {}).scorers || [])[0]);
             }
             if (seq !== renderSeq) return;
             MD.render(sq, tpl, data, assets);
-            MD.compose(canvas, sq, { format, brand, theme: theme || MD.BASE_COLORS, teamLogo: assets.logos.team || assets.logos.home, title: storyTitle(), subtitle: storySubtitle() });
+            last = { tpl, assets, brand, theme };
+            MD.compose(canvas, sq, { format: curFormat(), brand, theme: theme || MD.BASE_COLORS, teamLogo: assets.logos.team || assets.logos.home, title: storyTitle(), subtitle: storySubtitle() });
             $('#out').closest('.preview-frame').toggleClass('is-story', format === 'story');
             $('#btnDownload, #btnCopy, #btnSaveServer').prop('disabled', false);
             renderPostText();
@@ -753,6 +780,21 @@
                 L.push('', 'Gratulujeme! 👏');
                 break;
             }
+            case 'season': {
+                const si = data.seasonInfo || {}, own = (data.table || []).find((r) => r.own);
+                L.push('🏁 ' + (si.title || 'SEZÓNA') + ' ' + (M.season || '') + ' – ' + data.team + (M.category ? ' · ' + M.category : ''), '');
+                if (own) L.push('📊 ' + own.pos + '. miesto · ' + own.pts + ' bodov · ' + own.w + 'V ' + own.d + 'R ' + own.l + 'P · skóre ' + own.gf + ':' + own.ga);
+                if (si.scorer) L.push('⚽ Najlepší strelec: ' + si.scorer + ' (' + si.goals + ')');
+                L.push('', 'Ďakujeme hráčom, trénerom aj fanúšikom! 💪');
+                break;
+            }
+            case 'poster':
+                L.push('📣 POZVÁNKA NA ZÁPAS' + (M.category ? ' – ' + M.category : ''), '', M.d1name + ' – ' + M.d2name);
+                if (when) L.push('📅 ' + when);
+                if (data.report && data.report.venue) L.push('📍 ' + data.report.venue);
+                if (compLine) L.push('🏆 ' + compLine);
+                L.push('', 'Príďte nás povzbudiť! 💪');
+                break;
             case 'player':
                 L.push('👤 ' + P.name + (P.nr ? ' #' + P.nr : ''), data.team, '', (P.apps || 0) + ' zápasov · ' + (P.goals || 0) + ' gólov' + (P.minutes ? ' · ' + P.minutes + ' minút' : ''));
                 break;
@@ -791,9 +833,9 @@
     }
 
     const slug = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase();
-    const fileName = () => baseFileName().replace(/\.png$/, format === 'story' ? '_story.png' : '.png');
+    const fileName = () => baseFileName().replace(/\.png$/, curFormat() === 'story' ? '_story.png' : '.png');
     function baseFileName() {
-        const prefix = { matchday: 'matchday', lineup: 'zostava', result: 'vysledok', goals: 'strelci', report: 'suhrn', squad: 'supiska', table: 'tabulka', round: 'kolo', stats: 'statistiky', player: 'profil', motm: 'hrac-zapasu', milestone: 'jubileum', month: 'hrac-mesiaca', birthday: 'narodeniny', h2h: 'vzajomne', form: 'forma', weekend: 'vikend' }[type] || type;
+        const prefix = { matchday: 'matchday', lineup: 'zostava', result: 'vysledok', goals: 'strelci', report: 'suhrn', squad: 'supiska', table: 'tabulka', round: 'kolo', stats: 'statistiky', player: 'profil', motm: 'hrac-zapasu', milestone: 'jubileum', month: 'hrac-mesiaca', season: 'sezona', poster: 'plagat', birthday: 'narodeniny', h2h: 'vzajomne', form: 'forma', weekend: 'vikend' }[type] || type;
         if (MODE === 'match') return [prefix, slug(M.d1name), 'vs', slug(M.d2name)].join('_') + ((type === 'lineup' || type === 'form') ? '_' + slug(data.team) : '') + '.png';
         if (MODE === 'player') return [prefix, slug((findPlayer() || {}).name), slug(M.d1name)].filter(Boolean).join('_') + '.png';
         if (MODE === 'club') return [prefix, slug(M.d1name), weekStart || ''].filter(Boolean).join('_') + '.png';
@@ -841,7 +883,7 @@
                 mvalue: savedType === 'milestone' ? String((data.milestone || {}).value || '') : '',
                 week: savedType === 'weekend' ? (weekStart || '') : '',
                 month: savedType === 'month' ? monthKey() : '',
-                format: format === 'story' ? 'story' : '',
+                format: curFormat() === 'story' ? 'story' : '',
             });
             const r = await fetch('api-save?' + q.toString(), { method: 'POST', headers: MD.clientHeaders({ 'Content-Type': 'image/png', 'X-MD-Mode': $('#autoSave').is(':checked') ? 'auto' : 'manual' }), body: blob });
             const txt = await r.text();
@@ -963,6 +1005,24 @@
         $('#msValue').data('touched', false);
         $('#bdAge').data('touched', false);
         render();
+    });
+    $('#seasonTitle').on('change', render);
+    $('#btnPdf').on('click', async function () {
+        if (!last) return;
+        const $b = $(this).prop('disabled', true);
+        try {
+            // plagát do tlače: dvojnásobné rozlíšenie (2480 × 3508 px = A4 pri 300 DPI)
+            const hi = document.createElement('canvas'), out = document.createElement('canvas');
+            MD.render(hi, last.tpl, data, last.assets, { scale: 2 });
+            MD.compose(out, hi, { format: 'square', brand: last.brand, theme: last.theme || MD.BASE_COLORS });
+            const pdf = await MD.pdf(out, { title: metaTitle() });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(pdf);
+            a.download = baseFileName().replace(/\.png$/, '.pdf');
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        } catch (e) { MD.toast('PDF sa nepodarilo vytvoriť.', 'danger'); }
+        $b.prop('disabled', false);
     });
     $('#monthSel').on('change', function () { monthSel = this.value; setQs('month', monthSel); render(); });
     $('#monthKind').on('change', function () { setQs('mkind', this.value); render(); });

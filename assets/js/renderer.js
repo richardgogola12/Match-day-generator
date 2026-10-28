@@ -222,6 +222,9 @@
             referee: (data.report || {}).referee || '', venue: (data.report || {}).venue || '',
             h2hPlayed: String((data.h2h || {}).played ?? ''),
             weekendTitle: (data.weekend || {}).title || '', weekendRange: (data.weekend || {}).range || '',
+            matchUrl: data.matchUrl || '', appUrl: location.origin + (window.MD_BASE || '') + '/',
+            seasonTitle: (data.seasonInfo || {}).title || 'SEZÓNA', seasonScorer: (data.seasonInfo || {}).scorer || '', seasonScorerGoals: (data.seasonInfo || {}).goals || '',
+            seasonSecond: (data.seasonInfo || {}).second || '', seasonSecondLabel: (data.seasonInfo || {}).secondLabel || '',
         }, playerTokens(data), teamTokens(data), dateParts(data.startDate));
     };
 
@@ -798,6 +801,33 @@
         return { x: x0, y: el.y, w: Math.max(S, total), h: S };
     }
 
+    /* QR kód (napr. odkaz na detail zápasu na plagáte) – biely podklad s tichou zónou */
+    function drawQr(ctx, el, tokens, opts) {
+        const S = el.size || 200;
+        const text = MD.fillTokens(el.text || '{matchUrl}', tokens).trim();
+        const pad = el.padding ?? Math.round(S * 0.08);
+        ctx.globalAlpha = el.opacity ?? 1;
+        if (el.bgColor !== 'transparent') {
+            ctx.fillStyle = el.bgColor || '#ffffff';
+            ctx.beginPath();
+            if (ctx.roundRect) ctx.roundRect(el.x, el.y, S, S, el.radius ?? Math.round(S * 0.08)); else ctx.rect(el.x, el.y, S, S);
+            ctx.fill();
+        }
+        if (!text || !MD.qr) {
+            if (opts.editor) { ctx.fillStyle = '#999'; ctx.font = Math.round(S / 6) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('QR', el.x + S / 2, el.y + S / 2 + S / 16); }
+            return { x: el.x, y: el.y, w: S, h: S };
+        }
+        let q;
+        try { q = MD.qr(text); } catch (e) { return { x: el.x, y: el.y, w: S, h: S }; }
+        const cell = (S - pad * 2) / q.size;
+        ctx.fillStyle = el.color || '#0b2a1a';
+        for (let y = 0; y < q.size; y++) for (let x = 0; x < q.size; x++) {
+            if (q.get(x, y)) ctx.fillRect(el.x + pad + x * cell, el.y + pad + y * cell, Math.ceil(cell + 0.35), Math.ceil(cell + 0.35));
+        }
+        ctx.globalAlpha = 1;
+        return { x: el.x, y: el.y, w: S, h: S };
+    }
+
     function drawBackground(ctx, tpl, img) {
         const W = tpl.width, H = tpl.height;
         if (img) {
@@ -825,9 +855,12 @@
     MD.render = function (canvas, tpl, data, assets, opts) {
         opts = opts || {};
         assets = assets || {};
-        if (canvas.width !== tpl.width) canvas.width = tpl.width;
-        if (canvas.height !== tpl.height) canvas.height = tpl.height;
+        // opts.scale: vyššie rozlíšenie (napr. plagát do tlače) – súradnice šablóny ostávajú rovnaké
+        const scale = opts.scale > 0 ? opts.scale : 1;
+        if (canvas.width !== tpl.width * scale) canvas.width = tpl.width * scale;
+        if (canvas.height !== tpl.height * scale) canvas.height = tpl.height * scale;
         const ctx = canvas.getContext('2d');
+        ctx.setTransform(scale, 0, 0, scale, 0, 0);
         ctx.clearRect(0, 0, tpl.width, tpl.height);
         drawBackground(ctx, tpl, assets.background);
 
@@ -853,6 +886,7 @@
                 else if (el.type === 'fixtures') boxes[el.id] = drawFixtures(ctx, el, data || {}, assets, opts);
                 else if (el.type === 'compare') boxes[el.id] = drawCompare(ctx, el, data || {}, opts);
                 else if (el.type === 'formbadges') boxes[el.id] = drawFormBadges(ctx, el, data || {}, opts);
+                else if (el.type === 'qr') boxes[el.id] = drawQr(ctx, el, tokens, opts);
             } catch (e) { console.error('Chyba pri kreslení prvku', el, e); }
             ctx.restore();
         });
@@ -1012,6 +1046,54 @@
             Source: base + '/',
             'Creation Time': now.toISOString(),
         };
+    };
+
+    /**
+     * PDF A4 (na výšku) s jedným obrázkom na celú stranu – plagát na tlač.
+     * @param {HTMLCanvasElement} canvas
+     * @param {object} info { title }
+     * @returns {Promise<Blob>}
+     */
+    MD.pdf = async function (canvas, info) {
+        info = info || {};
+        const jpg = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.95));
+        const img = new Uint8Array(await jpg.arrayBuffer());
+        const W = 595.28, H = 841.89; // A4 v bodoch
+        const r = Math.min(W / canvas.width, H / canvas.height);
+        const w = canvas.width * r, h = canvas.height * r;
+        const enc = new TextEncoder();
+        const esc = (t) => String(t || '').replace(/[\\()]/g, '\\$&');
+        // texty v PDF Info ako UTF-16BE (diakritika)
+        const u16 = (t) => { let hex = 'FEFF'; for (const ch of String(t || '')) { const c = ch.codePointAt(0); if (c > 0xFFFF) continue; hex += c.toString(16).padStart(4, '0').toUpperCase(); } return '<' + hex + '>'; };
+        const content = 'q ' + w.toFixed(2) + ' 0 0 ' + h.toFixed(2) + ' ' + ((W - w) / 2).toFixed(2) + ' ' + ((H - h) / 2).toFixed(2) + ' cm /Im0 Do Q';
+        const d = new Date(), pad = (n) => String(n).padStart(2, '0');
+        const date = 'D:' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
+        const objs = [
+            '<< /Type /Catalog /Pages 2 0 R >>',
+            '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+            '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + W + ' ' + H + '] /Resources << /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>',
+            null, // obrázok (binárny)
+            '<< /Length ' + content.length + ' >>\nstream\n' + content + '\nendstream',
+            '<< /Title ' + u16(info.title || 'Plagát') + ' /Producer ' + u16((MD.APP_NAME || 'Match Day Generator')) + ' /Creator ' + u16((MD.APP_NAME || 'Match Day Generator') + ' – ' + location.origin + (window.MD_BASE || '') + '/') + ' /CreationDate (' + esc(date) + ') >>',
+        ];
+        const parts = [enc.encode('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n')];
+        let len = parts[0].length;
+        const offsets = [];
+        objs.forEach((o, i) => {
+            offsets.push(len);
+            if (o === null) {
+                const head = enc.encode((i + 1) + ' 0 obj\n<< /Type /XObject /Subtype /Image /Width ' + canvas.width + ' /Height ' + canvas.height + ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' + img.length + ' >>\nstream\n');
+                const tail = enc.encode('\nendstream\nendobj\n');
+                parts.push(head, img, tail); len += head.length + img.length + tail.length;
+            } else {
+                const b = enc.encode((i + 1) + ' 0 obj\n' + o + '\nendobj\n'); parts.push(b); len += b.length;
+            }
+        });
+        let xref = 'xref\n0 ' + (objs.length + 1) + '\n0000000000 65535 f \n';
+        offsets.forEach((o) => { xref += String(o).padStart(10, '0') + ' 00000 n \n'; });
+        xref += 'trailer\n<< /Size ' + (objs.length + 1) + ' /Root 1 0 R /Info 6 0 R >>\nstartxref\n' + len + '\n%%EOF';
+        parts.push(enc.encode(xref));
+        return new Blob(parts, { type: 'application/pdf' });
     };
 
     /** @param {{name: string, data: Uint8Array}[]} files  @returns {Blob} */
@@ -1210,6 +1292,8 @@
             milestone: { value: 100, label: 'zápas za FK Slovan Horná Ves' },
             month: { title: 'STRELEC MESIACA', period: 'Október 2026', player: 'Martin Kováč', value: 6, unit: 'gólov', nr: '7' },
             birthday: { age: 25, wish: 'Prajeme veľa zdravia, radosti a gólov!' },
+            matchUrl: 'https://example.sk/match-day/zapas?matchID=ukazka',
+            seasonInfo: { title: 'SEZÓNA', scorer: 'Martin Kováč', goals: '9 gólov', secondLabel: 'NAJVIAC MINÚT' },
             afterRound: 'po 12. kole',
             h2h: { played: 8, rows: [['VÝHRY', 4, 3], ['REMÍZY', 1, 1], ['PREHRY', 3, 4], ['GÓLY', 14, 11], ['ŽLTÉ KARTY', 12, 15], ['ČERVENÉ KARTY', 1, 0]].map(([label, home, away]) => ({ label, home, away })) },
             form: ['V', 'V', 'R', 'P', 'V'],
@@ -1243,6 +1327,7 @@
         return {
             start: Array.from({ length: 11 }, (_, i) => mk(i)), subs: Array.from({ length: 7 }, (_, i) => mk(i + 11)), squad,
             scorers: top('goals'), apps: top('apps'),
+            seasonSecond: all.slice(0, 5).map((p, i) => Object.assign({}, p, { value: (1170 - i * 90) + '′' })),
             month: top('goals').map((p) => Object.assign({}, p, { value: p.goals })), monthRest: top('goals').slice(1, 5).map((p) => Object.assign({}, p, { value: p.goals })),
             cards: all.filter((p) => p.yellow + p.red > 0).sort((a, b) => (b.red * 3 + b.yellow) - (a.red * 3 + a.yellow)).slice(0, 8),
         };

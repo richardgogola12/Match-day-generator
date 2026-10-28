@@ -259,6 +259,60 @@
                 { id: 'season', type: 'text', label: 'Sezóna', text: '{category} · {season}', x: 500, y: 905, size: 18, align: 'center', opacity: 0.7 },
             ],
         },
+        poster: {
+            name: 'Plagát A4',
+            icon: 'bi-file-earmark-richtext',
+            width: 1240, height: 1754,
+            defaultBackground: 'img/poster-bg.webp',
+            elements: [
+                { id: 'competition', type: 'text', label: 'Súťaž', text: '{competition}', x: 620, y: 170, size: 40, align: 'center', color: yellow, maxWidth: 1000, uppercase: true, letterSpacing: 2 },
+                Object.assign({ id: 'title', type: 'text', label: 'Nadpis', text: 'POZVÁNKA', x: 620, y: 365, size: 190, maxWidth: 1060 }, TITLE, { shadowY: 10 }),
+                Object.assign({ id: 'pill', type: 'text', label: 'Podnadpis', text: 'NA ZÁPAS', x: 820, y: 450, size: 66 }, PILL),
+                { id: 'logo1', type: 'logo', label: 'Logo domácich', team: 'home', x: 130, y: 540, size: 340, shadow: true },
+                { id: 'logo2', type: 'logo', label: 'Logo hostí', team: 'away', x: 770, y: 540, size: 340, shadow: true },
+                Object.assign({ id: 'vs', type: 'text', label: 'VS', text: 'VS', x: 620, y: 755, size: 120 }, TITLE),
+                { id: 'name1', type: 'text', label: 'Názov domácich', text: '{d1name}', x: 300, y: 950, size: 50, align: 'center', bold: true, maxWidth: 440, lineHeight: 1.15, shadow: true },
+                { id: 'name2', type: 'text', label: 'Názov hostí', text: '{d2name}', x: 940, y: 950, size: 50, align: 'center', bold: true, maxWidth: 440, lineHeight: 1.15, shadow: true },
+                { id: 'panel', type: 'shape', label: 'Podklad dátumu', x: 120, y: 1060, w: 1000, h: 330, color: '#000000', opacity: 0.35, radius: 32 },
+                { id: 'weekday', type: 'text', label: 'Deň v týždni', text: '{weekday}', x: 620, y: 1140, size: 58, align: 'center', color: yellow, uppercase: true, letterSpacing: 4 },
+                Object.assign({ id: 'date', type: 'text', label: 'Dátum', text: '{date}', x: 620, y: 1265, size: 128 }, TITLE),
+                { id: 'time', type: 'text', label: 'Čas výkopu', text: 'VÝKOP {time}', x: 620, y: 1355, size: 64, align: 'center', bold: true },
+                { id: 'venue', type: 'text', label: 'Štadión', text: '{venue}', x: 620, y: 1465, size: 44, align: 'center', maxWidth: 1000, opacity: 0.95 },
+                { id: 'round', type: 'text', label: 'Kolo a kategória', text: '{roundLabel} · {category}', x: 620, y: 1522, size: 34, align: 'center', opacity: 0.75, maxWidth: 1000 },
+                Object.assign({ id: 'slogan', type: 'text', label: 'Výzva', text: 'Príďte nás povzbudiť!', x: 120, y: 1640, size: 64, align: 'left', maxWidth: 760 }, TITLE, { align: 'left', shadowY: 5 }),
+                { id: 'qr', type: 'qr', label: 'QR kód (detail zápasu)', text: '{matchUrl}', x: 935, y: 1440, size: 190 },
+                { id: 'qrText', type: 'text', label: 'Text pri QR', text: 'detail zápasu', x: 1030, y: 1665, size: 24, align: 'center', opacity: 0.8 },
+            ],
+        },
+        season: {
+            name: 'Koniec sezóny',
+            icon: 'bi-flag',
+            width: 1000, height: 1000,
+            defaultBackground: 'img/team-bg.webp',
+            elements: [
+                { id: 'logoTeam', type: 'logo', label: 'Logo družstva', team: 'team', x: 150, y: 118, size: 100 },
+                Object.assign({ id: 'title', type: 'text', label: 'Nadpis', text: '{seasonTitle}', x: 520, y: 200, size: 96, maxWidth: 560 }, TITLE),
+                Object.assign({ id: 'season', type: 'text', label: 'Sezóna', text: '{season}', x: 660, y: 262, size: 32 }, PILL),
+                { id: 'panel', type: 'shape', label: 'Podklad bilancie', x: 160, y: 292, w: 680, h: 150, color: '#000000', opacity: 0.35, radius: 20 },
+                Object.assign({ id: 'pos', type: 'text', label: 'Miesto', text: '{tpos}.', x: 245, y: 383, size: 62 }, TITLE, { color: yellow, shadowY: 4 }),
+                { id: 'pts', type: 'text', label: 'Body', text: '{tpts}', x: 415, y: 383, size: 62, align: 'center', bold: true },
+                { id: 'wdl', type: 'text', label: 'V-R-P', text: '{tw}-{td}-{tl}', x: 585, y: 383, size: 50, align: 'center', bold: true },
+                { id: 'score', type: 'text', label: 'Skóre', text: '{tgf}:{tga}', x: 755, y: 383, size: 50, align: 'center', bold: true },
+                { id: 'l1', type: 'text', label: 'Popis – miesto', text: 'MIESTO', x: 245, y: 422, size: 17, align: 'center', opacity: 0.8, letterSpacing: 2 },
+                { id: 'l2', type: 'text', label: 'Popis – body', text: 'BODOV', x: 415, y: 422, size: 17, align: 'center', opacity: 0.8, letterSpacing: 2 },
+                { id: 'l3', type: 'text', label: 'Popis – V-R-P', text: 'V – R – P', x: 585, y: 422, size: 17, align: 'center', opacity: 0.8, letterSpacing: 2 },
+                { id: 'l4', type: 'text', label: 'Popis – skóre', text: 'SKÓRE', x: 755, y: 422, size: 17, align: 'center', opacity: 0.8, letterSpacing: 2 },
+                { id: 'photo', type: 'photo', label: 'Fotka strelca', x: 185, y: 462, w: 160, h: 160, shape: 'circle', borderWidth: 5, borderColor: '#ffd166', shadow: true, fallbackText: 'TOP' },
+                { id: 'scorerLabel', type: 'text', label: 'Nadpis strelca', text: 'NAJLEPŠÍ STRELEC', x: 375, y: 504, size: 20, color: yellow, letterSpacing: 2 },
+                { id: 'scorer', type: 'text', label: 'Strelec', text: '{seasonScorer}', x: 375, y: 564, size: 46, uppercase: true, bold: true, maxWidth: 460, shadow: true },
+                { id: 'scorerGoals', type: 'text', label: 'Góly strelca', text: '{seasonScorerGoals}', x: 375, y: 610, size: 28, opacity: 0.9 },
+                { id: 'scorersLabel', type: 'text', label: 'Nadpis strelcov', text: 'STRELCI', x: 165, y: 676, size: 20, color: yellow, letterSpacing: 2 },
+                { id: 'scorers', type: 'players', label: 'Strelci', source: 'scorers', x: 165, y: 712, size: 22, columns: 1, maxWidth: 320, gap: 30, maxY: 840, limit: 5, format: '{goals}  {name}', numColor: '', capMark: '', gkMark: '' },
+                { id: 'secondLabel', type: 'text', label: 'Nadpis druhého zoznamu', text: '{seasonSecondLabel}', x: 525, y: 676, size: 20, color: yellow, letterSpacing: 2 },
+                { id: 'second', type: 'players', label: 'Najviac minút / zápasov', source: 'seasonSecond', x: 525, y: 712, size: 22, columns: 1, maxWidth: 320, gap: 30, maxY: 840, limit: 5, format: '{value}  {name}', numColor: '', capMark: '', gkMark: '' },
+                { id: 'competition', type: 'text', label: 'Súťaž', text: '{team} · {category} · {competition}', x: 500, y: 952, size: 17, align: 'center', opacity: 0.7, maxWidth: 760 },
+            ],
+        },
         month: {
             name: 'Hráč mesiaca',
             icon: 'bi-star',
@@ -332,14 +386,15 @@
         table: { w: 680, rowH: 42, size: 22, font: 'Barlow Condensed', color: '#ffffff', headColor: '#ffd166', ownColor: '#ffffff', ptsColor: '#ffd166', highlight: 'rgba(230,57,70,0.85)', stripe: 'rgba(255,255,255,0.05)', header: true, showLogos: true, columns: 'p,w,d,l,score,pts', maxRows: 20, maxY: 915, autoFit: true, ownBold: true, uppercase: false, headName: 'Družstvo', opacity: 1 },
         fixtures: { showLabel: false, labelColor: '#ffd166', w: 720, rowH: 72, size: 22, font: 'Barlow Condensed', color: '#ffffff', pillColor: '#e63946', pillColor2: 'rgba(255,255,255,0.14)', pillText: '#ffffff', highlight: 'rgba(255,209,102,0.16)', showLogos: true, showDate: false, maxRows: 12, maxY: 915, autoFit: true, uppercase: false, opacity: 1 },
         compare: { w: 700, rowH: 56, size: 22, font: 'Barlow Condensed', color: '#ffffff', labelColor: '#ffffff', barHome: '#e63946', barAway: '#ffd166', barBg: 'rgba(255,255,255,0.15)', barH: 8, uppercase: true, opacity: 1 },
+        qr: { size: 200, text: '{matchUrl}', color: '#0b2a1a', bgColor: '#ffffff', opacity: 1 },
         formbadges: { size: 64, gap: 18, font: 'Barlow Condensed', color: '#ffffff', winColor: '#22a06b', drawColor: '#f2a516', lossColor: '#d93a3a', max: 5, opacity: 1 },
         players: { limit: 0, source: 'start', size: 26, font: 'Barlow Condensed', color: '#ffffff', numColor: '#ffd166', align: 'left', letterSpacing: 0, italic: false, columns: 2, maxWidth: 330, colGap: 20, gap: 44, lineHeight: 1.2, maxY: 900, autoFit: true, minScale: 0.6, format: '{nr}  {name}', capMark: ' (C)', gkMark: ' (B)', emptyText: '', uppercase: false, bold: false, shadow: false, strokeWidth: 0, strokeColor: '#000000', opacity: 1 },
     };
     MD.TYPE_DEFAULTS = TYPE_DEFAULTS;
 
-    MD.TEMPLATE_IDS = ['matchday', 'lineup', 'result', 'goals', 'report', 'h2h', 'form', 'squad', 'table', 'round', 'stats', 'month', 'player', 'motm', 'milestone', 'birthday', 'weekend'];
+    MD.TEMPLATE_IDS = ['matchday', 'lineup', 'result', 'goals', 'report', 'h2h', 'form', 'squad', 'table', 'round', 'stats', 'month', 'season', 'player', 'motm', 'milestone', 'birthday', 'weekend', 'poster'];
     /** Typy viazané na zápas / družstvo / hráča */
-    MD.TYPE_GROUPS = { match: ['matchday', 'lineup', 'result', 'goals', 'report', 'h2h', 'form'], team: ['squad', 'table', 'round', 'stats', 'month'], player: ['player', 'motm', 'milestone', 'birthday'], club: ['weekend'] };
+    MD.TYPE_GROUPS = { match: ['matchday', 'lineup', 'result', 'goals', 'report', 'h2h', 'form', 'poster'], team: ['squad', 'table', 'round', 'stats', 'month', 'season'], player: ['player', 'motm', 'milestone', 'birthday'], club: ['weekend'] };
 
     const clone = (o) => JSON.parse(JSON.stringify(o));
 

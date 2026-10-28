@@ -629,7 +629,7 @@ function slugify($text, $max = 40) {
 function image_types() {
     return ['matchday' => 'Match day', 'lineup' => 'Zostava', 'result' => 'Výsledok', 'goals' => 'Strelci', 'report' => 'Súhrn zápasu',
             'h2h' => 'Vzájomné zápasy', 'form' => 'Forma', 'weekend' => 'Víkend klubu',
-            'squad' => 'Súpiska', 'table' => 'Tabuľka', 'round' => 'Kolo', 'stats' => 'Štatistiky', 'month' => 'Hráč mesiaca',
+            'squad' => 'Súpiska', 'table' => 'Tabuľka', 'round' => 'Kolo', 'stats' => 'Štatistiky', 'month' => 'Hráč mesiaca', 'season' => 'Koniec sezóny', 'poster' => 'Plagát A4',
             'player' => 'Profil hráča', 'motm' => 'Hráč zápasu', 'milestone' => 'Jubileum', 'birthday' => 'Narodeniny'];
 }
 

@@ -84,6 +84,7 @@ function md_create_match(array $b, array $ctx = []) {
     } else {
         $soon = $days !== null && $days >= 0 && $days <= 7;
         $items[] = $it('matchday', 'Match day', 'bi-calendar-event', 'pozvánka na zápas', [], $soon, 'zápas je ' . $when);
+        $items[] = $it('poster', 'Plagát A4', 'bi-file-earmark-richtext', 'pozvánka na vytlačenie (PDF) s QR kódom', [], $days !== null && $days >= 3 && $days <= 10, 'zápas je ' . $when . ' – stihnete ho vyvesiť');
         if ($hasId) $items[] = $it('lineup', 'Zostava', 'bi-person-lines-fill', 'keď je zostava v zápise (krátko pred zápasom)', ['side' => $side], $days !== null && $days >= 0 && $days <= 1, 'zápas je ' . $when);
     }
     if ($hasId) {
@@ -130,6 +131,11 @@ function md_create_team($teamId, array $team, $cat, $season, $competition, ?arra
         ? $it('month', 'Hráč mesiaca – ' . $mNames[(int)substr($prev, 5)], 'bi-star', 'podľa gólov, minút alebo zápasov', ['month' => $prev], true, 'mesiac sa práve skončil')
         : $it('month', 'Hráč / strelec mesiaca', 'bi-star', 'podľa gólov, minút alebo zápasov');
     $items[] = $it('squad', 'Súpiska', 'bi-people', 'všetci hráči sezóny s číslami');
+    // koniec sezóny / časti: po poslednom kole alebo v mesiacoch, keď sa súťaž končí
+    $mon = (int)$now->format('n');
+    $over = $C && !$next && $last;
+    $seasonEnd = $over || in_array($mon, [6, 7, 11, 12], true);
+    $items[] = $it('season', 'Koniec sezóny', 'bi-flag', 'miesto, body, skóre a najlepší strelec', [], $seasonEnd, $over ? 'súťaž sa dohrala' : ($mon >= 11 ? 'jesenná časť sa končí' : 'sezóna sa končí'));
     return [
         'key' => 't:' . $teamId, 'kind' => 'team',
         'title' => trim(($team['name'] ?? '') . ' ' . $cat),

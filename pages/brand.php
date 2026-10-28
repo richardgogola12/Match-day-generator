@@ -1,7 +1,7 @@
 <?php
 	add_layout("header", array(
 		"title"   => "Značka klubu | Match Day",
-		"scripts" => ["js/renderer.js", "js/brand.js"],
+		"scripts" => ["js/qr.js", "js/renderer.js", "js/brand.js"],
 	));
 ?>
 

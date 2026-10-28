@@ -2,10 +2,10 @@
 
 PHP + Bootstrap 5 aplikácia na generovanie zápasových grafík pre futbalové kluby (dáta zo Sportnet / Futbalnet SFZ).
 
-Sedemnásť typov obrázkov, každý ako štvorcový príspevok (1000 × 1000) aj **story 9:16** (1080 × 1920):
+Devätnásť typov obrázkov, každý ako štvorcový príspevok (1000 × 1000) aj **story 9:16** (1080 × 1920); plagát A4 (1240 × 1754, PDF na tlač 300 DPI):
 - ku klubu: **Víkend klubu** (program / výsledky všetkých družstiev v týždni)
-- k zápasu: **Match day**, **Zostava**, **Výsledok**, **Strelci**, **Súhrn zápasu**, **Vzájomné zápasy**, **Forma**
-- k družstvu: **Súpiska**, **Tabuľka**, **Kolo** (program / výsledky), **Štatistiky**, **Hráč / strelec mesiaca**
+- k zápasu: **Match day**, **Zostava**, **Výsledok**, **Strelci**, **Súhrn zápasu**, **Vzájomné zápasy**, **Forma**, **Plagát A4** (pozvánka na tlač s QR kódom)
+- k družstvu: **Súpiska**, **Tabuľka**, **Kolo** (program / výsledky), **Štatistiky**, **Hráč / strelec mesiaca**, **Koniec sezóny** (miesto, body, skóre, najlepší strelec, najviac minút)
 - k hráčovi: **Profil hráča**, **Hráč zápasu**, **Jubileum**, **Narodeniny** (s fotkou hráča zo Sportnetu alebo uloženou v prehliadači)
 
 ## Funkcie
@@ -15,6 +15,7 @@ Sedemnásť typov obrázkov, každý ako štvorcový príspevok (1000 × 1000) a
 - Zostava na zápas (základ, náhradníci, tréner) zo zápisu o stretnutí a súpiska družstva za sezónu zo zápisov odohratých zápasov; hráčov možno ručne upraviť (uloží sa v prehliadači)
 - Stránky: **zápis o stretnutí** (góly, karty, striedania, polčas, rozhodcovia, diváci, zostavy), **prehľad družstva** (štatistiky, hráči s minútami, oficiálna tabuľka, kolá celej súťaže) a **profil hráča** (štatistiky a zápasy sezóny s minútami, kariéra)
 - Generovanie obrázka priamo v prehliadači (HTML canvas) – stiahnutie PNG, kopírovanie, zdieľanie, **všetky typy naraz v ZIP**
+- **Plagát A4** k zápasu s **QR kódom** na detail zápasu – stiahnutie ako PDF na tlač (vlastný generátor QR `assets/js/qr.js` a PDF `MD.pdf` v `renderer.js`, bez knižníc); prvok *QR kód* je dostupný v editore šablón
 - **Plávajúce tlačidlo Vytvoriť obrázok** na stránkach klubu, družstva, zápasu a hráča: panel so všetkými obrázkami pre danú stránku a **odporúčaniami podľa situácie** (Match day pred zápasom, výsledok po zápase, kolo a tabuľka po kole, hráč mesiaca na začiatku mesiaca, víkend klubu …); logika v `includes/create.php`, panel `assets/js/create.js`
 - Každý PNG obsahuje metadáta (`Software: Match Day Generator`, názov, popis, zdroj a čas vytvorenia) – v stiahnutí, ZIP, zdieľaní aj na serveri
 - **Text príspevku** na Facebook / Instagram (skóre, strelci, súťaž, hashtagy) s tlačidlom Kopírovať

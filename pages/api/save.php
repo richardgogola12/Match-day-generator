@@ -70,7 +70,7 @@ if ($type === 'weekend') {
     $key  = 'weekend|' . ($m['teamID'] ?: $m['d1name']) . '|' . $m['week'];
     try { $date = new DateTime($m['week'] ?: 'now', new DateTimeZone('Europe/Bratislava')); } catch (Throwable $e) { $date = new DateTime('now', new DateTimeZone('Europe/Bratislava')); }
     $name = $date->format('Y-m-d') . '_vikend_' . slugify($m['d1name'], 30);
-} elseif (in_array($type, ['squad', 'table', 'round', 'stats', 'month', 'player', 'motm', 'milestone', 'birthday'], true)) {
+} elseif (in_array($type, ['squad', 'table', 'round', 'stats', 'month', 'season', 'player', 'motm', 'milestone', 'birthday'], true)) {
     // obrázky družstva / hráča nie sú viazané na jeden zápas – stály názov aj priečinok (podľa začiatku sezóny),
     // aby sa pri ďalšom uložení prepísali (tabuľka je vždy aktuálna, kolo a jubileum podľa čísla …)
     $extra = ['round' => 'kolo-' . $m['roundNo'], 'player' => $m['playerKey'], 'motm' => $m['playerKey'] . '|' . $m['matchID'], 'milestone' => $m['playerKey'] . '|' . $m['mvalue'], 'month' => $m['month'], 'birthday' => $m['playerKey'] . '|' . date('Y')][$type] ?? '';

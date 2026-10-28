@@ -223,7 +223,7 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 		<!-- ŠTATISTIKY HRÁČOV -->
 		<div class="tab-pane fade<?= $tab === 'hraci' ? ' show active' : '' ?>" id="t-hraci" role="tabpanel">
 			<div class="card-app overflow-hidden">
-				<div class="card-header sec-head"><h2 class="team-title mb-0">Štatistiky hráčov</h2><div class="d-flex flex-wrap gap-2"><a class="btn btn-sm btn-outline-primary rounded-pill" href="<?= plain(md_gen_link('month', $tp)) ?>"><i class="bi bi-star me-1"></i>Hráč mesiaca</a><a class="btn btn-sm btn-outline-primary rounded-pill" href="<?= plain(md_gen_link('stats', $tp)) ?>"><i class="bi bi-image me-1"></i>Obrázok Štatistiky</a></div></div>
+				<div class="card-header sec-head"><h2 class="team-title mb-0">Štatistiky hráčov</h2><div class="d-flex flex-wrap gap-2"><a class="btn btn-sm btn-outline-primary rounded-pill" href="<?= plain(md_gen_link('month', $tp)) ?>"><i class="bi bi-star me-1"></i>Hráč mesiaca</a><a class="btn btn-sm btn-outline-primary rounded-pill" href="<?= plain(md_gen_link('season', $tp)) ?>"><i class="bi bi-flag me-1"></i>Koniec sezóny</a><a class="btn btn-sm btn-outline-primary rounded-pill" href="<?= plain(md_gen_link('stats', $tp)) ?>"><i class="bi bi-image me-1"></i>Obrázok Štatistiky</a></div></div>
 				<?php if (!$players): ?>
 					<div class="empty-state"><i class="bi bi-people"></i>V zápisoch o stretnutí sa zatiaľ nenašli žiadni hráči.</div>
 				<?php else: ?>

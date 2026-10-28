@@ -35,6 +35,8 @@
 		'profil'     => ['bi-person-vcard', 'Profil hráča'],
 		'obr-hrac'   => ['bi-award', 'Hráč zápasu a jubileum'],
 		'mesiac'     => ['bi-star', 'Hráč mesiaca a narodeniny'],
+		'plagat'     => ['bi-file-earmark-richtext', 'Plagát A4 na vytlačenie'],
+		'sezona'     => ['bi-flag', 'Koniec sezóny'],
 		'formaty'    => ['bi-phone', 'Story, ZIP a text príspevku'],
 		'ulozenie'   => ['bi-cloud-check', 'Uloženie a zdieľanie'],
 		'znacka-klubu' => ['bi-palette', 'Značka klubu: logo, sponzori, farby'],
@@ -97,7 +99,7 @@
 <section id="uvod">
 	<h2><i class="bi bi-info-circle"></i>Čo aplikácia robí</h2>
 	<p><strong>Match Day Generator</strong> vytvára hotové grafiky k futbalovým zápasom z oficiálnych údajov <strong>Futbalnet / Sportnet SFZ</strong>. Nemusíte nič prepisovať – názvy tímov, logá, dátum, čas, výsledok, strelcov, zostavy, tabuľku aj štatistiky hráčov si aplikácia načíta sama. Vy si iba vyberiete zápas a stiahnete obrázok.</p>
-	<p>K dispozícii je sedemnásť typov obrázkov – k <strong>klubu</strong> (Víkend klubu) a v troch skupinách – k <strong>zápasu</strong> (Match day, Zostava, Výsledok, Strelci, Súhrn, Vzájomné zápasy, Forma), k <strong>družstvu</strong> (Súpiska, Tabuľka, Kolo, Štatistiky, Hráč mesiaca) a k <strong>hráčovi</strong> (Profil, Hráč zápasu, Jubileum, Narodeniny). Každý obrázok je ako štvorcový príspevok aj ako <strong>story 9:16</strong>. Niekoľko ukážok:</p>
+	<p>K dispozícii je devätnásť typov obrázkov – k <strong>klubu</strong> (Víkend klubu) a v troch skupinách – k <strong>zápasu</strong> (Match day, Zostava, Výsledok, Strelci, Súhrn, Vzájomné zápasy, Forma, Plagát A4), k <strong>družstvu</strong> (Súpiska, Tabuľka, Kolo, Štatistiky, Hráč mesiaca, Koniec sezóny) a k <strong>hráčovi</strong> (Profil, Hráč zápasu, Jubileum, Narodeniny). Každý obrázok je ako štvorcový príspevok aj ako <strong>story 9:16</strong>; plagát je na výšku vo formáte A4 a stiahnete ho aj ako PDF na tlač. Niekoľko ukážok:</p>
 	<div class="row g-3 my-3">
 		<div class="col-6 col-md-4">
 			<?= guide_shot('ukazka-matchday.webp', 'Ukážka obrázka Match day', '<strong>Match day</strong> – pozvánka na zápas: logá, dátum, čas výkopu, súťaž a kolo.', 'guide-shot-tile') ?>
@@ -151,6 +153,12 @@
 			<?= guide_shot('ukazka-narodeniny.webp', 'Ukážka obrázka Narodeniny', '<strong>Narodeniny</strong> – blahoželanie hráčovi s vekom a prianím.', 'guide-shot-tile') ?>
 		</div>
 		<div class="col-6 col-md-4">
+			<?= guide_shot('ukazka-sezona.webp', 'Ukážka obrázka Koniec sezóny', '<strong>Koniec sezóny</strong> – miesto, body, skóre, najlepší strelec a hráči s najviac minútami.', 'guide-shot-tile') ?>
+		</div>
+		<div class="col-6 col-md-4">
+			<?= guide_shot('ukazka-plagat.webp', 'Ukážka plagátu A4', '<strong>Plagát A4</strong> – pozvánka na vytlačenie s QR kódom na detail zápasu.', 'guide-shot-tile') ?>
+		</div>
+		<div class="col-6 col-md-4">
 			<?= guide_shot('ukazka-story.webp', 'Ukážka story formátu', '<strong>Story 9:16</strong> – ľubovoľný obrázok na výšku pre Instagram a Facebook stories.', 'guide-shot-tile') ?>
 		</div>
 	</div>
@@ -178,7 +186,7 @@
 	<p>Na stránke klubu, družstva, zápasu a hráča (a na úvodnej stránke, ak máte <a href="#moj-klub">Môj klub</a>) je vpravo dole žlté plávajúce tlačidlo <strong><i class="bi bi-magic"></i> Vytvoriť obrázok</strong>. Otvorí panel so všetkými obrázkami, ktoré na danej stránke dávajú zmysel – nemusíte ich hľadať po stránke.</p>
 	<?= guide_shot('31-vytvorit.webp', 'Panel Vytvoriť obrázok', 'Navrchu odporúčané obrázky s dôvodom, pod nimi všetky obrázky k zápasu, družstvu a klubu.') ?>
 	<ul class="guide-list">
-		<li><strong>Odporúčané teraz</strong> – aplikácia sama vie, čo sa práve hodí: <em>Match day</em> týždeň pred zápasom, <em>Zostava</em> v deň zápasu, <em>Výsledok</em> a <em>Strelci</em> do 3 dní po zápase, <em>Výsledky / Program kola</em> a <em>Tabuľka</em> po kole, <em>Hráč mesiaca</em> na začiatku mesiaca, <em>Program víkendu</em> od štvrtka a <em>Výsledky víkendu</em> v pondelok a utorok, <em>Hráč zápasu</em> pre strelca, okrúhle <em>jubileum</em>. Číslo na tlačidle je počet odporúčaní.</li>
+		<li><strong>Odporúčané teraz</strong> – aplikácia sama vie, čo sa práve hodí: <em>Match day</em> týždeň pred zápasom, <em>Zostava</em> v deň zápasu, <em>Výsledok</em> a <em>Strelci</em> do 3 dní po zápase, <em>Výsledky / Program kola</em> a <em>Tabuľka</em> po kole, <em>Hráč mesiaca</em> na začiatku mesiaca, <em>Plagát A4</em> 3 až 10 dní pred zápasom (aby ste ho stihli vytlačiť a vyvesiť), <em>Koniec sezóny</em> po poslednom kole a v júni, júli, novembri a decembri, <em>Program víkendu</em> od štvrtka a <em>Výsledky víkendu</em> v pondelok a utorok, <em>Hráč zápasu</em> pre strelca, okrúhle <em>jubileum</em>. Číslo na tlačidle je počet odporúčaní.</li>
 		<li>Pod odporúčaniami sú skupiny – <strong>zápas</strong>, <strong>družstvo</strong>, <strong>hráč</strong>, <strong>klub</strong> – so všetkými obrázkami a krátkym popisom. Obrázky, ktoré vytvárate najčastejšie, sú v skupine vyššie.</li>
 		<li>V zoznamoch zápasov má každý zápas hlavné tlačidlo (<em>Match day</em> alebo <em>Výsledok</em>) a tlačidlo <i class="bi bi-magic"></i>, ktoré otvorí ten istý panel pre konkrétny zápas.</li>
 		<li>Na mobile sa panel vysunie zospodu.</li>
@@ -431,6 +439,32 @@
 </section>
 
 <!-- ================================================================== -->
+<section id="plagat">
+	<h2><i class="bi bi-file-earmark-richtext"></i>Plagát A4 na vytlačenie</h2>
+	<p>Pozvánku na zápas do vývesnej skrinky, na dvere krčmy či obchodu vytvoríte pri každom <strong>neodohratom zápase</strong>: tlačidlo <em>Vytvoriť obrázok</em> → <strong>Plagát A4</strong>, alebo typ <strong>Plagát A4</strong> v generátore zápasu.</p>
+	<?= guide_shot('32-plagat.webp', 'Generátor s plagátom A4', 'Plagát A4 v generátore – zelené tlačidlo stiahne PDF pripravené na tlač.') ?>
+	<ul class="guide-list">
+		<li>Na plagáte je súťaž, logá a názvy oboch družstiev, <strong>deň, dátum a čas výkopu</strong>, <strong>štadión</strong> (zo zápisu o stretnutí), kolo a kategória.</li>
+		<li>Vpravo dole je <strong>QR kód</strong> – po naskenovaní mobilom sa otvorí detail zápasu v tejto aplikácii (zostavy, góly a výsledok sa tam objavia samy).</li>
+		<li>Tlačidlo <strong><i class="bi bi-printer"></i> Stiahnuť PDF na tlač (A4)</strong> vytvorí PDF vo vysokom rozlíšení (2480 × 3508 px, čiže 300 DPI na A4). Tlačte na <em>skutočnú veľkosť</em> alebo <em>prispôsobiť stránke</em>.</li>
+		<li><strong>Stiahnuť PNG</strong> stiahne plagát ako obrázok (1240 × 1754 px) – hodí sa aj na Facebook. Prepínač story sa pri plagáte nepoužíva.</li>
+		<li>Text <em>Príďte nás povzbudiť!</em>, farby aj rozloženie zmeníte v editore šablón (šablóna <em>Plagát A4</em>). Logo klubu, pás sponzorov a klubové farby zo <a href="#znacka-klubu">Značky klubu</a> sa pridajú aj na plagát.</li>
+	</ul>
+</section>
+
+<!-- ================================================================== -->
+<section id="sezona">
+	<h2><i class="bi bi-flag"></i>Koniec sezóny</h2>
+	<p>Bilanciu jesene alebo celej sezóny vytvoríte v prehľade družstva – tlačidlo <em>Vytvoriť obrázok</em> → <strong>Koniec sezóny</strong>, alebo <strong><i class="bi bi-flag"></i> Koniec sezóny</strong> v záložke Štatistiky hráčov.</p>
+	<?= guide_shot('33-sezona.webp', 'Generátor s obrázkom Koniec sezóny', 'Koniec sezóny – konečné miesto, body, bilancia výhier, remíz a prehier, skóre a najlepší hráči.') ?>
+	<ul class="guide-list">
+		<li>Hore je <strong>miesto v tabuľke, body, V – R – P a skóre</strong>, v strede <strong>najlepší strelec</strong> s fotkou (ak ju má nahratú v profile), dole päť najlepších strelcov a päť hráčov s <strong>najviac minútami</strong> (ak zápisy minúty neuvádzajú, tak s najviac zápasmi).</li>
+		<li>V karte <strong>Koniec sezóny</strong> vyberte nadpis: <em>Automaticky</em> (od septembra do februára <em>JESEŇ</em>, inak <em>SEZÓNA</em>), <em>Sezóna</em>, <em>Jesenná časť</em>, <em>Jarná časť</em> alebo <em>Bilancia</em>.</li>
+		<li>Text príspevku obsahuje bilanciu, najlepšieho strelca a poďakovanie hráčom a fanúšikom.</li>
+	</ul>
+</section>
+
+<!-- ================================================================== -->
 <section id="formaty">
 	<h2><i class="bi bi-phone"></i>Story, ZIP a text príspevku</h2>
 	<p>Pod typmi obrázkov v generátore je prepínač <strong>Formát</strong>:</p>
@@ -510,6 +544,7 @@
 		<div class="col-sm-6"><div class="guide-card"><i class="bi bi-shield"></i><div><strong>Logo družstva</strong><br><span>Logo domácich alebo hostí v zvolenej veľkosti.</span></div></div></div>
 		<div class="col-sm-6"><div class="guide-card"><i class="bi bi-list-ol"></i><div><strong>Zoznam strelcov</strong><br><span>Strelci domácich alebo hostí (hlavne pre šablónu Strelci).</span></div></div></div>
 		<div class="col-sm-6"><div class="guide-card"><i class="bi bi-people"></i><div><strong>Zoznam hráčov</strong><br><span>Základná zostava, náhradníci alebo súpiska – v jednom až štyroch stĺpcoch.</span></div></div></div>
+		<div class="col-sm-6"><div class="guide-card"><i class="bi bi-qr-code"></i><div><strong>QR kód</strong><br><span>Odkaz na detail zápasu (<code>{matchUrl}</code>) alebo ľubovoľný text či webová adresa – napr. stránka klubu.</span></div></div></div>
 	</div>
 	<h3>Vlastnosti textu</h3>
 	<ul class="guide-list">
@@ -585,6 +620,8 @@
 				<tr><td><code>{yellow}</code> / <code>{red}</code></td><td>žlté / červené karty</td><td>2 / 0</td></tr>
 				<tr><td><code>{milestone}</code> / <code>{milestoneLabel}</code></td><td>jubileum</td><td>100 / zápas za FK…</td></tr>
 				<tr><td><code>{matchHome}</code> <code>{matchScore}</code> <code>{matchAway}</code> <code>{matchGoals}</code></td><td>zápas pri obrázku Hráč zápasu</td><td>FK… 3:1 MFK… / 1</td></tr>
+				<tr><td><code>{matchUrl}</code></td><td>odkaz na detail zápasu (pre QR kód)</td><td>https://…/zapas?matchID=…</td></tr>
+				<tr><td><code>{seasonTitle}</code> <code>{seasonScorer}</code> <code>{seasonScorerGoals}</code> <code>{seasonSecondLabel}</code></td><td>koniec sezóny: nadpis, najlepší strelec, jeho góly, nadpis druhého rebríčka</td><td>JESEŇ · Patrik Vrba · 5 gólov · NAJVIAC MINÚT</td></tr>
 				<tr><td><code>{monthTitle}</code> <code>{monthPeriod}</code> <code>{monthPlayer}</code> <code>{monthValue}</code> <code>{monthUnit}</code></td><td>hráč mesiaca: nadpis, mesiac, hráč, hodnota, jednotka</td><td>STRELEC MESIACA · Október 2026 · … · 3 · góly</td></tr>
 				<tr><td><code>{age}</code> / <code>{birthdayWish}</code></td><td>vek a prianie (narodeniny)</td><td>26 / Prajeme veľa zdravia…</td></tr>
 				<tr><td><code>{roundTitle}</code></td><td>PROGRAM KOLA / VÝSLEDKY KOLA</td><td>VÝSLEDKY KOLA</td></tr>
