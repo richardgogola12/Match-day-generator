@@ -46,6 +46,9 @@ Sedemnásť typov obrázkov, každý ako štvorcový príspevok (1000 × 1000) a
    Bez prístupu ku cronu: nastavte `CRON_KEY` v `config.local.php` a vo webcron službe hostingu volajte `https://vas-web/match-day/cron?key=…`.
 7. **E-maily cez SMTP** – do `config.local.php` doplňte `ADMIN_EMAIL`, `SMTP_HOST`, `SMTP_PORT` (465 = SSL, 587 = STARTTLS), `SMTP_USER`, `SMTP_PASS` (a `MAIL_FROM`). Nastavenie overíte v časti Správca → **Poslať skúšobný e-mail**. Bez `SMTP_HOST` sa použije funkcia `mail()` servera.
 
+## Nastavenia v aplikácii
+Po prihlásení správcu: **Správca → Nastavenia** (`/nastavenia-spravcu`) – názov aplikácie, časové pásmo, vývojový režim, log, e-mail a SMTP (so skúšobným e-mailom), úložisko a limity, povolené domény lôg, overovanie HTTPS, nočná úloha (kľúč webcronu, klub na kontrolu). Ukladá sa do `storage/private/settings.json` (z webu nedostupné). Hodnota zadaná v `config.local.php` má prednosť a v aplikácii je uzamknutá – ak ju chcete meniť v aplikácii, riadok z `config.local.php` odstráňte. Heslo správcu sa mení v prehľade správcu.
+
 ## Bezpečnosť a rýchlosť
 - Heslo správcu sa ukladá iba ako hash (`storage/private/admin.json`), zmena hesla priamo v aplikácii; prihlasovanie má limit pokusov aj podľa IP.
 - Spojenia so Sportnetom overujú HTTPS certifikát (`SSL_VERIFY`; záložný balík CA `includes/cacert.pem`, vlastný cez `SSL_CAINFO`).

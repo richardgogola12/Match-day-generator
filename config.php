@@ -4,11 +4,14 @@
 // Heslá a tajné kľúče patria do config.local.php (nie je v gite, viď config.local.example.php).
 // ---------------------------------------------------------------------------------
 if (is_file(__DIR__ . '/config.local.php')) require __DIR__ . '/config.local.php';
+// nastavenia upravené v aplikácii (Správca → Nastavenia, storage/private/settings.json); config.local.php má prednosť
+require __DIR__ . '/includes/settings.php';
+md_settings_apply();
 
 // ---------------------------------------------------------------------------------
 // PROJECT NAME
 // ---------------------------------------------------------------------------------
-define('APP_NAME', 'Match Day Generator');
+defined('APP_NAME') || define('APP_NAME', 'Match Day Generator');
 // časové pásmo (dátumy v logoch, galérii a údržbe)
 date_default_timezone_set(defined('APP_TIMEZONE') ? APP_TIMEZONE : 'Europe/Bratislava');
 
@@ -77,6 +80,7 @@ defined('SAVE_LIMIT_CLIENT') || define('SAVE_LIMIT_CLIENT', 180);  // uložení 
 defined('STORAGE_MAX_MB') || define('STORAGE_MAX_MB', 3000);        // max. veľkosť všetkých uložených obrázkov (0 = bez limitu)
 defined('STORAGE_KEEP_DAYS') || define('STORAGE_KEEP_DAYS', 365);   // obrázky staršie ako N dní sa automaticky zmažú (0 = nikdy)
 // Nočná úloha (cron): obnova cache, údržba a kontrola Sportnetu – viď README
+defined('CRON_CHECK_CLUB') || define('CRON_CHECK_CLUB', 'nitra');     // klub na nočnú kontrolu Sportnetu
 defined('CRON_KEY') || define('CRON_KEY', '');                     // kľúč pre spustenie cez URL /cron?key=… ('' = iba z príkazového riadku)
 defined('ADMIN_EMAIL') || define('ADMIN_EMAIL', '');               // sem príde e-mail, keď kontrola Sportnetu nájde chybu
 defined('MAIL_FROM') || define('MAIL_FROM', '');                   // odosielateľ e-mailu (prázdne = SMTP_USER alebo noreply@doména)
@@ -131,6 +135,7 @@ $routes = array(
     "zdielaj"                 => "share",
     "znacka"                  => "brand",
     "cron"                    => "cron",
+    "nastavenia-spravcu"      => "admin-settings",
 
     // JSON / obrázkové API pre prehliadač
     "api-logo"                => "api/logo",

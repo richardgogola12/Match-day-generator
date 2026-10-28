@@ -1,4 +1,6 @@
 <?php
+// Väčšinu nastavení upravíte priamo v aplikácii: Správca → Nastavenia (ukladajú sa do storage/private/settings.json).
+// Čo zadáte tu, má prednosť a v aplikácii je uzamknuté – sem patrí hlavne heslo správcu.
 /**
  * Lokálne nastavenia servera – skopírujte tento súbor ako config.local.php
  * a vyplňte vlastné hodnoty. Súbor config.local.php sa do gitu NENAHRÁVA.
@@ -10,10 +12,10 @@
 define('GALLERY_ADMIN_KEY', 'asd123');
 
 // Zapisovanie logu generovania (true / false)
-define('LOG_ENABLED', true);
+// define('LOG_ENABLED', true);
 
 // Vývojový režim – zobrazuje chyby PHP priamo na stránke. Na produkcii false.
-define('APP_DEBUG', false);
+// define('APP_DEBUG', false);
 
 // Heslo správcu môže byť aj hash (odporúčané), napr.:
 //   php -r "echo password_hash('moje-heslo', PASSWORD_DEFAULT);"

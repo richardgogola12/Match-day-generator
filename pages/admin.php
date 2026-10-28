@@ -17,7 +17,7 @@ if (is_post_request()) {
     } elseif ($action === 'login') {
         if (admin_login($_POST['password'] ?? '')) {
             $next = $_POST['next'] ?? '';
-            redirect(in_array($next, ['galeria?vsetky=1', 'log', 'kontrola'], true) ? $next : 'spravca', 303);
+            redirect(in_array($next, ['galeria?vsetky=1', 'log', 'kontrola', 'nastavenia-spravcu'], true) ? $next : 'spravca', 303);
         }
         $lock = admin_lock_minutes();
         $error = $lock ? 'Príliš veľa neúspešných pokusov. Skúste to o ' . $lock . ' min.' : 'Nesprávne heslo.';
@@ -150,6 +150,13 @@ add_layout("header", array("title" => "Správca | Match Day", "noindex" => true)
 				<a class="card-app admin-link h-100" href="<?= url('kontrola') ?>">
 					<i class="bi bi-activity"></i>
 					<div><div class="fw-semibold">Kontrola Sportnetu</div><div class="small text-muted-2">Overenie všetkých zdrojov dát a vymazanie cache</div></div>
+					<i class="bi bi-chevron-right ms-auto"></i>
+				</a>
+			</div>
+			<div class="col-md-6">
+				<a class="card-app admin-link h-100" href="<?= url('nastavenia-spravcu') ?>">
+					<i class="bi bi-gear"></i>
+					<div><div class="fw-semibold">Nastavenia</div><div class="small text-muted-2">E-mail (SMTP), úložisko, limity, domény lôg, nočná úloha</div></div>
 					<i class="bi bi-chevron-right ms-auto"></i>
 				</a>
 			</div>

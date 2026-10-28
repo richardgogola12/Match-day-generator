@@ -41,7 +41,7 @@ function md_cron($log = null) {
     $state['warmed'] = ['teams' => count($teams), 'clubs' => count($clubs)];
 
     // 3. kontrola Sportnetu
-    $checks = md_sportnet_checks(defined('CRON_CHECK_CLUB') ? CRON_CHECK_CLUB : 'nitra');
+    $checks = md_sportnet_checks(CRON_CHECK_CLUB);
     $fails = array_values(array_filter($checks, fn($c) => $c['state'] === 'fail'));
     $state['problems'] = count($fails);
     $state['checks'] = count($checks);

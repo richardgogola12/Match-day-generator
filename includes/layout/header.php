@@ -146,14 +146,15 @@
 				</li>
 				<?php if ($isAdminNav): ?>
 				<li class="nav-item dropdown">
-					<a class="nav-link dropdown-toggle<?= $nav(['spravca', 'log', 'kontrola']) ?>" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+					<a class="nav-link dropdown-toggle<?= $nav(['spravca', 'log', 'kontrola', 'nastavenia-spravcu']) ?>" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
 						<i class="bi bi-shield-lock"></i><span>Správca</span>
 					</a>
 					<ul class="dropdown-menu dropdown-menu-end app-dropdown">
 						<li><a class="dropdown-item" href="<?= url("spravca") ?>"><i class="bi bi-speedometer2"></i>Prehľad</a></li>
 						<li><a class="dropdown-item" href="<?= url("galeria?vsetky=1") ?>"><i class="bi bi-collection"></i>Galéria všetkých</a></li>
 						<li><a class="dropdown-item" href="<?= url("log") ?>"><i class="bi bi-journal-text"></i>Log generovania</a></li>
-							<li><a class="dropdown-item" href="<?= url("kontrola") ?>"><i class="bi bi-activity"></i>Kontrola Sportnetu</a></li>
+						<li><a class="dropdown-item" href="<?= url("kontrola") ?>"><i class="bi bi-activity"></i>Kontrola Sportnetu</a></li>
+						<li><a class="dropdown-item" href="<?= url("nastavenia-spravcu") ?>"><i class="bi bi-gear"></i>Nastavenia</a></li>
 						<li><hr class="dropdown-divider"></li>
 						<li>
 							<form method="post" action="<?= url("spravca") ?>" class="m-0">
