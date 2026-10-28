@@ -400,9 +400,12 @@
 	<h2><i class="bi bi-person-vcard"></i>Profil hráča</h2>
 	<p>Profil otvoríte kliknutím na meno hráča – v prehľade družstva, v zostave alebo priebehu zápasu – alebo nájdením hráča v hľadaní.</p>
 	<?= guide_shot('23-profil.webp', 'Profil hráča', 'Profil: číslo, kapitán/brankár, štatistiky sezóny, všetky jeho zápasy a nahratie fotky.') ?>
+	<?= guide_shot('34-profil-filter.webp', 'Prepínač sezóny a filter zápasov v profile hráča', 'Prepínač sezóny a družstva, filter zápasov (tu domáce výhry) a prepočítaný súčet.') ?>
 	<ul class="guide-list">
 		<li><strong>Štatistiky sezóny</strong> – odohrané zápasy, zápasy v základe, minúty, góly (aj z penalty), žlté a červené karty.</li>
+		<li><strong>Sezóna a družstvo</strong> – hore v profile prepnete <strong>sezónu</strong> a <strong>družstvo</strong> (napr. muži A a dorast), za ktoré hráč nastúpil; v zátvorke je počet zápasov. Štatistiky, zápasy aj obrázky sa prepnú na zvolenú sezónu.</li>
 		<li><strong>Zápasy v sezóne</strong> – súper, výsledok (farebne výhra / remíza / prehra), či hral v základe alebo striedal (s minútou), odohrané minúty, góly a karty.</li>
+		<li><strong>Filter zápasov</strong> – nad tabuľkou zápasov zúžite zoznam: <em>Doma / Vonku</em>, <em>Výhry / Remízy / Prehry</em>, <em>V základe / Striedal / Nehral</em>, <em>Jeseň / Jar</em> a len zápasy <em>S gólom</em> alebo <em>S kartou</em>. Riadok pod filtrom hneď prepočíta počet zápasov, minúty, góly, bilanciu V-R-P, karty a ako často hráč strieľa gól (napr. <em>gól každých 120 min</em>). Tlačidlo <em>Zrušiť</em> filter vynuluje.</li>
 		<li><strong>Kariéra</strong> – súčet za všetky súťaže a sezóny zo Sportnetu (zápasy, minúty, góly, karty) a tlačidlo na jubileum podľa počtu zápasov v kariére.</li>
 		<li><strong>Fotka</strong> – ak má hráč na Sportnete verejnú fotku, zobrazí sa v profile aj v obrázkoch automaticky; vlastná nahratá fotka má vždy prednosť. Pri profile je aj rok narodenia, kluby hráča a jeho posledné zápasy za všetky družstvá.</li>
 		<li><strong>Fotka hráča</strong> – pretiahnite obrázok do rámčeka alebo naň kliknite. Fotka sa zmenší a uloží <strong>iba v tomto prehliadači</strong>; prenesiete ju zálohou nastavení. Najlepšie vyzerá PNG s priehľadným pozadím (napr. vyrezaný hráč v drese).</li>

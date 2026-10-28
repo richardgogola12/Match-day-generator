@@ -32,6 +32,13 @@ if (!$P && $key !== '') foreach ($T['players'] ?? [] as $p) if ($p['key'] === $k
 if (!$P && !$U) show_404();
 if ($sid === '' && $P && $P['id'] !== '') { $sid = $P['id']; $U = sportnet_user($sid); if ($U) $recent = sportnet_player_recent($sid, $U['clubs'], 6); }
 $career = $sid !== '' ? sportnet_player_career($sid) : null;
+// sezóny a družstvá hráča (prepínač sezóny)
+$teams = $U ? sportnet_player_teams($sid, $U['clubs'], $recent) : [];
+if ($teamId !== '' && !in_array($teamId, array_column($teams, 'teamId'), true)) {
+    $teams[] = ['teamId' => $teamId, 'season' => $season, 'cat' => $cat, 'club' => (string)($team['club'] ?? ''), 'name' => (string)$team['name'], 'logo' => (string)$team['logo'], 'n' => count($P['matches'] ?? []), 'last' => ''];
+    usort($teams, fn($a, $b) => strcmp($b['season'], $a['season']) ?: ($b['n'] <=> $a['n']));
+}
+$seasons = array_values(array_unique(array_filter(array_column($teams, 'season'))));
 
 $name = $P['name'] ?? ($U['name'] ?? 'Hráč');
 $pkey = $P['key'] ?? sn_name_key($name);
@@ -78,6 +85,24 @@ add_layout("header", array("title" => $name . " – profil | Match Day", "script
 <div class="container-xxl overlap">
 	<div class="row g-4">
 		<div class="col-lg-8">
+			<?php if (count($teams) > 1 || count($seasons) > 1): ?>
+			<div class="card-app mb-4 player-switch"><div class="card-body">
+				<div class="row g-2 align-items-end">
+					<div class="col-sm-4">
+						<label class="form-label small fw-semibold" for="psSeason"><i class="bi bi-calendar3 me-1"></i>Sezóna</label>
+						<select class="form-select" id="psSeason">
+							<?php foreach ($seasons as $sn): ?><option value="<?= plain($sn) ?>" <?= $sn === $season ? 'selected' : '' ?>><?= plain($sn) ?></option><?php endforeach; ?>
+						</select>
+					</div>
+					<div class="col-sm-8">
+						<label class="form-label small fw-semibold" for="psTeam"><i class="bi bi-shield me-1"></i>Družstvo</label>
+						<select class="form-select" id="psTeam"></select>
+					</div>
+				</div>
+				<div class="form-text mb-0">Sezóny a družstvá, za ktoré hráč nastúpil (podľa zápisov o stretnutí) – v zátvorke počet zápasov.</div>
+				<script type="application/json" id="psData"><?= json_encode(['current' => $teamId, 'base' => url('hrac'), 'sid' => $sid, 'key' => $pkey, 'teams' => array_map(fn($t) => ['id' => $t['teamId'], 's' => $t['season'], 'cat' => $t['cat'], 'name' => $t['name'], 'n' => $t['n']], $teams)], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?></script>
+			</div></div>
+			<?php endif; ?>
 			<?php if ($P): ?>
 			<div class="row g-3 mb-4">
 				<?php
@@ -95,20 +120,45 @@ add_layout("header", array("title" => $name . " – profil | Match Day", "script
 				</div>
 				<?php if (!$P['matches']): ?>
 					<div class="empty-state"><i class="bi bi-calendar-x"></i>Zatiaľ žiadne zápasy.</div>
-				<?php else: ?>
+				<?php else:
+					$parts = []; foreach ($P['matches'] as $m) if ($m['date'] !== '') $parts[(int)substr($m['date'], 5, 2) >= 7 ? 'j' : 'r'] = 1;
+					$hasCards = array_sum(array_map(fn($m) => (int)$m['yellow'] + (int)$m['red'], $P['matches'])) > 0;
+					$hasGoals = array_sum(array_column($P['matches'], 'goals')) > 0; ?>
+				<div class="player-filter" id="pFilter">
+					<div class="pf-group" role="group" aria-label="Miesto">
+						<button type="button" class="pf-btn active" data-f="place" data-v="">Doma aj vonku</button><button type="button" class="pf-btn" data-f="place" data-v="1"><i class="bi bi-house"></i> Doma</button><button type="button" class="pf-btn" data-f="place" data-v="0"><i class="bi bi-bus-front"></i> Vonku</button>
+					</div>
+					<div class="pf-group" role="group" aria-label="Výsledok">
+						<button type="button" class="pf-btn active" data-f="res" data-v="">V · R · P</button><button type="button" class="pf-btn pf-w" data-f="res" data-v="W">Výhry</button><button type="button" class="pf-btn pf-d" data-f="res" data-v="D">Remízy</button><button type="button" class="pf-btn pf-l" data-f="res" data-v="L">Prehry</button>
+					</div>
+					<div class="pf-group" role="group" aria-label="Nastúpil">
+						<button type="button" class="pf-btn active" data-f="role" data-v="">Základ aj lavička</button><button type="button" class="pf-btn" data-f="role" data-v="start">V základe</button><button type="button" class="pf-btn" data-f="role" data-v="sub">Striedal</button><button type="button" class="pf-btn" data-f="role" data-v="none">Nehral</button>
+					</div>
+					<?php if (count($parts) > 1): ?>
+					<div class="pf-group" role="group" aria-label="Časť sezóny">
+						<button type="button" class="pf-btn active" data-f="part" data-v="">Celá sezóna</button><button type="button" class="pf-btn" data-f="part" data-v="j"><i class="bi bi-tree"></i> Jeseň</button><button type="button" class="pf-btn" data-f="part" data-v="r"><i class="bi bi-flower1"></i> Jar</button>
+					</div>
+					<?php endif; ?>
+					<div class="pf-group pf-toggles">
+						<?php if ($hasGoals): ?><button type="button" class="pf-btn" data-t="goal" aria-pressed="false"><i class="bi bi-bullseye"></i> S gólom</button><?php endif; ?>
+						<?php if ($hasCards): ?><button type="button" class="pf-btn" data-t="card" aria-pressed="false"><span class="card-ic yellow"></span> S kartou</button><?php endif; ?>
+						<button type="button" class="pf-btn pf-reset" id="pfReset" hidden><i class="bi bi-x-lg"></i> Zrušiť</button>
+					</div>
+				</div>
+				<div class="pf-sum" id="pfSum" aria-live="polite"></div>
 				<div class="table-responsive">
 					<table class="table table-hover align-middle mb-0 data-table">
 						<thead><tr><th>Dátum</th><th>Súper</th><th class="text-center">Výsledok</th><th>Nastúpil</th><th class="text-end">Min</th><th class="text-end">G</th><th class="text-end">Karty</th></tr></thead>
 						<tbody>
 						<?php foreach (array_reverse($P['matches']) as $m): [$dT] = format_match_date($m['date']);
 							$rc = ['W' => 'success', 'D' => 'secondary', 'L' => 'danger'][$m['result']] ?? 'light';
-							$mu = md_match_url($m['id'], $team['id']); ?>
-							<tr>
+							$mu = md_match_url($m['id'], $team['id']);
+							$role = $m['role'] ?? 'listed'; ?>
+							<tr data-place="<?= $m['home'] ? 1 : 0 ?>" data-res="<?= plain($m['result']) ?>" data-role="<?= in_array($role, ['start', 'sub'], true) ? $role : 'none' ?>" data-part="<?= $m['date'] !== '' ? ((int)substr($m['date'], 5, 2) >= 7 ? 'j' : 'r') : '' ?>" data-goals="<?= (int)$m['goals'] ?>" data-y="<?= (int)$m['yellow'] ?>" data-r="<?= (int)$m['red'] ?>" data-min="<?= isset($m['min']) && $m['min'] !== null ? (int)$m['min'] : '' ?>">
 								<td class="text-nowrap small"><a class="text-reset text-decoration-none" href="<?= plain($mu) ?>"><?= plain($dT) ?><div class="text-muted-2"><?= plain($m['round']) ?></div></a></td>
 								<td><span class="text-muted-2 small"><?= $m['home'] ? 'doma' : 'vonku' ?></span> <a class="fw-semibold text-reset" href="<?= plain($mu) ?>"><?= plain($m['opponent']) ?></a></td>
 								<td class="text-center"><?php if ($m['score'] !== ''): ?><a class="badge text-bg-<?= $rc ?> text-decoration-none" href="<?= plain($mu) ?>"><?= plain($m['score']) ?></a><?php endif; ?></td>
 								<td class="small"><?php
-									$role = $m['role'] ?? 'listed';
 									if ($role === 'start') echo 'základ' . (($m['out'] ?? null) !== null ? ' <span class="text-muted-2">→ ' . (int)$m['out'] . "'</span>" : '');
 									elseif ($role === 'sub') echo 'striedal <span class="text-muted-2">' . (int)$m['in'] . "'</span>";
 									elseif ($role === 'bench') echo '<span class="text-muted-2">lavička</span>';
@@ -122,6 +172,7 @@ add_layout("header", array("title" => $name . " – profil | Match Day", "script
 						</tbody>
 					</table>
 				</div>
+				<div class="empty-state" id="pfEmpty" hidden><i class="bi bi-funnel"></i>Filtru nezodpovedá žiadny zápas.</div>
 				<?php endif; ?>
 			</div>
 			<p class="small text-muted-2 mt-3 mb-0"><i class="bi bi-info-circle me-1"></i>Súčty minút, zápasov a štartov sú oficiálne štatistiky Sportnetu pre toto družstvo a sezónu. Minúty pri jednotlivých zápasoch sú vypočítané zo striedaní a červených kariet v zápise o stretnutí.</p>

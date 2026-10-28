@@ -15,6 +15,7 @@ Devätnásť typov obrázkov, každý ako štvorcový príspevok (1000 × 1000) 
 - Zostava na zápas (základ, náhradníci, tréner) zo zápisu o stretnutí a súpiska družstva za sezónu zo zápisov odohratých zápasov; hráčov možno ručne upraviť (uloží sa v prehliadači)
 - Stránky: **zápis o stretnutí** (góly, karty, striedania, polčas, rozhodcovia, diváci, zostavy), **prehľad družstva** (štatistiky, hráči s minútami, oficiálna tabuľka, kolá celej súťaže) a **profil hráča** (štatistiky a zápasy sezóny s minútami, kariéra)
 - Generovanie obrázka priamo v prehliadači (HTML canvas) – stiahnutie PNG, kopírovanie, zdieľanie, **všetky typy naraz v ZIP**
+- **Profil hráča**: prepínač sezóny a družstva (zo zápasov hráča), filter zápasov (doma/vonku, V-R-P, základ/striedal, jeseň/jar, s gólom, s kartou) s prepočítaným súčtom
 - **Plagát A4** k zápasu s **QR kódom** na detail zápasu – stiahnutie ako PDF na tlač (vlastný generátor QR `assets/js/qr.js` a PDF `MD.pdf` v `renderer.js`, bez knižníc); prvok *QR kód* je dostupný v editore šablón
 - **Plávajúce tlačidlo Vytvoriť obrázok** na stránkach klubu, družstva, zápasu a hráča: panel so všetkými obrázkami pre danú stránku a **odporúčaniami podľa situácie** (Match day pred zápasom, výsledok po zápase, kolo a tabuľka po kole, hráč mesiaca na začiatku mesiaca, víkend klubu …); logika v `includes/create.php`, panel `assets/js/create.js`
 - Každý PNG obsahuje metadáta (`Software: Match Day Generator`, názov, popis, zdroj a čas vytvorenia) – v stiahnutí, ZIP, zdieľaní aj na serveri

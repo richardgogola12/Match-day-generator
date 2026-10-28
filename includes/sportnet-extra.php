@@ -249,4 +249,26 @@ function sportnet_player_recent($sportnetId, array $clubs, $limit = 5) {
     usort($out, fn($a, $b) => strcmp($b['brief']['date'], $a['brief']['date']));
     return $out;
 }
+/**
+ * Všetky družstvá a sezóny, za ktoré hráč nastúpil (z /player-matches, posledných 60 zápasov za každý klub).
+ * @return array [ ['teamId','season','cat','club','name','logo','n' => počet zápasov,'last' => dátum] ] od najnovšej sezóny
+ */
+function sportnet_player_teams($sportnetId, array $clubs, array $fallback = []) {
+    $rows = sportnet_player_recent($sportnetId, $clubs, 60);
+    if (!$rows) $rows = $fallback;
+    $out = [];
+    foreach ($rows as $r) {
+        $id = (string)($r['teamId'] ?? '');
+        if ($id === '') continue;
+        $b = $r['brief'];
+        $side = ($b['home']['id'] ?? '') === $id ? 'home' : (($b['away']['id'] ?? '') === $id ? 'away' : '');
+        if (!isset($out[$id])) $out[$id] = ['teamId' => $id, 'season' => (string)$r['season'], 'cat' => (string)$r['cat'], 'club' => (string)$r['club'],
+            'name' => $side ? (string)$b[$side]['name'] : '', 'logo' => $side ? (string)$b[$side]['logo'] : '', 'n' => 0, 'last' => (string)$b['date']];
+        $out[$id]['n']++;
+        if (strcmp((string)$b['date'], $out[$id]['last']) > 0) $out[$id]['last'] = (string)$b['date'];
+    }
+    $out = array_values($out);
+    usort($out, fn($a, $b) => strcmp($b['season'], $a['season']) ?: ($b['n'] <=> $a['n']) ?: strcmp($b['last'], $a['last']));
+    return $out;
+}
 require_once __DIR__ . '/create.php';
