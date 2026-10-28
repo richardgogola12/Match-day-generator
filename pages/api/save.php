@@ -52,6 +52,9 @@ foreach (['d1name', 'd2name', 'startDate', 'competition', 'round', 'score1', 'sc
     $m[$k] = mb_substr(trim((string)($_GET[$k] ?? '')), 0, 200, 'UTF-8');
 }
 
+// „vygenerované aplikáciou Match Day Generator“ v PNG (ak ho tam prehliadač ešte nedal)
+$raw = md_png_meta($raw, md_image_meta(trim($types[$type] . ' · ' . $m['d1name'] . ($m['d2name'] !== '' ? ' – ' . $m['d2name'] : ''), ' ·')));
+
 try {
     $date = $m['startDate'] ? (new DateTime($m['startDate']))->setTimezone(new DateTimeZone('Europe/Bratislava')) : new DateTime('now', new DateTimeZone('Europe/Bratislava'));
 } catch (Throwable $e) {

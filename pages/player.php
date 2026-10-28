@@ -54,7 +54,7 @@ add_layout("header", array("title" => $name . " – profil | Match Day", "script
 <section class="hero hero-sm">
 	<div class="container-xxl">
 		<div class="player-hero">
-			<div class="player-photo" id="photoBox" data-key="<?= plain('photo:' . ($team['id'] ?: $teamId) . ':' . $pkey) ?>" data-remote="<?= plain($remotePhoto ? url('api-logo') . '?raw=1&url=' . rawurlencode($remotePhoto) : '') ?>">
+			<div class="player-photo" id="photoBox" data-key="<?= plain('photo:' . ($team['id'] ?: $teamId) . ':' . $pkey) ?>" data-remote="<?= plain($remotePhoto ? url('api-logo') . '?raw=1&s=256&fb=1&url=' . rawurlencode($remotePhoto) : '') ?>">
 				<span class="player-nr"><?= plain(($P['nr'] ?? '') ?: '?') ?></span>
 				<img id="photoImg" alt="Fotka – <?= plain($name) ?>" hidden>
 			</div>

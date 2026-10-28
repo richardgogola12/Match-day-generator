@@ -958,6 +958,59 @@
         for (let i = 0; i < u8.length; i++) c = crcTable[(c ^ u8[i]) & 255] ^ (c >>> 8);
         return (c ^ 0xFFFFFFFF) >>> 0;
     }
+    /* ------------------------------------------------------------------ */
+    /* Metadáta PNG – „vygenerované aplikáciou Match Day Generator“        */
+    /* ------------------------------------------------------------------ */
+    MD.APP_NAME = 'Match Day Generator';
+    /**
+     * Vloží do PNG textové údaje (iTXt, UTF-8) hneď za hlavičku IHDR:
+     * Software, Comment, Description, Title, Source, Creation Time …
+     * Zobrazia ich Vlastnosti súboru, prehliadače obrázkov aj exiftool.
+     * @param {Blob} blob PNG
+     * @param {object} fields { kľúč: text }
+     * @returns {Promise<Blob>}
+     */
+    MD.pngMeta = async function (blob, fields) {
+        try {
+            const src = new Uint8Array(await blob.arrayBuffer());
+            const SIG = [137, 80, 78, 71, 13, 10, 26, 10];
+            if (src.length < 33 || SIG.some((b, i) => src[i] !== b)) return blob;
+            const ihdrEnd = 8 + 4 + 4 + 13 + 4; // podpis + dĺžka + typ + dáta IHDR + CRC
+            const enc = new TextEncoder();
+            const chunks = Object.entries(fields || {}).filter(([, v]) => v !== '' && v != null).map(([key, val]) => {
+                // iTXt: kľúč \0 kompresia(0) metóda(0) jazyk \0 preložený kľúč \0 text
+                const k = enc.encode(String(key).slice(0, 79)), t = enc.encode(String(val));
+                const data = new Uint8Array(k.length + 5 + t.length);
+                data.set(k, 0); data.set(t, k.length + 5); // nulové bajty sú v poli už nastavené
+                const typeAndData = new Uint8Array(4 + data.length);
+                typeAndData.set(enc.encode('iTXt'), 0); typeAndData.set(data, 4);
+                const out = new Uint8Array(12 + data.length);
+                const dv = new DataView(out.buffer);
+                dv.setUint32(0, data.length);
+                out.set(typeAndData, 4);
+                dv.setUint32(8 + data.length, crc32(typeAndData));
+                return out;
+            });
+            return new Blob([src.subarray(0, ihdrEnd), ...chunks, src.subarray(ihdrEnd)], { type: 'image/png' });
+        } catch (e) {
+            return blob;
+        }
+    };
+
+    /** štandardné metadáta obrázka z tejto aplikácie */
+    MD.imageMeta = function (title) {
+        const base = location.origin + (window.MD_BASE || '');
+        const now = new Date();
+        return {
+            Software: MD.APP_NAME,
+            Title: title || '',
+            Description: (title ? title + ' – ' : '') + 'vygenerované aplikáciou ' + MD.APP_NAME,
+            Comment: 'Vygenerované aplikáciou ' + MD.APP_NAME + ' (' + base + '/) z údajov Sportnet / Futbalnet SFZ.',
+            Source: base + '/',
+            'Creation Time': now.toISOString(),
+        };
+    };
+
     /** @param {{name: string, data: Uint8Array}[]} files  @returns {Blob} */
     MD.zip = function (files) {
         const enc = new TextEncoder();

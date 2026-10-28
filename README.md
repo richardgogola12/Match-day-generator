@@ -16,6 +16,7 @@ Sedemnásť typov obrázkov, každý ako štvorcový príspevok (1000 × 1000) a
 - Stránky: **zápis o stretnutí** (góly, karty, striedania, polčas, rozhodcovia, diváci, zostavy), **prehľad družstva** (štatistiky, hráči s minútami, oficiálna tabuľka, kolá celej súťaže) a **profil hráča** (štatistiky a zápasy sezóny s minútami, kariéra)
 - Generovanie obrázka priamo v prehliadači (HTML canvas) – stiahnutie PNG, kopírovanie, zdieľanie, **všetky typy naraz v ZIP**
 - **Plávajúce tlačidlo Vytvoriť obrázok** na stránkach klubu, družstva, zápasu a hráča: panel so všetkými obrázkami pre danú stránku a **odporúčaniami podľa situácie** (Match day pred zápasom, výsledok po zápase, kolo a tabuľka po kole, hráč mesiaca na začiatku mesiaca, víkend klubu …); logika v `includes/create.php`, panel `assets/js/create.js`
+- Každý PNG obsahuje metadáta (`Software: Match Day Generator`, názov, popis, zdroj a čas vytvorenia) – v stiahnutí, ZIP, zdieľaní aj na serveri
 - **Text príspevku** na Facebook / Instagram (skóre, strelci, súťaž, hashtagy) s tlačidlom Kopírovať
 - **Značka klubu** (`/znacka`): logo klubu a pás sponzorov sa vložia do každého obrázka; **klubové farby** prefarbia predvolené pozadia aj prvky šablón (predvoľby alebo farby zistené z loga)
 - **Môj klub** – najbližšie zápasy a posledné výsledky obľúbeného klubu priamo na úvodnej stránke s tlačidlami na obrázky

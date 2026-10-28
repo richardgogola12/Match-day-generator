@@ -144,6 +144,7 @@ $routes = array(
     "api-player"              => "api/player",
     "api-club"                => "api/club",
     "api-create"              => "api/create",
+    "api-photos"              => "api/photos",
 
     // pôvodné serverové generátory (GD) – ponechané ako záloha
     "generate-match-result"   => "generate/generate-result",

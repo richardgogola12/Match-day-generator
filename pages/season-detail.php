@@ -109,8 +109,6 @@
 		$ownId = $tm['ownId'];
 		$played = array_values(array_filter($matches, fn($m) => ($m['matchState'] ?? '') === 'ODOHRATY'));
 		$upcoming = array_values(array_filter($matches, fn($m) => ($m['matchState'] ?? '') !== 'ODOHRATY' && ($m['matchState'] ?? '') !== 'NEZUCASTNENE_JEDNO_DRUZSTVO' && strtotime($m['startDate'] ?? '') > time() - 3 * 3600));
-		$squadLink = gen_link('squad', ['team' => $team_id, 'd1name' => $tm['ownName'] ?: $team_name, 'd1url' => $tm['ownLogo'], 'category' => $team_name,
-			'season' => $season, 'competitionName' => $matches[0]['competitionPart']['name'] ?? '']);
 		$teamLink = url('druzstvo') . '?' . http_build_query(['team' => $team_id, 's' => $season, 'cat' => $team_name]);
 		$next = $upcoming[0] ?? null;
 		$last = $played ? end($played) : null;
@@ -122,6 +120,14 @@
 		if ($matches) md_create_add(md_create_pane(md_create_team($team_id, ['name' => $tm['ownName'] ?: $team_name, 'logo' => $tm['ownLogo']], $team_name, $season, $matches[0]['competitionPart']['name'] ?? ''), $team_id));
 	?>
 	<div class="team-pane" data-team-pane="<?= plain($team_id) ?>"<?= $team_id === $sel ? '' : ' hidden' ?>>
+
+		<?php if ($matches): ?>
+		<a class="team-bar mb-3" href="<?= plain($teamLink) ?>">
+			<span class="team-bar-ic"><i class="bi bi-people-fill"></i></span>
+			<span class="min-w-0 flex-fill"><span class="team-bar-title"><?= plain($team_name) ?></span><span class="team-bar-sub"><?= plain($matches[0]['competitionPart']['name'] ?? $season) ?></span></span>
+			<span class="team-bar-go">Detail družstva<i class="bi bi-chevron-right ms-1"></i></span>
+		</a>
+		<?php endif; ?>
 
 		<?php if ($next || $last): ?>
 		<div class="row g-3 mb-4">
@@ -162,12 +168,7 @@
 					<h2 class="team-title"><?= plain($team_name) ?></h2>
 					<div class="small text-muted-2"><?= plain($matches[0]['competitionPart']['name'] ?? $season) ?> · <?= count($played) ?>/<?= count($matches) ?> odohraných</div>
 				</div>
-				<?php if ($matches): ?>
-				<div class="d-flex flex-wrap gap-2">
-					<a class="btn btn-sm btn-primary rounded-pill px-3" href="<?= plain($teamLink) ?>"><i class="bi bi-people me-1"></i>Družstvo</a>
-					<a class="btn btn-sm btn-outline-primary rounded-pill px-3" href="<?= plain($squadLink) ?>" title="Obrázok so súpiskou družstva"><i class="bi bi-people me-1"></i>Súpiska</a>
-				</div>
-				<?php endif; ?>
+
 			</div>
 
 			<?php if (!$matches): ?>

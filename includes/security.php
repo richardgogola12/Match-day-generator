@@ -410,3 +410,30 @@ function md_logo($url, $size = 64) {
 }
 
 require_once __DIR__ . '/mail.php';
+
+/* ------------------------------------------------------------------ */
+/* Metadáta PNG (ak ich prehliadač nevložil – napr. stará verzia appky) */
+/* ------------------------------------------------------------------ */
+/** vloží textové údaje (iTXt) za hlavičku IHDR; ak už PNG má „Software“, nemení nič */
+function md_png_meta($raw, array $fields) {
+    if (strncmp($raw, "\x89PNG\r\n\x1a\n", 8) !== 0 || strlen($raw) < 33) return $raw;
+    if (preg_match('/(tEXt|iTXt)Software\0/', substr($raw, 0, 4096))) return $raw;
+    $chunks = '';
+    foreach ($fields as $k => $v) {
+        if ($v === '' || $v === null) continue;
+        $data = substr((string)$k, 0, 79) . "\0\0\0\0\0" . (string)$v;
+        $chunks .= pack('N', strlen($data)) . 'iTXt' . $data . pack('N', crc32('iTXt' . $data));
+    }
+    return substr($raw, 0, 33) . $chunks . substr($raw, 33);
+}
+
+function md_image_meta($title) {
+    return [
+        'Software' => APP_NAME,
+        'Title' => $title,
+        'Description' => ($title !== '' ? $title . ' – ' : '') . 'vygenerované aplikáciou ' . APP_NAME,
+        'Comment' => 'Vygenerované aplikáciou ' . APP_NAME . ' (' . APP_URL . '/) z údajov Sportnet / Futbalnet SFZ.',
+        'Source' => APP_URL . '/',
+        'Creation Time' => date('c'),
+    ];
+}

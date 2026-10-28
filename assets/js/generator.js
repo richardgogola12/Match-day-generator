@@ -800,7 +800,13 @@
         return [prefix, slug(M.d1name), slug(M.category), type === 'round' ? (data.round || '') + '-kolo' : '', slug(M.season)].filter(Boolean).join('_') + '.png';
     }
 
-    const toBlob = () => new Promise((res) => canvas.toBlob(res, 'image/png'));
+    /** PNG s metadátami (Software, popis, zdroj, čas) – vo všetkých stiahnutiach, ZIP, zdieľaní aj na serveri */
+    const metaTitle = () => {
+        const name = ($('#templateSwitch [data-type="' + type + '"] .small').text() || type).trim();
+        const who = MODE === 'match' ? M.d1name + ' – ' + M.d2name : (MODE === 'player' ? ((findPlayer() || {}).name || '') + ' · ' : '') + (M.d1name || '');
+        return [name, who, M.category].filter(Boolean).join(' · ');
+    };
+    const toBlob = () => new Promise((res) => canvas.toBlob(res, 'image/png')).then((b) => (b ? MD.pngMeta(b, MD.imageMeta(metaTitle())) : b));
 
     /* ------------------------------------------------------------------ */
     /* Uloženie na server                                                  */

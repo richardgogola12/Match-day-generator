@@ -961,7 +961,8 @@
         // čistý náhľad bez pomocných rámikov
         const c = document.createElement('canvas');
         MD.render(c, S.tpl, previewData(), previewAssets(), {});
-        c.toBlob((blob) => {
+        c.toBlob(async (blob) => {
+            blob = await MD.pngMeta(blob, MD.imageMeta('Náhľad šablóny ' + S.tplId));
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
             a.download = 'nahlad-' + S.tplId + '.png';

@@ -200,10 +200,17 @@ add_layout("header", array("title" => ($team['name'] ?: 'Družstvo') . " – pre
 						<h3 class="h6 section-title text-uppercase text-muted-2 mb-3 mt-2"><?= $lab ?></h3>
 						<div class="squad-grid mb-3">
 							<?php foreach ($list as $p): ?>
-								<a class="squad-card" href="<?= plain(md_player_url($p['id'], $teamId, $season, $cat, $p['key'])) ?>">
-									<span class="sq-nr"><?= plain($p['nr'] ?: '–') ?></span>
-									<span class="sq-txt"><span class="sq-name"><?= plain($p['name']) ?><?= $p['captain'] ? ' <span class="badge text-bg-warning">C</span>' : '' ?></span>
-									<span class="sq-meta"><?= (int)$p['apps'] ?> z · <?= (int)$p['goals'] ?> g<?= $p['minutes'] !== null ? ' · ' . (int)$p['minutes'] . "'" : '' ?></span></span>
+								<a class="squad-card" href="<?= plain(md_player_url($p['id'], $teamId, $season, $cat, $p['key'])) ?>" data-pid="<?= plain($p['id']) ?>" data-pkey="<?= plain($p['key']) ?>"<?= !empty($p['photo']) ? ' data-photo="' . plain($p['photo']) . '"' : '' ?>>
+									<span class="sq-ava"><span class="sq-ini"><?= plain(($p['nr'] ?? '') !== '' ? $p['nr'] : mb_substr($p['name'], 0, 1)) ?></span><img alt="" hidden><?php if (($p['nr'] ?? '') !== ''): ?><span class="sq-nr"><?= plain($p['nr']) ?></span><?php endif; ?></span>
+									<span class="sq-txt">
+										<span class="sq-name"><?= plain($p['name']) ?><?= $p['captain'] ? ' <span class="badge text-bg-warning">C</span>' : '' ?></span>
+										<span class="sq-stats">
+											<span title="odohrané zápasy"><b><?= (int)$p['apps'] ?></b> <?= (int)$p['apps'] === 1 ? 'zápas' : ((int)$p['apps'] >= 2 && (int)$p['apps'] <= 4 ? 'zápasy' : 'zápasov') ?></span>
+											<?php if ($p['gk']): ?><span title="zápasy v základe"><b><?= (int)$p['starts'] ?></b> v základe</span>
+											<?php else: ?><span title="góly"><b><?= (int)$p['goals'] ?></b> <?= (int)$p['goals'] === 1 ? 'gól' : ((int)$p['goals'] >= 2 && (int)$p['goals'] <= 4 ? 'góly' : 'gólov') ?></span><?php endif; ?>
+											<?php if ($p['minutes'] !== null): ?><span title="odohrané minúty"><b><?= (int)$p['minutes'] ?></b> min</span><?php endif; ?>
+										</span>
+									</span>
 								</a>
 							<?php endforeach; ?>
 						</div>
@@ -342,6 +349,30 @@ $(function () {
 			return (num ? (x - y) : String(x).localeCompare(String(y), 'sk')) * (num && idx > 1 ? -dir : dir);
 		});
 		$th.closest('table').find('tbody').append(rows);
+	});
+});
+</script>
+
+<script>
+// fotky hráčov v súpiske: vlastná nahratá (prehliadač) > zo zápisu > zo Sportnetu
+$(function () {
+	const cards = [...document.querySelectorAll('.squad-card[data-pid]')];
+	if (!cards.length || !window.MD) return;
+	const base = (window.MD_BASE || '').replace(/\/$/, '');
+	const team = <?= json_encode($team['id'] ?: $teamId) ?>;
+	const show = (c, src) => { const img = c.querySelector('.sq-ava img'); img.onload = () => { img.hidden = false; c.classList.add('has-photo'); }; img.src = src; };
+	const remote = (u) => base + '/api-logo?raw=1&s=128&fb=1&url=' + encodeURIComponent(u);
+	const need = [];
+	Promise.all(cards.map(async (c) => {
+		const b = await MD.store.getPhoto(MD.store.photoKey(team, c.dataset.pkey)).catch(() => null);
+		if (b) return show(c, URL.createObjectURL(b));
+		if (c.dataset.photo) return show(c, remote(c.dataset.photo));
+		if (c.dataset.pid) need.push(c);
+	})).then(() => {
+		if (!need.length) return;
+		fetch(base + '/api-photos?ids=' + encodeURIComponent(need.map((c) => c.dataset.pid).join(','))).then((r) => r.json()).then((j) => {
+			need.forEach((c) => { const u = (j.photos || {})[c.dataset.pid]; if (u) show(c, remote(u)); });
+		}).catch(() => {});
 	});
 });
 </script>
