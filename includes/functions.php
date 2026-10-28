@@ -398,6 +398,7 @@ function imageFromUrl($url) {
     };
 
     $stack = [];
+    $removed = str_repeat("\0", $w * $h); // odstránené pixely pozadia
 
     for ($x = 0; $x < $w; $x++) {
         $stack[] = [$x,0];
@@ -418,6 +419,9 @@ function imageFromUrl($url) {
         $rgb = imagecolorat($img,$x,$y);
 
         if (!$isWhite($rgb)) continue;
+        $idx = $y * $w + $x;
+        if ($removed[$idx] === "\1") continue;
+        $removed[$idx] = "\1";
 
         imagesetpixel($img,$x,$y,$transparent);
 
@@ -425,6 +429,33 @@ function imageFromUrl($url) {
         $stack[] = [$x-1,$y];
         $stack[] = [$x,$y+1];
         $stack[] = [$x,$y-1];
+    }
+
+    // jemný okraj: svetlé pixely hneď pri odstránenom pozadí sú čiastočne priehľadné a bez bieleho lemu
+    // (inak by logo malo zúbkovaný okraj s bielou obrubou)
+    for ($pass = 0; $pass < 1; $pass++) {
+        $next = $removed;
+        for ($y = 0; $y < $h; $y++) {
+            for ($x = 0; $x < $w; $x++) {
+                $idx = $y * $w + $x;
+                if ($removed[$idx] !== "\0") continue;
+                $near = ($x > 0 && $removed[$idx - 1] === "\1") || ($x < $w - 1 && $removed[$idx + 1] === "\1")
+                     || ($y > 0 && $removed[$idx - $w] === "\1") || ($y < $h - 1 && $removed[$idx + $w] === "\1");
+                if (!$near) continue;
+                $c = imagecolorat($img, $x, $y);
+                $oa = ($c >> 24) & 0x7F;
+                $r = ($c >> 16) & 0xFF; $g = ($c >> 8) & 0xFF; $b = $c & 0xFF;
+                $m = min($r, $g, $b);
+                if ($m <= 170) continue;
+                $t = min(1, ($m - 170) / (240 - 170));          // 0 = farba loga, 1 = biele pozadie
+                $keep = 1 - $t * 0.9;                             // výsledná krytie pixela
+                $un = fn($v) => (int)max(0, min(255, round(($v - 255 * (1 - $keep)) / max(0.1, $keep)))); // odstráni prímes bielej
+                $alpha = (int)min(127, max($oa, round(127 * (1 - $keep))));
+                imagesetpixel($img, $x, $y, imagecolorallocatealpha($img, $un($r), $un($g), $un($b), $alpha));
+                $next[$idx] = "\2";
+            }
+        }
+        $removed = str_replace("\2", "\1", $next);
     }
 
     return $img;

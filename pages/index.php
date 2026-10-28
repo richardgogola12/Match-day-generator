@@ -99,7 +99,7 @@ $(function () {
 
 	/* ---------- Môj klub: najbližšie zápasy a posledné výsledky ---------- */
 	const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-	const logoUrl = (u) => (u ? base + '/api-logo?s=64&fb=1&url=' + encodeURIComponent(u) : ''); // malé WebP; pri chybe originál
+	const logoUrl = (u) => (u ? base + '/api-logo?s=128&fb=1&url=' + encodeURIComponent(u) : ''); // malé WebP; pri chybe originál
 	const fmt = (iso) => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString('sk-SK', { timeZone: 'Europe/Bratislava', weekday: 'short', day: 'numeric', month: 'numeric' }) + ' · ' + d.toLocaleTimeString('sk-SK', { timeZone: 'Europe/Bratislava', hour: '2-digit', minute: '2-digit' }); };
 	function genUrl(type, m, season) {
 		const q = { type, d1name: m.home.name, d2name: m.away.name, d1url: m.home.logo, d2url: m.away.logo, startDate: m.date, competitionName: m.competition, round: m.round,
@@ -125,7 +125,7 @@ $(function () {
 		if (!f) return;
 		const season = $('#season').val() || f.season;
 		$('#favName').text(f.name || f.club);
-		$('#favLogo').attr('src', logoUrl(f.logo)).prop('hidden', !f.logo);
+		$('#favLogo').attr('src', f.logo ? base + '/api-logo?s=256&fb=1&url=' + encodeURIComponent(f.logo) : '').prop('hidden', !f.logo);
 		$('#favLink').attr('href', base + '/match-day-season-detail?' + new URLSearchParams({ s: season, team: f.club }));
 		$('#favWeekend').attr('href', base + '/generator?' + new URLSearchParams({ type: 'weekend', club: f.club, season, d1name: f.name || '', d1url: f.logo || '' }));
 		fetch(base + '/api-create?' + new URLSearchParams({ club: f.club, s: season })).then((r) => r.json()).then((j) => MD.create && MD.create.add(j.groups || [])).catch(() => {});

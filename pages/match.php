@@ -71,7 +71,7 @@ add_layout("header", array("title" => $b['home']['name'] . ' – ' . $b['away'][
 				</div>
 			<?php endif; ?>
 				<a class="sb-team" href="<?= plain($teamUrl($s) ?: '#') ?>" title="Prehľad družstva">
-					<?php if ($b[$s]['logo']): ?><img src="<?= plain(md_logo($b[$s]['logo'], 64)) ?>" alt="" width="72" height="72"><?php endif; ?>
+					<?php if ($b[$s]['logo']): ?><img src="<?= plain(md_logo($b[$s]['logo'], 128)) ?>" srcset="<?= plain(md_logo_srcset($b[$s]['logo'], 72)) ?>" alt="" width="72" height="72"><?php endif; ?>
 					<span><?= plain($b[$s]['name']) ?></span>
 					<?php if ($b[$s]['cat']): ?><small><?= plain($b[$s]['cat']) ?></small><?php endif; ?>
 				</a>
@@ -138,9 +138,9 @@ add_layout("header", array("title" => $b['home']['name'] . ' – ' . $b['away'][
 		<?php else: ?>
 		<div class="card-body">
 			<div class="cmp-head">
-				<a href="<?= plain($teamUrl('home')) ?>" title="<?= plain($b['home']['name']) ?>"><?php if ($b['home']['logo']): ?><img src="<?= plain(md_logo($b['home']['logo'], 64)) ?>" alt="<?= plain($b['home']['name']) ?>"><?php endif; ?></a>
+				<a href="<?= plain($teamUrl('home')) ?>" title="<?= plain($b['home']['name']) ?>"><?php if ($b['home']['logo']): ?><img src="<?= plain(md_logo($b['home']['logo'], 128)) ?>" srcset="<?= plain(md_logo_srcset($b['home']['logo'], 56)) ?>" alt="<?= plain($b['home']['name']) ?>"><?php endif; ?></a>
 				<div class="text-center"><div class="small text-muted-2">Počet zápasov</div><div class="cmp-total"><?= (int)$h2h['played'] ?></div></div>
-				<a href="<?= plain($teamUrl('away')) ?>" title="<?= plain($b['away']['name']) ?>"><?php if ($b['away']['logo']): ?><img src="<?= plain(md_logo($b['away']['logo'], 64)) ?>" alt="<?= plain($b['away']['name']) ?>"><?php endif; ?></a>
+				<a href="<?= plain($teamUrl('away')) ?>" title="<?= plain($b['away']['name']) ?>"><?php if ($b['away']['logo']): ?><img src="<?= plain(md_logo($b['away']['logo'], 128)) ?>" srcset="<?= plain(md_logo_srcset($b['away']['logo'], 56)) ?>" alt="<?= plain($b['away']['name']) ?>"><?php endif; ?></a>
 			</div>
 			<?php foreach ([['Výhry', 'w'], ['Prehry', 'l'], ['Remízy', 'd'], ['Góly', 'gf'], ['Červené karty', 'red'], ['Žlté karty', 'yellow']] as [$lab, $k]):
 				$hv = (int)$h2h['home'][$k]; $av = (int)$h2h['away'][$k]; $sum = max(1, $hv + $av); ?>
@@ -177,8 +177,8 @@ add_layout("header", array("title" => $b['home']['name'] . ' – ' . $b['away'][
 								<a class="form-item" href="<?= plain(md_match_url($m['id'], $b[$s]['id'])) ?>">
 									<span class="when"><?= plain($fd) ?><small><?= plain($ft) ?></small></span>
 									<span class="teams">
-										<span class="<?= $m['home']['id'] === $b[$s]['id'] ? 'fw-bold' : '' ?>"><?php if ($m['home']['logo']): ?><img src="<?= plain(md_logo($m['home']['logo'])) ?>" alt="" loading="lazy"><?php endif; ?><em><?= plain($m['home']['name']) ?></em><b><?= (int)$m['home']['score'] ?></b></span>
-										<span class="<?= $m['away']['id'] === $b[$s]['id'] ? 'fw-bold' : '' ?>"><?php if ($m['away']['logo']): ?><img src="<?= plain(md_logo($m['away']['logo'])) ?>" alt="" loading="lazy"><?php endif; ?><em><?= plain($m['away']['name']) ?></em><b><?= (int)$m['away']['score'] ?></b></span>
+										<span class="<?= $m['home']['id'] === $b[$s]['id'] ? 'fw-bold' : '' ?>"><?php if ($m['home']['logo']): ?><img src="<?= plain(md_logo($m['home']['logo'], 64)) ?>" srcset="<?= plain(md_logo_srcset($m['home']['logo'], 22)) ?>" alt="" loading="lazy"><?php endif; ?><em><?= plain($m['home']['name']) ?></em><b><?= (int)$m['home']['score'] ?></b></span>
+										<span class="<?= $m['away']['id'] === $b[$s]['id'] ? 'fw-bold' : '' ?>"><?php if ($m['away']['logo']): ?><img src="<?= plain(md_logo($m['away']['logo'], 64)) ?>" srcset="<?= plain(md_logo_srcset($m['away']['logo'], 22)) ?>" alt="" loading="lazy"><?php endif; ?><em><?= plain($m['away']['name']) ?></em><b><?= (int)$m['away']['score'] ?></b></span>
 									</span>
 									<span class="res res-<?= plain($m['result']) ?>"><?= plain($m['result']) ?></span>
 								</a>
@@ -297,7 +297,7 @@ add_layout("header", array("title" => $b['home']['name'] . ' – ' . $b['away'][
 					<?php foreach ($table as $r): ?>
 						<tr class="<?= $r['own'] ? 'is-own' : '' ?>">
 							<td class="fw-bold"><?= (int)$r['pos'] ?>.</td>
-							<td><a class="d-inline-flex align-items-center gap-2 text-reset text-decoration-none" href="<?= plain(md_team_url($r['id'], $season)) ?>"><?php if ($r['logo']): ?><img src="<?= plain(md_logo($r['logo'], 64)) ?>" alt="" width="26" height="26" loading="lazy"><?php endif; ?><span class="fw-semibold"><?= plain($r['name']) ?></span></a></td>
+							<td><a class="d-inline-flex align-items-center gap-2 text-reset text-decoration-none" href="<?= plain(md_team_url($r['id'], $season)) ?>"><?php if ($r['logo']): ?><img src="<?= plain(md_logo($r['logo'], 64)) ?>" srcset="<?= plain(md_logo_srcset($r['logo'], 26)) ?>" alt="" width="26" height="26" loading="lazy"><?php endif; ?><span class="fw-semibold"><?= plain($r['name']) ?></span></a></td>
 							<td class="text-end"><?= (int)$r['p'] ?></td><td class="text-end"><?= (int)$r['w'] ?></td><td class="text-end"><?= (int)$r['d'] ?></td><td class="text-end"><?= (int)$r['l'] ?></td>
 							<td class="text-end text-nowrap"><?= (int)$r['gf'] ?>:<?= (int)$r['ga'] ?></td>
 							<td class="text-end fw-bold"><?= (int)$r['pts'] ?></td>

@@ -83,7 +83,7 @@
                 html += '<div class="gsearch-group">' + esc(label) + '</div>';
                 list.forEach((it) => {
                     const i = items.push(it) - 1;
-                    const small = it.logo && /^https?:/.test(it.logo) ? BASE + '/api-logo?s=64&fb=1' + (it.icon === 'bi-person' ? '&raw=1' : '') + '&url=' + encodeURIComponent(it.logo) : it.logo;
+                    const small = it.logo && /^https?:/.test(it.logo) ? BASE + '/api-logo?s=128&fb=1' + (it.icon === 'bi-person' ? '&raw=1' : '') + '&url=' + encodeURIComponent(it.logo) : it.logo;
                     const pic = it.logo ? '<img src="' + esc(small) + '" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement(\'i\'),{className:\'bi ' + it.icon + '\'}))">' : '<i class="bi ' + it.icon + '"></i>';
                     html += '<a class="gsearch-item" role="option" id="gs-' + i + '" data-i="' + i + '" href="' + esc(it.href) + '"><span class="pic">' + pic + '</span><span class="txt"><span class="t">' + esc(it.title) + '</span><span class="s">' + esc(it.sub) + '</span></span></a>';
                 });

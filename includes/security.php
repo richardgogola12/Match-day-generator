@@ -409,6 +409,16 @@ function md_logo($url, $size = 64) {
     return url('api-logo') . '?' . http_build_query(['s' => $size, 'fb' => 1, 'url' => $url]);
 }
 
+/** srcset pre ostré logá aj na mobiloch s hustým displejom: šírka v CSS px → 1×, 2×, 3× */
+function md_logo_srcset($url, $cssPx = 32) {
+    if ((string)$url === '') return '';
+    $sizes = [32, 64, 128, 256, 512];
+    $pick = function ($px) use ($sizes) { foreach ($sizes as $s) if ($s >= $px) return $s; return 512; };
+    $out = [];
+    foreach ([1, 2, 3] as $x) { $s = $pick($cssPx * $x); $out[$s] = md_logo($url, $s) . ' ' . $x . 'x'; }
+    return implode(', ', array_values(array_unique($out)));
+}
+
 require_once __DIR__ . '/mail.php';
 
 /* ------------------------------------------------------------------ */

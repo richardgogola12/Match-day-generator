@@ -11,8 +11,8 @@ $cacheDir = md_cache_dir('logos');
 // raw=1: fotka hráča – bez odstraňovania bieleho pozadia (to je iba pre logá)
 $raw = !empty($_GET['raw']);
 // s=32|64|128|256: zmenšený náhľad (WebP) na zobrazenie v zoznamoch – plné PNG iba pre canvas
-$size = in_array((int)($_GET['s'] ?? 0), [32, 64, 128, 256], true) ? (int)$_GET['s'] : 0;
-$cacheFile = $cacheDir . '/' . sha1(($raw ? 'raw|' : '') . $url) . '.png';
+$size = in_array((int)($_GET['s'] ?? 0), [32, 64, 128, 256, 512], true) ? (int)$_GET['s'] : 0;
+$cacheFile = $cacheDir . '/' . sha1('v2|' . ($raw ? 'raw|' : '') . $url) . '.png';
 
 /** chyba: starú verziu z cache, inak presmerovanie na originál (fb=1, iba pre <img>) alebo 404 bez cache */
 $fail = function ($code, $msg) use ($cacheFile, $url) {
@@ -82,7 +82,7 @@ if ($size > 0 && function_exists('imagewebp')) {
             imagefill($dst, 0, 0, imagecolorallocatealpha($dst, 0, 0, 0, 127));
             imagecopyresampled($dst, $src, 0, 0, 0, 0, $nw, $nh, $w, $h);
             $tmpS = $small . '.tmp' . getmypid();
-            if (@imagewebp($dst, $tmpS, 86)) @rename($tmpS, $small); else @unlink($tmpS);
+            if (@imagewebp($dst, $tmpS, 92)) @rename($tmpS, $small); else @unlink($tmpS);
         }
     }
     if (is_file($small)) {

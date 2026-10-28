@@ -6,7 +6,7 @@
     if (!el || !window.bootstrap) return;
     const base = (window.MD_BASE || '').replace(/\/$/, '');
     const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    const logo = (u) => (u ? base + '/api-logo?s=64&fb=1&url=' + encodeURIComponent(u) : ''); // malé WebP; pri chybe originál
+    const logo = (u) => (u ? base + '/api-logo?s=128&fb=1&url=' + encodeURIComponent(u) : ''); // malé WebP; pri chybe originál
     const oc = bootstrap.Offcanvas.getOrCreateInstance(el);
     let groups = [];
     let pane = document.querySelector('[data-team-pane]:not([hidden])')?.dataset.teamPane || null; // stránka klubu: aktuálne družstvo
