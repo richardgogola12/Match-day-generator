@@ -819,17 +819,8 @@ button.gallery-thumb { width: 100%; border: 0; padding: 0; cursor: zoom-in; }
 .sb-score span { opacity: .6; margin: 0 .15em; }
 .sb-score small { font-size: .45em; }
 .sb-half { font-family: "Inter", sans-serif; font-size: .85rem; opacity: .75; margin-top: .35rem; }
-.timeline { list-style: none; margin: 0; padding: .5rem 0; }
-.timeline li { display: grid; grid-template-columns: 1fr 3.2rem 1fr; align-items: center; gap: .5rem; padding: .45rem 1.25rem; }
-.timeline .min { grid-column: 2; grid-row: 1; text-align: center; font-weight: 800; font-variant-numeric: tabular-nums; background: var(--md-surface-2); border-radius: .5rem; padding: .15rem 0; font-size: .85rem; }
-.timeline li.home .ic { grid-column: 1; grid-row: 1; justify-self: end; order: 2; }
-.timeline li.home .tx { grid-column: 1; grid-row: 1; text-align: right; padding-right: 1.6rem; }
-.timeline li.away .ic { grid-column: 3; grid-row: 1; justify-self: start; }
-.timeline li.away .tx { grid-column: 3; grid-row: 1; padding-left: 1.6rem; }
-.timeline .tx { font-size: .9rem; }
 .ev-goal { color: var(--bs-primary); font-size: .8rem; }
 .ev-sub { color: var(--md-muted); }
-.timeline li.ev-goal .tx strong { font-weight: 800; }
 .nav-templates .nav-group-label { flex: 0 0 auto; align-self: center; white-space: nowrap; font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; color: rgba(255,255,255,.6); font-weight: 600; margin: 0 .1rem 0 .9rem; }
 .nav-templates .nav-group-label:first-child { margin-left: 0; }
 .nav-templates .nav-item { flex: 0 0 auto; }
@@ -1173,3 +1164,58 @@ body.has-fab .app-footer { padding-bottom: 5rem; }
 .pf-sum .card-ic { margin: 0 .15rem 0 0; vertical-align: -1px; }
 .pf-wdl b { font-weight: 700; } .pf-wdl .w { color: var(--bs-success); } .pf-wdl .l { color: var(--bs-danger); } .pf-wdl .d { opacity: .7; }
 @media (max-width: 575.98px) { .player-filter { padding: .75rem .75rem .35rem; } .pf-btn { padding: .28rem .6rem; } }
+
+/* ---------- Priebeh zápasu – časová os (domáci vľavo, hostia vpravo) ---------- */
+.tl { list-style: none; margin: 0; padding: .75rem 1.25rem 1.25rem; --tl-line: var(--md-border); }
+.tl > li { display: grid; grid-template-columns: minmax(0, 1fr) 2rem 2.9rem 1px 2rem minmax(0, 1fr); column-gap: .55rem; align-items: center; padding: .55rem 0; min-height: 3.1rem; }
+.tl > li::before { content: ""; grid-column: 4; grid-row: 1; align-self: stretch; margin: -.55rem 0; background: var(--tl-line); }
+.tl > li:first-child::before { margin-top: 1.4rem; }
+.tl > li:last-child::before { margin-bottom: 1.4rem; }
+.tl .tl-head { min-height: 0; padding: 0 0 .5rem; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--md-muted); }
+.tl .tl-head::before { margin: 1.2rem 0 -.55rem; }
+.tl .tl-head .home { grid-column: 1 / 3; text-align: right; }
+.tl .tl-head .away { grid-column: 5 / 7; }
+.tl .tl-min { grid-column: 3; grid-row: 1; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; font-size: .9rem; }
+.tl .tl-ic { grid-row: 1; display: grid; place-items: center; }
+.tl .tl-tx { grid-row: 1; min-width: 0; line-height: 1.25; }
+.tl .tl-tx strong { display: block; font-weight: 700; font-size: .92rem; }
+.tl .tl-tx strong a { color: inherit; text-decoration: none; }
+.tl .tl-tx strong a:hover { color: var(--bs-primary); text-decoration: underline; }
+.tl .tl-tx small { display: block; color: var(--md-muted); font-size: .8rem; margin-top: .15rem; overflow-wrap: anywhere; }
+.tl .tl-tx small a { color: inherit; }
+.tl .home .tl-ic { grid-column: 2; }
+.tl .home .tl-tx { grid-column: 1; text-align: right; }
+.tl .away .tl-ic, .tl .tl-phase .tl-ic { grid-column: 5; }
+.tl .away .tl-tx, .tl .tl-phase .tl-tx { grid-column: 6; }
+.tl .tl-phase .tl-tx strong { font-weight: 500; }
+.tl .tl-phase .tl-tx small { font-variant-numeric: tabular-nums; }
+.tl .tl-phase.is-ht .tl-tx small, .tl .tl-phase.is-ft .tl-tx small { font-weight: 700; color: var(--md-text, inherit); }
+.tl .tl-phase.is-ft .tl-tx strong { font-weight: 700; }
+.tl-phase-ic { font-size: 1.15rem; color: var(--md-muted); }
+.tl-ball { width: 1.25rem; height: 1.25rem; color: #1f2937; }
+[data-bs-theme="dark"] .tl-ball circle { fill: #e5e7eb; }
+.tl-card { display: inline-block; width: .78rem; height: 1.05rem; border-radius: .16rem; box-shadow: 0 1px 2px rgba(0,0,0,.25); }
+.tl-card.y { background: linear-gradient(160deg, #fde68a, #facc15); }
+.tl-card.r { background: linear-gradient(160deg, #f87171, #dc2626); }
+.tl-card.yr { background: linear-gradient(135deg, #facc15 0 50%, #dc2626 50% 100%); }
+.tl-sub { display: inline-flex; font-size: .78rem; line-height: 1; letter-spacing: -.18em; }
+.tl-sub .bi-caret-down-fill { color: #dc2626; } .tl-sub .bi-caret-up-fill { color: #16a34a; }
+.tl > li.tl-ev:hover { background: linear-gradient(90deg, transparent, rgba(var(--md-accent-rgb), .045), transparent); }
+.tl > li.tl-k-goal .tl-tx strong { font-weight: 800; }
+@media (max-width: 575.98px) {
+    .tl { padding: .5rem .6rem 1rem; }
+    .tl > li { grid-template-columns: minmax(0, 1fr) 1.45rem 2.3rem 1px 1.45rem minmax(0, 1fr); column-gap: .35rem; }
+    .tl .tl-tx strong { font-size: .84rem; } .tl .tl-tx small { font-size: .72rem; } .tl .tl-min { font-size: .8rem; }
+}
+.tl .player-link { border-bottom: 0; color: inherit; }
+.tl .tl-tx strong .player-link:hover { color: var(--bs-primary); text-decoration: underline; }
+.tl .tl-tx small .player-link { text-decoration: underline dotted rgba(127,127,127,.6); text-underline-offset: 2px; }
+.tl > li.tl-k-goal .tl-min { color: var(--bs-primary); }
+/* profil hráča – komentáre zo zápisu pod súperom */
+.pev { list-style: none; margin: .25rem 0 0; padding: 0; font-size: .76rem; color: var(--md-muted); line-height: 1.3; }
+.pev li { display: flex; align-items: baseline; gap: .35rem; }
+.pev li + li { margin-top: .1rem; }
+.pev .bi-circle-fill { font-size: .5rem; }
+.pev .card-ic { margin: 0; width: .5rem; height: .7rem; flex: 0 0 auto; align-self: center; }
+.pev .m { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--bs-body-color); }
+.card-ic.yr { background: linear-gradient(135deg, #facc15 0 50%, #dc2626 50% 100%); }

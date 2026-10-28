@@ -156,7 +156,15 @@ add_layout("header", array("title" => $name . " – profil | Match Day", "script
 							$role = $m['role'] ?? 'listed'; ?>
 							<tr data-place="<?= $m['home'] ? 1 : 0 ?>" data-res="<?= plain($m['result']) ?>" data-role="<?= in_array($role, ['start', 'sub'], true) ? $role : 'none' ?>" data-part="<?= $m['date'] !== '' ? ((int)substr($m['date'], 5, 2) >= 7 ? 'j' : 'r') : '' ?>" data-goals="<?= (int)$m['goals'] ?>" data-y="<?= (int)$m['yellow'] ?>" data-r="<?= (int)$m['red'] ?>" data-min="<?= isset($m['min']) && $m['min'] !== null ? (int)$m['min'] : '' ?>">
 								<td class="text-nowrap small"><a class="text-reset text-decoration-none" href="<?= plain($mu) ?>"><?= plain($dT) ?><div class="text-muted-2"><?= plain($m['round']) ?></div></a></td>
-								<td><span class="text-muted-2 small"><?= $m['home'] ? 'doma' : 'vonku' ?></span> <a class="fw-semibold text-reset" href="<?= plain($mu) ?>"><?= plain($m['opponent']) ?></a></td>
+								<td><span class="text-muted-2 small"><?= $m['home'] ? 'doma' : 'vonku' ?></span> <a class="fw-semibold text-reset" href="<?= plain($mu) ?>"><?= plain($m['opponent']) ?></a><?php
+										// komentáre zo zápisu: dôvod karty, druh gólu
+										$evs = array_values(array_filter($m['ev'] ?? [], fn($x) => $x['note'] !== '' || $x['k'] !== 'goal' || $x['pk'] || $x['second']));
+										if ($evs): ?><ul class="pev"><?php foreach ($evs as $x):
+											$ic = $x['k'] === 'goal' ? '<i class="bi bi-circle-fill text-primary"></i>' : '<span class="card-ic ' . ($x['k'] === 'red' && $x['second'] ? 'yr' : ($x['k'] === 'red' ? 'red' : 'yellow')) . '"></span>';
+											$txt = $x['note'] !== '' ? $x['note'] : ($x['k'] === 'goal' ? ($x['pk'] ? 'z pokutového kopu' : '') : ($x['second'] ? 'druhá žltá karta' : ($x['k'] === 'red' ? 'červená karta' : 'žltá karta')));
+											if ($x['k'] === 'red' && $x['second'] && $x['note'] !== '') $txt = 'druhá žltá – ' . $x['note']; ?>
+											<li><?= $ic ?><span class="m"><?= (int)$x['m'] ?>'</span><?= plain($txt) ?></li>
+										<?php endforeach; ?></ul><?php endif; ?></td>
 								<td class="text-center"><?php if ($m['score'] !== ''): ?><a class="badge text-bg-<?= $rc ?> text-decoration-none" href="<?= plain($mu) ?>"><?= plain($m['score']) ?></a><?php endif; ?></td>
 								<td class="small"><?php
 									if ($role === 'start') echo 'základ' . (($m['out'] ?? null) !== null ? ' <span class="text-muted-2">→ ' . (int)$m['out'] . "'</span>" : '');

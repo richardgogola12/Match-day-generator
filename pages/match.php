@@ -109,20 +109,54 @@ add_layout("header", array("title" => $b['home']['name'] . ' – ' . $b['away'][
 		<?php if (!$events): ?>
 			<div class="empty-state"><i class="bi bi-clock-history"></i><?= $b['played'] ? 'Zápis neobsahuje udalosti.' : 'Zápas sa ešte nehral.' ?></div>
 		<?php else: ?>
-		<ul class="timeline">
-			<?php foreach ($events as $e): $right = $e['side'] === 'away'; $evSide = $sideOfTeam($e['team']); ?>
-				<li class="<?= $right ? 'away' : 'home' ?> ev-<?= $e['kind'] ?>">
-					<span class="min"><?= (int)$e['minute'] ?>'</span>
-					<span class="ic"><?= $icon[$e['kind']] ?></span>
-					<span class="tx">
-						<?php if ($e['kind'] === 'sub'): ?>
-							<span class="text-success"><i class="bi bi-arrow-up-short"></i><?= $pl($e['inId'] ?? '', $e['in'], $evSide) ?></span> <span class="text-danger"><i class="bi bi-arrow-down-short"></i><?= $pl($e['id'], $e['name'], $evSide) ?></span>
-						<?php else: ?>
-							<strong><?= $pl($e['id'], $e['name'], $evSide) ?></strong><?= !empty($e['own']) ? ' <span class="text-muted-2">(vlastný gól)</span>' : '' ?><?= !empty($e['penalty']) ? ' <span class="text-muted-2">(pokutový kop)</span>' : '' ?>
-						<?php endif; ?>
-					</span>
-				</li>
-			<?php endforeach; ?>
+		<?php
+			// časová os: udalosti rozdelené na polčasy + značky začiatku / polčasu / konca
+			$halfLen = max(1, intdiv($len, 2));
+			$halfOf = function ($e) use ($halfLen) {
+				$ph = strtoupper((string)($e['phase'] ?? ''));
+				if (preg_match('/^(1|1HT|FIRST|H1)$/', $ph)) return 1;
+				if (preg_match('/^(2|2HT|SECOND|H2)$/', $ph)) return 2;
+				if ($ph !== '' && preg_match('/ET|OT|PRED|EXTRA/', $ph)) return 3;
+				return $e['minute'] <= $halfLen ? 1 : 2;
+			};
+			$byHalf = [1 => [], 2 => [], 3 => []];
+			foreach ($events as $e) $byHalf[$halfOf($e)][] = $e;
+			// polčas: z gólov v zápise, ak sedia s konečným výsledkom; inak skóre polčasu zo Sportnetu
+			$cnt = fn($list) => array_reduce($list, function ($c, $e) { if ($e['kind'] === 'goal') $c[$e['side'] === 'away' ? 1 : 0]++; return $c; }, [0, 0]);
+			$all = $cnt($events); $h1 = $cnt($byHalf[1]);
+			$htScore = $b['played'] && $all === [(int)$b['home']['score'], (int)$b['away']['score']] ? $h1[0] . ':' . $h1[1] : (($rep['halftime'] ?? '') ?: $h1[0] . ':' . $h1[1]);
+			$ftScore = $b['played'] ? (int)$b['home']['score'] . ':' . (int)$b['away']['score'] : '';
+			$evNote = function ($e) {
+				if ($e['kind'] === 'goal') return $e['note'] !== '' ? $e['note'] : (!empty($e['own']) ? 'Vlastný gól' : (!empty($e['penalty']) ? 'Gól z pokutového kopu' : 'Gól z hry'));
+				if ($e['kind'] === 'red' && !empty($e['second'])) return $e['note'] !== '' ? 'Druhá žltá karta – ' . $e['note'] : 'Druhá žltá karta';
+				return $e['note'];
+			};
+			$tlIcon = [
+				'goal' => '<svg class="tl-ball" viewBox="0 0 24 24" aria-label="gól"><circle cx="12" cy="12" r="10.5" fill="#fff"/><g fill="currentColor"><path d="M12 8.1l3.7 2.7-1.4 4.4H9.7l-1.4-4.4z"/><path d="M12 1.5a10.5 10.5 0 0 1 3.1.47L12 4.2 8.9 1.97A10.5 10.5 0 0 1 12 1.5z"/><path d="M21.9 8.6a10.5 10.5 0 0 1 .6 4.1l-2.9-1.7.6-3.6z"/><path d="M18.5 20.3a10.5 10.5 0 0 1-3.5 1.8l.6-3.4 3.4-.4z"/><path d="M5.5 20.3l-.5-2 3.4.4.6 3.4a10.5 10.5 0 0 1-3.5-1.8z"/><path d="M2.1 8.6l2.3-1.2.6 3.6-2.9 1.7a10.5 10.5 0 0 1 0-4.1z"/></g><g stroke="currentColor" stroke-width="1.1" fill="none"><path d="M12 8.1V4.2M15.7 10.8l3.9-1.2M14.3 15.2l1.3 3.5M9.7 15.2l-1.3 3.5M8.3 10.8L4.4 9.6"/><circle cx="12" cy="12" r="10.5"/></g></svg>',
+				'yellow' => '<span class="tl-card y" aria-label="žltá karta"></span>', 'red' => '<span class="tl-card r" aria-label="červená karta"></span>', 'red2' => '<span class="tl-card yr" aria-label="druhá žltá karta"></span>',
+				'sub' => '<span class="tl-sub" aria-label="striedanie"><i class="bi bi-caret-down-fill"></i><i class="bi bi-caret-up-fill"></i></span>',
+				'phase' => '<i class="bi bi-alarm tl-phase-ic"></i>'];
+			$tlRow = function ($e) use ($tlIcon, $evNote, $pl, $sideOfTeam) {
+				$side = $e['side'] === 'away' ? 'away' : 'home'; $evSide = $sideOfTeam($e['team']);
+				$ic = $e['kind'] === 'red' && !empty($e['second']) ? $tlIcon['red2'] : $tlIcon[$e['kind']];
+				$note = $evNote($e);
+				if ($e['kind'] === 'sub') $note = ($e['in'] !== '' ? 'Striedajúci hráč: ' . $pl($e['inId'] ?? '', $e['in'], $evSide) : '') . ($e['note'] !== '' ? ' · ' . plain($e['note']) : '');
+				else $note = plain($note);
+				$min = (int)$e['minute'] . "'";
+				$tx = '<span class="tl-tx"><strong>' . $pl($e['id'], $e['name'], $evSide) . '</strong>' . ($note !== '' ? '<small>' . $note . '</small>' : '') . '</span>';
+				return '<li class="tl-ev ' . $side . ' tl-k-' . $e['kind'] . '"><span class="tl-min">' . $min . '</span><span class="tl-ic">' . $ic . '</span>' . $tx . '</li>';
+			};
+			$tlPhase = fn($title, $sub, $cls = '') => '<li class="tl-phase ' . $cls . '"><span class="tl-ic">' . $tlIcon['phase'] . '</span><span class="tl-tx"><strong>' . plain($title) . '</strong>' . ($sub !== '' ? '<small>' . plain($sub) . '</small>' : '') . '</span></li>';
+		?>
+		<ul class="tl" aria-label="Priebeh zápasu">
+			<li class="tl-head"><span class="home"><?= plain($b['home']['name']) ?></span><span class="away"><?= plain($b['away']['name']) ?></span></li>
+			<?= $tlPhase('Začiatok – 1. polčas', $tT) ?>
+			<?php foreach ($byHalf[1] as $e) echo $tlRow($e); ?>
+			<?= $tlPhase('Koniec – 1. polčas', 'polčas ' . $htScore, 'is-ht') ?>
+			<?= $tlPhase('Začiatok – 2. polčas', '') ?>
+			<?php foreach ($byHalf[2] as $e) echo $tlRow($e); ?>
+			<?php if ($byHalf[3]): ?><?= $tlPhase('Predĺženie', '') ?><?php foreach ($byHalf[3] as $e) echo $tlRow($e); ?><?php endif; ?>
+			<?php if ($b['played']): ?><?= $tlPhase('Koniec zápasu', 'konečný výsledok ' . $ftScore, 'is-ft') ?><?php endif; ?>
 		</ul>
 		<?php endif; ?>
 	</section>

@@ -17,7 +17,8 @@ function sn_minute($t) {
 
 /**
  * Udalosti zápisu: góly, karty, striedania.
- * @return array [ ['kind'=>'goal'|'yellow'|'red'|'sub', 'minute', 'side', 'team', 'name', 'id', 'own', 'penalty', 'in', 'inId'] ]
+ * @return array [ ['kind'=>'goal'|'yellow'|'red'|'sub', 'minute', 'side', 'team', 'name', 'id', 'own', 'penalty', 'in', 'inId', 'note', 'phase'] ]
+ *   note  – komentár zo zápisu (dôvod karty, poznámka), phase – '1HT' | '2HT' | … ak ho zápis uvádza
  */
 function sportnet_events(array $match, $homeId) {
     $out = [];
@@ -28,8 +29,15 @@ function sportnet_events(array $match, $homeId) {
         $team  = (string)sn_val($e, ['team', 'teamId', 'team._id'], '');
         $side  = $team === $homeId ? 'home' : 'away';
         $player = sn_val($e, ['player', 'athlete', 'playerOut', 'player_out'], null);
+        $note = '';
+        foreach (['reason.label', 'reason.name', 'reason.title', 'reason', 'comment', 'note', 'description', 'text', 'additionalData.reason', 'additionalData.comment', 'additionalData.note', 'additionalData.description'] as $np) {
+            $v = sn_val($e, [$np], null);
+            if (is_string($v) && trim($v) !== '') { $note = trim(preg_replace('/\s+/u', ' ', $v)); break; }
+        }
+        $phase = sn_val($e, ['phase', 'period', 'half'], '');
         $base = ['minute' => sn_minute($e['eventTime'] ?? $e['minute'] ?? $e['time'] ?? 0), 'team' => $team, 'side' => $side,
-                 'name' => sn_person_name($player), 'id' => sn_person_id(is_array($player) ? $player : [])];
+                 'name' => sn_person_name($player), 'id' => sn_person_id(is_array($player) ? $player : []),
+                 'note' => mb_substr($note, 0, 240), 'phase' => is_scalar($phase) ? (string)$phase : ''];
 
         if ($type === 'goal') {
             $own = $sub === 'dropped' || $sub === 'own' || !empty($e['ownGoal']);
@@ -402,7 +410,7 @@ function sportnet_competition($teamId) {
  * Súčty minút a nástupov sú oficiálne zo Sportnetu (API_COMP_PLAYERS), ostatné zo zápisov o stretnutí.
  */
 function sportnet_team($teamId) {
-    $cacheF = sn_cache_file('team|' . $teamId);
+    $cacheF = sn_cache_file('team|v2|' . $teamId); // v2: udalosti hráča s komentármi
     if (is_file($cacheF) && filemtime($cacheF) > time() - 3600 && is_array($c = json_decode((string)file_get_contents($cacheF), true))) return $c;
     if (($stale = md_bg_stale($cacheF, 3600, fn() => sportnet_team($teamId))) !== null) return $stale;
 
@@ -498,7 +506,11 @@ function sportnet_team($teamId) {
             if ($e['kind'] === 'goal' && !empty($e['penalty'])) $players[$k]['penalties']++;
             if ($e['kind'] !== 'goal') $teamStats[$e['kind']]++;
             $last = count($players[$k]['matches']) - 1;
-            if ($last >= 0 && $players[$k]['matches'][$last]['id'] === $brief['id']) $players[$k]['matches'][$last][$field]++;
+            if ($last >= 0 && $players[$k]['matches'][$last]['id'] === $brief['id']) {
+                $players[$k]['matches'][$last][$field]++;
+                // udalosti hráča v zápase s komentárom zo zápisu (profil hráča)
+                $players[$k]['matches'][$last]['ev'][] = ['k' => $e['kind'], 'm' => (int)$e['minute'], 'note' => (string)($e['note'] ?? ''), 'pk' => !empty($e['penalty']), 'second' => !empty($e['second'])];
+            }
         }
     }
 
