@@ -84,8 +84,8 @@
         if (theme && !bgInfo.custom) bg = MD.recolorImage(bg, theme);
         const data = Object.assign({}, MD.SAMPLE.data, { players: MD.samplePlayers(24) });
         if (type === 'matchday') { data.score1 = ''; data.score2 = ''; }
-        MD.render(sq, tpl, data, { background: bg, logos: { home, away, team: home, opponent: away }, teamLogos: {} }, { theme });
-        MD.compose(canvas, sq, { format, brand: { logo: brandImgs.logo, sponsors: brandImgs.sponsors, cfg }, theme: theme || MD.BASE_COLORS, teamLogo: home, title: 'Muži A · ' + data.competition, subtitle: 'So 31.10. · 14:30' });
+        MD.render(sq, tpl, data, { background: bg, logos: { home, away, team: home, opponent: away }, teamLogos: {} }, { theme, scale: 2 });
+        MD.compose(canvas, sq, { format, scale: 2, brand: { logo: brandImgs.logo, sponsors: brandImgs.sponsors, cfg }, theme: theme || MD.BASE_COLORS, teamLogo: home, title: 'Muži A · ' + data.competition, subtitle: 'So 31.10. · 14:30' });
         $('#bpFrame').toggleClass('is-story', format === 'story');
     }
 

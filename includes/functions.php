@@ -364,8 +364,8 @@ function imageFromUrl($url) {
     $w = imagesx($img);
     $h = imagesy($img);
 
-    // zmenšiť veľké obrázky (ochrana RAM)
-    $max = 800;
+    // zmenšiť veľké obrázky (ochrana RAM) – 1000 px stačí aj na logá v HD a na plagáte
+    $max = 1000;
 
     if ($w > $max || $h > $max) {
 

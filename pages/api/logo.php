@@ -12,7 +12,7 @@ $cacheDir = md_cache_dir('logos');
 $raw = !empty($_GET['raw']);
 // s=32|64|128|256: zmenšený náhľad (WebP) na zobrazenie v zoznamoch – plné PNG iba pre canvas
 $size = in_array((int)($_GET['s'] ?? 0), [32, 64, 128, 256, 512], true) ? (int)$_GET['s'] : 0;
-$cacheFile = $cacheDir . '/' . sha1('v2|' . ($raw ? 'raw|' : '') . $url) . '.png';
+$cacheFile = $cacheDir . '/' . sha1('v3|' . ($raw ? 'raw|' : '') . $url) . '.png'; // v3: väčšia predloha loga
 
 /** chyba: starú verziu z cache, inak presmerovanie na originál (fb=1, iba pre <img>) alebo 404 bez cache */
 $fail = function ($code, $msg) use ($cacheFile, $url) {
@@ -35,7 +35,15 @@ if (!$fresh) {
     clearstatcache(true, $cacheFile);
     if (!(is_file($cacheFile) && filesize($cacheFile) > 0 && filemtime($cacheFile) > time() - 7 * 86400)) {
         // iba povolené domény a verejné IP; presmerovania sa overujú (includes/security.php)
-        $bin = md_safe_fetch_image($url);
+        // najprv väčšia verzia z CDN (ak adresa obsahuje rozmer, napr. /120x120/ alebo ?w=120), inak originál
+        $bin = false;
+        $hi = md_logo_hires_url($url);
+        if ($hi !== '') {
+            $bin = md_safe_fetch_image($hi);
+            $d = $bin ? @getimagesizefromstring($bin) : false;
+            if (!$d || max($d[0], $d[1]) < 64) $bin = false;
+        }
+        if (!$bin) $bin = md_safe_fetch_image($url);
         if (!$bin) { usleep(400000); $bin = md_safe_fetch_image($url); } // druhý pokus
         // ochrana pamäte: obrázok najviac 4000 × 4000 px
         $dim = $bin ? @getimagesizefromstring($bin) : false;

@@ -138,7 +138,7 @@
         rafPending = true;
         requestAnimationFrame(() => {
             rafPending = false;
-            S.boxes = MD.render(canvas, S.tpl, previewData(), previewAssets(), { editor: true });
+            S.boxes = MD.render(canvas, S.tpl, previewData(), previewAssets(), { editor: true, scale: Math.min(2, Math.max(1, window.devicePixelRatio || 1)) }); // ostré plátno na Retina displejoch
             renderOverlay();
         });
     }
@@ -972,7 +972,7 @@
     $('#btnTestPng').on('click', () => {
         // čistý náhľad bez pomocných rámikov
         const c = document.createElement('canvas');
-        MD.render(c, S.tpl, previewData(), previewAssets(), {});
+        MD.render(c, S.tpl, previewData(), previewAssets(), { scale: 2 });
         c.toBlob(async (blob) => {
             blob = await MD.pngMeta(blob, MD.imageMeta('Náhľad šablóny ' + S.tplId));
             const a = document.createElement('a');

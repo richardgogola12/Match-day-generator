@@ -136,6 +136,26 @@ function md_test_mode() { return defined('MD_TEST_MODE') && MD_TEST_MODE; }
  * Stiahne obrázok: presmerovania sa sledujú ručne a každé sa znova overí,
  * spojenie ide presne na overenú IP adresu (žiadne podvrhnutie cez DNS).
  */
+/**
+ * Adresa väčšej verzie loga, ak ju CDN ponúka (rozmer v ceste /120x120/ alebo parameter ?w=120).
+ * Logá zo Sportnetu sú často len malé náhľady – v obrázkoch HD by boli rozmazané.
+ * @return string '' = nie je čo zväčšiť
+ */
+function md_logo_hires_url($url, $target = 800) {
+    $p = parse_url((string)$url);
+    if (!$p || empty($p['host'])) return '';
+    $path = $p['path'] ?? '';
+    $newPath = preg_replace_callback('#/(\d{2,4})x(\d{1,4})((?:x[a-z]+)?)/#i', function ($m) use ($target) {
+        $w = (int)$m[1]; $h = (int)$m[2];
+        if ($w >= $target) return $m[0];
+        return '/' . $target . 'x' . ($h === 0 ? 0 : ($w > 0 ? (int)round($h * $target / $w) : $target)) . $m[3] . '/';
+    }, $path, 1);
+    $query = $p['query'] ?? '';
+    $newQuery = preg_replace_callback('#(^|&)(w|width|h|height|size|s)=(\d{2,4})(?=&|$)#i', fn($m) => (int)$m[3] < $target ? $m[1] . $m[2] . '=' . $target : $m[0], $query);
+    if ($newPath === $path && $newQuery === $query) return '';
+    return $p['scheme'] . '://' . $p['host'] . (isset($p['port']) ? ':' . $p['port'] : '') . $newPath . ($newQuery !== '' ? '?' . $newQuery : '');
+}
+
 function md_safe_fetch_image($url, $maxBytes = 5242880) {
     for ($hop = 0; $hop < 4; $hop++) {
         $chk = md_check_image_url($url);

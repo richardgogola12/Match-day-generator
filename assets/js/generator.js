@@ -7,7 +7,33 @@
     const MODE = window.MD_MODE || 'match';         // match | team | player | club
     const SQUAD = () => type === 'squad';
 
-    const canvas = document.getElementById('out');
+    // canvas = plné rozlíšenie (sťahovanie, kopírovanie, server); #out = náhľad zmenšený v kvalite pre tento displej
+    const view = document.getElementById('out');
+    const canvas = document.createElement('canvas');
+    window.MD_FULL = canvas;
+    /** kvalitné zmenšenie do náhľadu: postupné polovičné zmenšovanie (bez zubatých hrán a moiré pri prehliadači) */
+    function paintPreview() {
+        if (!canvas.width) return;
+        const dpr = Math.min(3, window.devicePixelRatio || 1);
+        const tw = Math.max(320, Math.min(canvas.width, Math.round((view.clientWidth || view.parentElement.clientWidth || 700) * dpr)));
+        const th = Math.round(canvas.height * tw / canvas.width);
+        let src = canvas, w = canvas.width, h = canvas.height;
+        while (w / 2 >= tw) {
+            const t = document.createElement('canvas');
+            t.width = Math.round(w / 2); t.height = Math.round(h / 2);
+            const c = t.getContext('2d'); c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high';
+            c.drawImage(src, 0, 0, t.width, t.height);
+            src = t; w = t.width; h = t.height;
+        }
+        if (view.width !== tw) view.width = tw;
+        if (view.height !== th) view.height = th;
+        const vc = view.getContext('2d');
+        vc.imageSmoothingEnabled = true; vc.imageSmoothingQuality = 'high';
+        vc.clearRect(0, 0, tw, th);
+        vc.drawImage(src, 0, 0, tw, th);
+    }
+    let previewTimer = null;
+    window.addEventListener('resize', () => { clearTimeout(previewTimer); previewTimer = setTimeout(paintPreview, 150); });
     const sq = document.createElement('canvas');      // vykreslená šablóna (štvorec) – výsledok sa skladá do #out
     let brandPromise = null;
     let last = null; // posledné vykreslenie (šablóna, logá …) – pre PDF vo vyššom rozlíšení
@@ -653,6 +679,7 @@
             last = { tpl, assets, brand, theme };
             MD.compose(canvas, sq, { format: curFormat(), scale: quality, brand, theme: theme || MD.BASE_COLORS, teamLogo: assets.logos.team || assets.logos.home, title: storyTitle(), subtitle: storySubtitle() });
             $('#out').closest('.preview-frame').toggleClass('is-story', format === 'story');
+            paintPreview();
             $('#btnDownload, #btnCopy, #btnSaveServer').prop('disabled', false);
             renderPostText();
             if (o.noSave) { $loading.hide(); return !isEmpty(); }
